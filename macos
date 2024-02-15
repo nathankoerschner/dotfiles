@@ -46,9 +46,20 @@ defaults write -g AppleShowAllExtensions -bool true
 # disable warning when changing file extension
 defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
 
+# show all files
+defaults write com.apple.finder AppleShowAllFiles -bool true
+
+
+
 # finder shortcuts
 defaults write com.apple.finder NSUserKeyEquivalents -dict-add "New Terminal at Folder" "^i"
+
 killall Finder
 
-
-
+echo "Please manually change the required setting in the System Preferences app."
+echo "Once you have made the change, press any key to continue."
+echo ""
+echo ""
+read -p "Navigate to Accissibility>Reduce Motion and enable. Press any key to continue " -n1 -s
+echo ""
+echo "Execution Complete."
