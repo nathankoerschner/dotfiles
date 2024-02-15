@@ -16,7 +16,7 @@ defaults write com.apple.dock show-recents -bool false
 defaults write com.apple.dock tilesize -int 50
 
 # disable keyboard press and hold popup
-defaults write -g ApplePressAndHoldEnabled -bool false
+defaults write -g ApplePressAndHoldEnabled -bool true 
 
 # fast keyboard repeat rate
 defaults write -g KeyRepeat -int 2
@@ -45,4 +45,10 @@ defaults write -g AppleShowAllExtensions -bool true
 
 # disable warning when changing file extension
 defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+
+# finder shortcuts
+defaults write com.apple.finder NSUserKeyEquivalents -dict-add "New Terminal at Folder" "^i"
+killall Finder
+
+
 
