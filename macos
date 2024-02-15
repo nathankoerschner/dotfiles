@@ -60,6 +60,6 @@ echo "Please manually change the required setting in the System Preferences app.
 echo "Once you have made the change, press any key to continue."
 echo ""
 echo ""
-read -p "Navigate to Accissibility>Reduce Motion and enable. Press any key to continue " -n1 -s
+read -p "Press any key to continue " -n1 -s
 echo ""
 echo "Execution Complete."
