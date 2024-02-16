@@ -54,12 +54,32 @@ defaults write com.apple.finder AppleShowAllFiles -bool true
 # finder shortcuts
 defaults write com.apple.finder NSUserKeyEquivalents -dict-add "New Terminal at Folder" "^i"
 
+
+
+### Mission Control
+# defaults write com.apple.dock mcx-expose-disabled -bool true # (to disable it)
+# defaults delete com.apple.dock mcx-expose-disabled # (to re-enable it)
+
+# disable recent used spaces re-ordering
+defaults write com.apple.dock mru-spaces -bool false
+
+
+killall Dock
 killall Finder
 
 echo "Please manually change the required setting in the System Preferences app."
 echo "Once you have made the change, press any key to continue."
 echo ""
 echo ""
-read -p "Press any key to continue " -n1 -s
+read -p "Go to keyboard shortcuts and configure 
+
+Move left a space: ⌃⇧H
+Move right a space: ⌃⇧L 
+
+Application Windows: ⌃⇧J
+Mission Control: ⌃⇧K
+
+
+Press any key to continue " -n1 -s # this is complicated to set via script: https://apple.stackexchange.com/questions/201816/how-do-i-change-mission-control-shortcuts-from-the-command-line
 echo ""
 echo "Execution Complete."
