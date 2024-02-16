@@ -17,7 +17,7 @@ winmanHotkeys = {
   moveRight = "Right"
 }
 require "winman" -- Window management --not as good as rectangle at the moment, so keeping with that
-
+require "screenhop" -- Screen hopping
 
 
 require "readline" -- Readline style bindings

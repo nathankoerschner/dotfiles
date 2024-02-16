@@ -34,6 +34,7 @@ local hotkeys = winmanHotkeys or {
     cascadeAppWindows  = ".", -- Cascade windows for the current application
     snapToGrid         = "/", -- Snap windows to the grid
     maximizeWindow     = ";", -- Expand current window to take up whole grid
+    moveFocusedWindow = "M", -- Move focused window to other screen
 
     -- Only useful if you plan on using more than two windows per column/row:
     -- moveUp = "Up", -- Move window up one cell
