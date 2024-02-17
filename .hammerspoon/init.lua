@@ -20,9 +20,9 @@ require "winman" -- Window management --not as good as rectangle at the moment, 
 require "screenhop" -- Screen hopping
 
 
+
 require "readline" -- Readline style bindings
 local hints = require "hs.hints"
-
 
 hs.loadSpoon("ControlEscape") -- Spoon from here: https://github.com/jasonrudolph/ControlEscape.spoon?tab=readme-ov-file
 spoon.ControlEscape:start()
@@ -34,5 +34,7 @@ spoon.ControlEscape:start()
 
 
 hs.hotkey.bind(super, "Space", function()
-    hs.hints.windowHints()
+  hs.hints.windowHints()
 end) 
+
+require "righties"
