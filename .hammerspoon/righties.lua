@@ -10,7 +10,7 @@ local timer       = require("hs.timer")
 
 
 local appList = {
-    ["a"] = "Arc",
+    ["b"] = "Arc", -- Browser
     ["1"] = "1Password",
     ["t"] = "Terminal",
     ["n"] = "Notes",
