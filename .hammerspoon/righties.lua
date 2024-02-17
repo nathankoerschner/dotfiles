@@ -17,7 +17,8 @@ local appList = {
     ["r"] = "Reminders",
     ["c"] = "Visual Studio Code",
     ["l"] = "Calendar",
-    ["k"] = "Anki"
+    ["k"] = "Anki",
+    ["s"] = "Stickies"
 }
 
 for k, v in pairs(appList) do
