@@ -1,6 +1,7 @@
 hs.window.animationDuration = 0
 super = {"ctrl", "alt", "cmd"}
 
+-- Keybindings for window management
 winmanHotkeys = {
   resizeUp = "K", 
   resizeDown = "J", 
@@ -16,25 +17,19 @@ winmanHotkeys = {
   moveLeft = "Left", 
   moveRight = "Right"
 }
-require "winman" -- Window management --not as good as rectangle at the moment, so keeping with that
+
+-- Required libraries and modules
+require "winman" -- Window management
 require "screenhop" -- Screen hopping
-
-
-
 require "readline" -- Readline style bindings
-local hints = require "hs.hints"
+require "righties"
 
-hs.loadSpoon("ControlEscape") -- Spoon from here: https://github.com/jasonrudolph/ControlEscape.spoon?tab=readme-ov-file
+-- Load and start extensions
+local hints = require "hs.hints"
+hs.loadSpoon("ControlEscape")
 spoon.ControlEscape:start()
 
-
--- hs.hotkey.bind({"control", "alt"}, "Space", function()
---   hs.notify.new({title="Hammerspoon", informativeText="Hello World"}):send()
--- end)
-
-
+-- Hotkey bindings
 hs.hotkey.bind(super, "Space", function()
   hs.hints.windowHints()
 end) 
-
-require "righties"
