@@ -23,7 +23,7 @@ local appList = {
 }
 
 for k, v in pairs(appList) do
-    module["app_" .. v] = lrhk:bind({ "rCmd" }, k, function()
+    module["app_" .. v] = lrhk:bind({ "rAlt" }, k, function()
         application.launchOrFocus(v)
     end)
 end
