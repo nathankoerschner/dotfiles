@@ -16,7 +16,7 @@ defaults write com.apple.dock show-recents -bool false
 defaults write com.apple.dock tilesize -int 50
 
 # disable keyboard press and hold popup
-defaults write -g ApplePressAndHoldEnabled -bool true 
+defaults write -g ApplePressAndHoldEnabled -bool false
 
 # fast keyboard repeat rate
 defaults write -g KeyRepeat -int 2

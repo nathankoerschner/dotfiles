@@ -10,16 +10,18 @@ local timer       = require("hs.timer")
 
 
 local appList = {
-    ["b"] = "Arc", -- B for browse
+    ["b"] = "Firefox", -- B for browse
     ["1"] = "1Password", 
-    ["t"] = "Terminal",
-    ["n"] = "Notes",
+    ["t"] = "WezTerm",
+    ["n"] = "Obsidian",
     ["r"] = "Reminders",
-    ["c"] = "Cursor",
+    ["c"] = "WezTerm",
     ["l"] = "Calendar",
     ["a"] = "Anki", 
     ["s"] = "Slack",
-    ["m"] = "Messages"
+    ["m"] = "Messages",
+    ["w"] = "WhatsApp",
+    ["f"] = "Finder", -- F for Finder
 }
 
 for k, v in pairs(appList) do
