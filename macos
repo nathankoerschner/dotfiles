@@ -15,8 +15,8 @@ defaults write com.apple.dock show-recents -bool false
 # set the icon size of Dock items
 defaults write com.apple.dock tilesize -int 50
 
-# disable keyboard press and hold popup
-defaults write -g ApplePressAndHoldEnabled -bool false
+# enable keyboard press and hold popup
+defaults write -g ApplePressAndHoldEnabled -bool true
 
 # fast keyboard repeat rate
 defaults write -g KeyRepeat -int 2
