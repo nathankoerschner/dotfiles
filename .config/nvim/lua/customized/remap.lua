@@ -37,3 +37,6 @@ vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
 vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
+
+-- yank whole file to system clipboard
+vim.keymap.set("n", "<leader>yf", 'ggvG"+YG', { silent = true })
