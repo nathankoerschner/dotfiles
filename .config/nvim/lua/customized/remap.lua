@@ -39,4 +39,4 @@ vim.keymap.set("n", "<leader><leader>", function()
 end)
 
 -- yank whole file to system clipboard
-vim.keymap.set("n", "<leader>yf", 'ggvG"+YG', { silent = true })
+vim.keymap.set("n", "<leader>yf", 'm9ggvG"+YG`9:delm9<CR>', { silent = true })
