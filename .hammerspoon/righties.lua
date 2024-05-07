@@ -9,14 +9,16 @@ local doc = require("hs.doc")
 local timer = require("hs.timer")
 
 local appList = {
-	["j"] = "iTerm",
-	["k"] = "Firefox", -- B for browse
-	["l"] = "Slack",
-	["u"] = "Calendar",
+	["f"] = "iTerm",
+	["d"] = "Firefox", -- B for browse
+	["s"] = "Slack",
+	["r"] = "Finder",
+	["a"] = "Calendar",
+	["g"] = "Jump Desktop",
 }
 
 for k, v in pairs(appList) do
-	module["app_" .. v] = lrhk:bind({ "lCtrl" }, k, function()
+	module["app_" .. v] = lrhk:bind({ "rAlt" }, k, function()
 		application.launchOrFocus(v)
 	end)
 end

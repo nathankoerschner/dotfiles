@@ -1,0 +1,16 @@
+function spacemode:entered()
+	spacemode = hs.hotkey.modal.new("ctrl", "space")
+	hs.alert("Space Mode Entered")
+end
+function spacemode:exited()
+	hs.alert("Space Mode Exited")
+end
+spacemode:bind("", "escape", function()
+	spacemode:exit()
+end)
+spacemode:bind("ctrl", "space", function()
+	spacemode:exit()
+end)
+spacemode:bind("", "J", "Pressed J", function()
+	print("let the record show that J was pressed")
+end)
