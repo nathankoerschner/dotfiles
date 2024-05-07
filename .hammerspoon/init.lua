@@ -3,8 +3,8 @@ local application = require("hs.application")
 super = { "ctrl", "alt", "cmd", "shift" }
 
 local appList = {
-    ["J"] = "iTerm2",
-	["K"] = "Firefox", -- B for browse
+    ["J"] = "iTerm",
+	["K"] = "Firefox",
     ["L"] = "Slack",
 	["M"] = "Calendar",
 }
@@ -18,15 +18,15 @@ end
 
 -- -- Keybindings for window management
 winmanHotkeys = {
-	resizeUp = "K",
-	resizeDown = "J",
-	resizeLeft = "H",
-	resizeRight = "L",
-	showDesktop = "O",
+	resizeUp = "I",
+	resizeDown = "U",
+	resizeLeft = "Y",
+	resizeRight = "O",
+	showDesktop = "o",
 	cascadeAllWindows = ",",
 	cascadeAppWindows = ".",
 	snapToGrid = "/",
-	maximizeWindow = ";",
+	maximizeWindow = "P",
 	moveUp = "Up",
 	moveDown = "Down",
 	moveLeft = "Left",
