@@ -38,5 +38,9 @@ vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
 
--- yank all buffer text to system clipboard
+-- remaps to do common operations on all text in buffer
 vim.keymap.set("n", "<leader>ya", 'm9ggvG"+YG`9:delm9<CR>', { silent = true })
+vim.keymap.set("n", "<leader>da", 'ggdG', { silent = true })
+vim.keymap.set("n", "<leader>va", 'ggVG', { silent = true })
+
+vim.keymap.set("n", "<leader>%", ':let @" = expand("%")<CR>p', { silent = true })
