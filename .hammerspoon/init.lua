@@ -20,6 +20,7 @@ winmanHotkeys = {
 }
 require("winman")
 require("righties")
+
 -- Load and start extensions
 hs.loadSpoon("ControlEscape")
 spoon.ControlEscape:start()
@@ -37,4 +38,3 @@ for k, v in pairs(appList) do
 		application.launchOrFocus(v)
 	end)
 end
-
