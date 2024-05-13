@@ -70,7 +70,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git vi-mode)
+plugins=(git)
 source $ZSH/oh-my-zsh.sh
 # use Vim keys for navigating the autosuggest list
 bindkey -M vicmd "k" up-line-or-beginning-search
@@ -126,4 +126,5 @@ alias daasity_dbt='source /Users/nathankoerschner/all-client-dbt/daasity-dbt-env
 export EDITOR=nvim
 
 export PATH="/Users/nathankoerschner/.local/bin/:$PATH"
-
+alias bigquery-query='bq query --use_legacy_sql=false'
+alias generate-iphone-8plus-sized-screenshot-from-iphone-se-screenshot='magick convert  -resize 1242x2209 -crop 1242x2208+0+0'

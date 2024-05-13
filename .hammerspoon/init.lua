@@ -1,40 +1,38 @@
 hs.window.animationDuration = 0
-local application = require("hs.application")
-super = { "ctrl", "alt", "cmd", "shift" }
+super = { "alt", "cmd" }
 
 -- -- Keybindings for window management
 winmanHotkeys = {
-	resizeUp = "I",
-	resizeDown = "U",
-	resizeLeft = "Y",
-	resizeRight = "O",
+	resizeDown = "j",
+	resizeUp = "k",
+	resizeRight = "l",
+	resizeLeft = "h",
 	showDesktop = "o",
 	cascadeAllWindows = ",",
 	cascadeAppWindows = ".",
 	snapToGrid = "/",
-	maximizeWindow = "P",
+	maximizeWindow = ";",
 	moveUp = "Up",
 	moveDown = "Down",
 	moveLeft = "Left",
 	moveRight = "Right",
 }
 require("winman")
-require("righties")
 
 -- Load and start extensions
 hs.loadSpoon("ControlEscape")
 spoon.ControlEscape:start()
 
 local appList = {
-	["J"] = "iTerm",
-	["K"] = "Firefox",
-	["L"] = "Slack",
-	["U"] = "Calendar",
+	["j"] = "iTerm",
+	["k"] = "Firefox",
+	["l"] = "Slack",
+	["u"] = "Calendar",
 }
 
 local module = {}
 for k, v in pairs(appList) do
-	module["app_" .. v] = hs.hotkey.bind({ "ctrl", "shift" }, k, function()
-		application.launchOrFocus(v)
+	module["app_" .. v] = hs.hotkey.bind({ "ctrl", "cmd" }, k, function()
+		hs.application.launchOrFocus(v)
 	end)
 end
