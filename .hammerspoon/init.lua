@@ -28,6 +28,10 @@ local appList = {
 	["k"] = "Firefox",
 	["l"] = "Slack",
 	["u"] = "Calendar",
+	["i"] = "Finder",
+	["w"] = "Whatsapp",
+	["o"] = "Microsoft Excel",
+	["h"] = "ChatGPT",
 }
 
 local module = {}
@@ -36,3 +40,4 @@ for k, v in pairs(appList) do
 		hs.application.launchOrFocus(v)
 	end)
 end
+
