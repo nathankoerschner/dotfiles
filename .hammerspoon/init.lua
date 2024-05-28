@@ -23,21 +23,37 @@ require("winman")
 hs.loadSpoon("ControlEscape")
 spoon.ControlEscape:start()
 
+local module = {}
 local appList = {
 	["j"] = "iTerm",
 	["k"] = "Firefox",
-	["l"] = "Slack",
 	["u"] = "Calendar",
 	["i"] = "Finder",
 	["w"] = "Whatsapp",
 	["o"] = "Microsoft Excel",
 	["h"] = "ChatGPT",
+	["1"] = "1Password",
+}
+local urlList = {
+	["l"] = "https://app.slack.com/client/T3Z6DPS4V/activity",
 }
 
-local module = {}
-for k, v in pairs(appList) do
+for k, v in pairs(urlList) do
 	module["app_" .. v] = hs.hotkey.bind({ "ctrl", "cmd" }, k, function()
-		hs.application.launchOrFocus(v)
+		hs.execute("open " .. v)
 	end)
 end
 
+for k, v in pairs(appList) do
+	module["app_" .. v] = hs.hotkey.bind({ "ctrl", "cmd" }, k, function()
+		hs.application.launchOrFocus(v)
+		-- Get the currently focused window
+		local win = hs.window.focusedWindow()
+		if win then
+			hs.grid.maximizeWindow(win)
+		end
+
+		-- Set the window to fullscreen
+		win:setFrame(max)
+	end)
+end
