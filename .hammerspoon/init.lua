@@ -25,17 +25,18 @@ spoon.ControlEscape:start()
 
 local module = {}
 local appList = {
-	["j"] = "iTerm",
+	["j"] = "Terminal",
 	["k"] = "Firefox",
 	["u"] = "Calendar",
 	["i"] = "Finder",
 	["w"] = "Whatsapp",
 	["o"] = "Microsoft Excel",
-	["h"] = "ChatGPT",
 	["1"] = "1Password",
+	["t"] = "Things3",
 }
 local urlList = {
-	["l"] = "https://app.slack.com/client/T3Z6DPS4V/activity",
+	["s"] = "https://app.slack.com/client/T3Z6DPS4V/activity",
+	["h"] = "https://chatgpt.com/",
 }
 
 for k, v in pairs(urlList) do
@@ -47,13 +48,5 @@ end
 for k, v in pairs(appList) do
 	module["app_" .. v] = hs.hotkey.bind({ "ctrl", "cmd" }, k, function()
 		hs.application.launchOrFocus(v)
-		-- Get the currently focused window
-		local win = hs.window.focusedWindow()
-		if win then
-			hs.grid.maximizeWindow(win)
-		end
-
-		-- Set the window to fullscreen
-		win:setFrame(max)
 	end)
 end
