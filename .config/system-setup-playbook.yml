@@ -1,0 +1,19 @@
+- hosts: localhost
+  tasks:
+    - name: Install ZSH
+      homebrew:
+        name: zsh
+        state: present
+      become: false
+
+    - name: Add zsh to the list of valid shells
+      lineinfile:
+        path: /etc/shells
+        line: "{{ lookup('pipe', 'which zsh') }}"
+        state: present
+
+    - name: Change default shell to zsh for this user
+      user:
+        name: "{{ ansible_user_id }}"
+        shell: "{{ lookup('pipe', 'which zsh') }}"
+
