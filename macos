@@ -22,6 +22,8 @@ defaults write -g ApplePressAndHoldEnabled -bool true
 defaults write -g KeyRepeat -int 2
 defaults write -g InitialKeyRepeat -int 15
 
+# Remap caps-lock to escape
+hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x700000029}]}'
 
 
 # disable text correction
@@ -70,17 +72,9 @@ defaults write com.apple.dock mru-spaces -bool false
 killall Dock
 killall Finder
 
-echo "Please manually change the required setting in the System Preferences app."
-echo "Once you have made the change, press any key to continue."
-echo ""
-echo ""
-read -p "Go to keyboard shortcuts and configure 
+read -p "
 
-Move left a space: ⌃⇧H
-Move right a space: ⌃⇧L 
 
-Application Windows: ⌃⇧J
-Mission Control: ⌃⇧K
 
 
 Press any key to continue " -n1 -s # this is complicated to set via script: https://apple.stackexchange.com/questions/201816/how-do-i-change-mission-control-shortcuts-from-the-command-line
