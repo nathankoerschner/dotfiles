@@ -80,3 +80,6 @@ read -p "
 Press any key to continue " -n1 -s # this is complicated to set via script: https://apple.stackexchange.com/questions/201816/how-do-i-change-mission-control-shortcuts-from-the-command-line
 echo ""
 echo "Execution Complete."
+echo ""
+echo "Please reboot your Mac to complete the changes."
+# prompt for reboot
