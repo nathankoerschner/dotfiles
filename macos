@@ -3,8 +3,10 @@
 # close system preferences to keep it from overriding stuff
 osascript -e 'tell application "System Preferences" to quit'
 
-# automatically hide and show the Dock
+# Dock settings
 defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock "orientation" -string "right"
+defaults write com.apple.dock "tilesize" -int "45"
 
 # translucent dock icons for hidden apps
 defaults write com.apple.dock showhidden -bool true
@@ -12,8 +14,6 @@ defaults write com.apple.dock showhidden -bool true
 # hide recent apps
 defaults write com.apple.dock show-recents -bool false
 
-# set the icon size of Dock items
-defaults write com.apple.dock tilesize -int 50
 
 # enable keyboard press and hold popup
 defaults write -g ApplePressAndHoldEnabled -bool true
@@ -21,6 +21,8 @@ defaults write -g ApplePressAndHoldEnabled -bool true
 # fast keyboard repeat rate
 defaults write -g KeyRepeat -int 2
 defaults write -g InitialKeyRepeat -int 15
+
+
 
 # disable text correction
 defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
@@ -31,6 +33,7 @@ defaults write -g NSAutomaticCapitalizationEnabled -bool false
 
 # natural scroll direction
 defaults write -g com.apple.swipescrolldirection -bool true
+defaults write NSGlobalDomain com.apple.mouse.scddaling -float "3.0"
 
 # expand print panel by default
 defaults write -g PMPrintingExpandedStateForPrint -bool true
