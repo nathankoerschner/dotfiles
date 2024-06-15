@@ -9,7 +9,3 @@ do
 done
 popd
 
-pushd $DOTFILES/netflix
-./stow
-popd
-
