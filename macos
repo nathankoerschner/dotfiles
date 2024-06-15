@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+#
+
+if [[ -z $STOW_FOLDERS ]]; then
+    STOW_FOLDERS="nvim,tmux,zsh,hammerspoon"
+fi
+
+if [[ -z $DOTFILES ]]; then
+    DOTFILES=$HOME/.dotfiles
+fi
+
+# Ensure stow is installed
+if ! command -v stow &> /dev/null; then
+    echo "stow could not be found, please install it first"
+    exit 1
+fi
+
+STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
 
 # close system preferences to keep it from overriding stuff
 osascript -e 'tell application "System Preferences" to quit'
