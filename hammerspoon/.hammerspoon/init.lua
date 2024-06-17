@@ -23,10 +23,9 @@ require("winman")
 local module = {}
 local appList = {
 	["j"] = "Terminal",
-	["k"] = "Firefox",
+	["k"] = "Safari",
 	["u"] = "Calendar",
 	["i"] = "Finder",
-	["w"] = "Whatsapp",
 	["o"] = "Microsoft Excel",
 	["1"] = "1Password",
 	["t"] = "Things3",
