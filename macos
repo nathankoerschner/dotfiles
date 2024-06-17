@@ -1,21 +1,6 @@
 #!/usr/bin/env bash
 #
 
-if [[ -z $STOW_FOLDERS ]]; then
-    STOW_FOLDERS="bin,nvim,tmux,zsh,hammerspoon"
-fi
-
-if [[ -z $DOTFILES ]]; then
-    DOTFILES=$HOME/.dotfiles
-fi
-
-# Ensure stow is installed
-if ! command -v stow &> /dev/null; then
-    echo "stow could not be found, please install it first"
-    exit 1
-fi
-
-STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
 
 # close system preferences to keep it from overriding stuff
 osascript -e 'tell application "System Preferences" to quit'
@@ -40,7 +25,7 @@ defaults write -g KeyRepeat -int 2
 defaults write -g InitialKeyRepeat -int 15
 
 # Remap caps-lock to escape
-hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x700000029}]}'
+hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}'
 
 
 # disable text correction
@@ -87,6 +72,22 @@ defaults write com.apple.finder NSUserKeyEquivalents -dict-add "New Terminal at 
 # disable recent used spaces re-ordering
 defaults write com.apple.dock mru-spaces -bool false
 
+
+if [[ -z $STOW_FOLDERS ]]; then
+    STOW_FOLDERS="bin,nvim,tmux,zsh,hammerspoon"
+fi
+
+if [[ -z $DOTFILES ]]; then
+    DOTFILES=$HOME/.dotfiles
+fi
+
+# Ensure stow is installed
+if ! command -v stow &> /dev/null; then
+    echo "stow could not be found, please install it first"
+    exit 1
+fi
+
+STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
 
 killall Dock
 killall Finder
