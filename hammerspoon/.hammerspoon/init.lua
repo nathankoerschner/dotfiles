@@ -29,9 +29,9 @@ local appList = {
 	["o"] = "Microsoft Excel",
 	["1"] = "1Password",
 	["t"] = "Things3",
+	["s"] = "Slack",
 }
 local urlList = {
-	["s"] = "https://app.slack.com/client/T3Z6DPS4V/activity",
 	["h"] = "https://chatgpt.com/",
 }
 
@@ -50,37 +50,43 @@ end
 
 
 
+ctrl_table = {
+    sends_escape = true,
+    last_mods = {}
+}
 
+control_key_timer = hs.timer.delayed.new(0.15, function()
+    ctrl_table["send_escape"] = false
+    -- log.i("timer fired")
+    -- control_key_timer:stop()
+end
+)
 
--- Sends "escape" if "caps lock" is held for less than .2 seconds, and no other keys are pressed.
+last_mods = {}
 
-local send_escape = false
-local last_mods = {}
-local control_key_timer = hs.timer.delayed.new(0.2, function()
-    send_escape = false
-end)
-
-hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, function(evt)
-    local new_mods = evt:getFlags()
-    if last_mods["ctrl"] == new_mods["ctrl"] then
-        return false
-    end
-    if not last_mods["ctrl"] then
-        last_mods = new_mods
-        send_escape = true
-        control_key_timer:start()
-    else
-        if send_escape then
-            hs.eventtap.keyStroke({}, "escape")
-        end
-        last_mods = new_mods
-        control_key_timer:stop()
-    end
+control_handler = function(evt)
+  local new_mods = evt:getFlags()
+  if last_mods["ctrl"] == new_mods["ctrl"] then
     return false
-end):start()
+  end
+  if not last_mods["ctrl"] then
+    last_mods = new_mods
+    send_escape = true
+    control_key_timer:start()
+  else
+    last_mods = new_mods
+    control_key_timer:stop()
+    if send_escape then
+      return true, {
+        hs.eventtap.event.newKeyEvent({}, 'escape', true),
+        hs.eventtap.event.newKeyEvent({}, 'escape', false),
+      }
+    end
+  end
+  return false
+end
 
+control_tap = hs.eventtap.new({12}, control_handler)
 
-hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
-    send_escape = false
-    return false
-end):start()
+control_tap:start()
+
