@@ -48,45 +48,47 @@ for k, v in pairs(appList) do
 end
 
 
-
-
-ctrl_table = {
-    sends_escape = true,
-    last_mods = {}
-}
-
-control_key_timer = hs.timer.delayed.new(0.15, function()
-    ctrl_table["send_escape"] = false
-    -- log.i("timer fired")
-    -- control_key_timer:stop()
-end
-)
-
-last_mods = {}
-
-control_handler = function(evt)
-  local new_mods = evt:getFlags()
-  if last_mods["ctrl"] == new_mods["ctrl"] then
-    return false
-  end
-  if not last_mods["ctrl"] then
-    last_mods = new_mods
-    send_escape = true
-    control_key_timer:start()
-  else
-    last_mods = new_mods
-    control_key_timer:stop()
-    if send_escape then
-      return true, {
-        hs.eventtap.event.newKeyEvent({}, 'escape', true),
-        hs.eventtap.event.newKeyEvent({}, 'escape', false),
-      }
+-- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
+-- You'll also have to install Karabiner Elements and map caps_lock to left_control there
+len = function(t)
+    local length = 0
+    for k, v in pairs(t) do
+    	length = length + 1
     end
-  end
-  return false
+    return length
 end
 
-control_tap = hs.eventtap.new({12}, control_handler)
 
-control_tap:start()
+send_escape = false
+prev_modifiers = {}
 
+modifier_handler = function(evt)
+    -- evt:getFlags() holds the modifiers that are currently held down
+    local curr_modifiers = evt:getFlags()
+
+    if curr_modifiers["ctrl"] and len(curr_modifiers) == 1 and len(prev_modifiers) == 0 then
+        -- We need this here because we might have had additional modifiers, which
+        -- we don't want to lead to an escape, e.g. [Ctrl + Cmd] —> [Ctrl] —> [ ]
+        send_escape = true
+    elseif prev_modifiers["ctrl"]  and len(curr_modifiers) == 0 and send_escape then
+		send_escape = false
+        hs.eventtap.keyStroke({}, "ESCAPE")
+    else
+        send_escape = false
+	end
+    prev_modifiers = curr_modifiers
+	return false
+end
+
+
+-- Call the modifier_handler function anytime a modifier key is pressed or released
+modifier_tap = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, modifier_handler)
+modifier_tap:start()
+
+
+-- If any non-modifier key is pressed, we know we won't be sending an escape
+non_modifier_tap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
+    send_escape = false
+	return false
+end)
+non_modifier_tap:start()
