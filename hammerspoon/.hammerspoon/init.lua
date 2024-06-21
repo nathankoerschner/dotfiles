@@ -89,6 +89,26 @@ modifier_tap:start()
 -- If any non-modifier key is pressed, we know we won't be sending an escape
 non_modifier_tap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
     send_escape = false
-	return false
-end)
-non_modifier_tap:start()
+    return false
+end):start()
+
+
+
+google_clipboard = function()
+    -- Simulate cmd + c to copy highlighted text
+    hs.eventtap.keyStroke({"cmd"}, "c")
+
+    -- Wait a moment for the clipboard to update
+    hs.timer.doAfter(0.2, function()
+        local clipboard_content = hs.pasteboard.getContents()
+        if clipboard_content and clipboard_content ~= "" then
+            local url = "https://www.google.com/search?q=" .. hs.http.encodeForQuery(clipboard_content)
+            hs.execute("open " .. url)
+        else
+            hs.alert.show("Clipboard is empty or invalid")
+        end
+    end)
+end
+
+hs.hotkey.bind({"cmd", "ctrl"}, "g", google_clipboard)
+
