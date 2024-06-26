@@ -128,3 +128,4 @@ export EDITOR=nvim
 export PATH="/Users/nathankoerschner/.local/bin/:$PATH"
 alias bigquery-query='bq query --use_legacy_sql=false'
 alias generate-iphone-8plus-sized-screenshot-from-iphone-se-screenshot='magick convert  -resize 1242x2209 -crop 1242x2208+0+0'
+export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
