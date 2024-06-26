@@ -32,7 +32,7 @@ local appList = {
 	["s"] = "Slack",
 }
 local urlList = {
-	["h"] = "https://chatgpt.com/",
+	["h"] = "https://claude.ai/",
 }
 
 for k, v in pairs(urlList) do
