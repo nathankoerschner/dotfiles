@@ -1,17 +1,17 @@
-vim.g.netrw_bufsettings = 'noma nomod nu rnu nobl nowrap ro'
+vim.g.netrw_bufsettings = "noma nomod nu rnu nobl nowrap ro"
 vim.opt.relativenumber = true
-vim.opt.number=true
+vim.opt.number = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
 
 vim.opt.ignorecase = true
-vim.opt.smartcase = true -- if search is mixed case, then be case-sensitive
+-- if search is mixed case, then be case-sensitive
+vim.opt.smartcase = true
 
 vim.opt.splitright = true
 vim.opt.splitbelow = true
-
 
 vim.opt.swapfile = false
 vim.opt.backup = false
