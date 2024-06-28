@@ -42,3 +42,8 @@ vim.keymap.set("n", "<leader>da", 'ggdG', { silent = true })
 vim.keymap.set("n", "<leader>va", 'ggVG', { silent = true })
 
 vim.keymap.set("n", "<leader>%", ':let @" = expand("%")<CR>p', { silent = true })
+-- yank the file path to the clipboard
+vim.keymap.set("n", "<leader>yf", function()
+    local filename = vim.fn.expand("%:t")
+    vim.fn.setreg("+", filename)
+end)

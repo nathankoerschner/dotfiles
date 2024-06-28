@@ -101,6 +101,12 @@ bindkey -M vicmd "j" down-line-or-beginning-search
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+alias gs="git status"
+alias ga="git add"
+alias gc="git commit"
+alias gp="git push"
+
+
 alias dotfile="echo '~/.zshrc'"
 alias youtube-to-mp3="yt-dlp -x --audio-format mp3 --concat-playlist always --yes-playlist"
 
