@@ -47,3 +47,7 @@ vim.keymap.set("n", "<leader>yf", function()
     local filename = vim.fn.expand("%:t")
     vim.fn.setreg("+", filename)
 end)
+
+
+vim.keymap.set("v", "<leader>z", 'c{{c1::<C-r>"}}<ESC>F{2l')
+
