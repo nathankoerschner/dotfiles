@@ -23,17 +23,16 @@ require("winman")
 local module = {}
 local appList = {
 	["j"] = "Terminal",
-	["k"] = "Safari",
+	["k"] = "Firefox",
 	["u"] = "Calendar",
 	["i"] = "Finder",
 	["o"] = "Microsoft Excel",
 	["1"] = "1Password",
-	["t"] = "Things3",
 	["s"] = "Slack",
+	["a"] = "Anki",
 }
 local urlList = {
 	["n"] = "https://claude.ai/",
-	["d"] = "https://excalidraw.com",
 }
 
 for k, v in pairs(urlList) do

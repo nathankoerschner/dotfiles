@@ -75,6 +75,9 @@ source $ZSH/oh-my-zsh.sh
 # use Vim keys for navigating the autosuggest list
 bindkey -M vicmd "k" up-line-or-beginning-search
 bindkey -M vicmd "j" down-line-or-beginning-search
+# Use Ctrl-P (previous) and Ctrl-N (next) for navigating the autosuggest list
+bindkey '^P' up-line-or-beginning-search
+bindkey '^N' down-line-or-beginning-search
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -125,7 +128,8 @@ eval "$(pyenv init -)"
 # dotfile git directory
 alias config='/usr/bin/git --git-dir=/Users/nathankoerschner/.cfg/ --work-tree=/Users/nathankoerschner'
 
-bindkey -v
+bindkey -e # v for vi mode, e for emacs mode
+
 alias daasity_dbt='source /Users/nathankoerschner/all-client-dbt/daasity-dbt-env/bin/activate'
 
 # Vim
@@ -135,3 +139,14 @@ export PATH="/Users/nathankoerschner/.local/bin/:$PATH"
 alias bigquery-query='bq query --use_legacy_sql=false'
 alias generate-iphone-8plus-sized-screenshot-from-iphone-se-screenshot='magick convert  -resize 1242x2209 -crop 1242x2208+0+0'
 export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
+
+
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+bindkey -M vicmd v edit-command-line
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^X^E' edit-command-line
+# export FZF_DEFAULT_OPTS='--bind "ctrl-j:down,ctrl-k:up,alt-j:preview-down,alt-k:preview-up"'
+bindkey "ç" fzf-cd-widget # step around mac default alt + c
