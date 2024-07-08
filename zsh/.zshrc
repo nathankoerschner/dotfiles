@@ -159,3 +159,5 @@ bindkey "ç" fzf-cd-widget # step around mac default alt + c
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
      exec tmux attach || exec tmux new-session
    fi
+
+source ~/.zsh_aliases

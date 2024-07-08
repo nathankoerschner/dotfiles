@@ -1,0 +1,12 @@
+alias gf='git_status=$(git -c color.status=false status);\
+          message=$(echo "$git_status" |\
+          sed -n -r\
+          -e "1,/Changes to be committed:/ d"\
+          -e "1,1 d" -e "/^Untracked files:/,$ d"\
+          -e "s/^\s*//"\
+          -e "/^.*git restore/ d"\
+          -e "/./p");\
+          echo $message;\
+          git commit -m "$message";\
+          sleep 0.1;\
+          git push'
