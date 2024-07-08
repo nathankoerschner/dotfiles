@@ -1,4 +1,5 @@
 # add tracked files, generate a commit message, commit with said message and push
+#
 alias gf='
 git add .
 git_status=$(git -c color.status=false status)
@@ -10,7 +11,6 @@ message=$(echo "$git_status" | \
     -e "/^.*git restore/ d" \
     -e "/./p")
 echo "$message"
-sleep 1.1
 git commit -m "$message"
 sleep 0.1
 git push
