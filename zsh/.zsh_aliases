@@ -1,5 +1,4 @@
 # add tracked files, generate a commit message, commit with said message and push
-#
 alias gf='
 git add .
 git_status=$(git -c color.status=false status)
@@ -15,3 +14,15 @@ git commit -m "$message"
 sleep 0.1
 git push
 '
+
+# add tracked files, generate a commit message, commit with said message and push
+alias gfwm='
+git add .
+git_status=$(git -c color.status=false status)
+message=$(git diff --staged | ttok -t 3000 | llm -s "Write a commit message for the following diff:" )
+echo "$message"
+git commit -m "$message"
+sleep 0.1
+git push
+'
+
