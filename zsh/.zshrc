@@ -128,7 +128,7 @@ eval "$(pyenv init -)"
 # dotfile git directory
 alias config='/usr/bin/git --git-dir=/Users/nathankoerschner/.cfg/ --work-tree=/Users/nathankoerschner'
 
-bindkey -e # v for vi mode, e for emacs mode
+bindkey -v # v for vi mode, e for emacs mode
 
 alias daasity_dbt='source /Users/nathankoerschner/all-client-dbt/daasity-dbt-env/bin/activate'
 
