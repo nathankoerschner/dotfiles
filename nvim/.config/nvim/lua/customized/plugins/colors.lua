@@ -9,7 +9,7 @@ end
 -- Return the proper plugin specification
 return {
   {
-    "zacanger/angr.vim", -- replace with the actual repository of your colorscheme
+    "phha/zenburn.nvim", -- replace with the actual repository of your colorscheme
     priority = 1000, -- ensure it loads first
     config = function()
       vim.cmd("colorscheme angr")

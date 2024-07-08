@@ -139,14 +139,23 @@ export PATH="/Users/nathankoerschner/.local/bin/:$PATH"
 alias bigquery-query='bq query --use_legacy_sql=false'
 alias generate-iphone-8plus-sized-screenshot-from-iphone-se-screenshot='magick convert  -resize 1242x2209 -crop 1242x2208+0+0'
 export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
+export PATH="/usr/local/opt/sqlite/bin:$PATH"
+export PATH=$PATH:$HOME/go/bin
 
 
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 bindkey -M vicmd v edit-command-line
+bindkey -M vicmd 'b' vi-backward-word
+
+# edit command line for emacs mode
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '^X^E' edit-command-line
 # export FZF_DEFAULT_OPTS='--bind "ctrl-j:down,ctrl-k:up,alt-j:preview-down,alt-k:preview-up"'
 bindkey "ç" fzf-cd-widget # step around mac default alt + c
+
+if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
+     exec tmux attach || exec tmux new-session
+   fi
