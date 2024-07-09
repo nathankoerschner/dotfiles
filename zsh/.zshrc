@@ -161,5 +161,4 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
      exec tmux attach || exec tmux new-session
    fi
 
-source ~/.zsh_aliases
 
