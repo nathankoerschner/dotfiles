@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 message=$(git diff --staged | ttok -t 3000 | llm -s "Write a commit message for the following diff. Limit your response to 50 characters (even less is better):" )
-echo "Suggested commit message: $message"
-echo "Press Enter to commit and push, or Ctrl+C to cancel..."
+echo -e "Suggested commit message: \n\n$message"
+echo -e "\033[1;33m$message\033[0m\n"
+echo -e "\nPress Enter to commit and push, or Ctrl+C to cancel..."
 read -r
 
 git commit -m "$message"
