@@ -157,8 +157,5 @@ bindkey '^X^E' edit-command-line
 # export FZF_DEFAULT_OPTS='--bind "ctrl-j:down,ctrl-k:up,alt-j:preview-down,alt-k:preview-up"'
 bindkey "ç" fzf-cd-widget # step around mac default alt + c
 
-if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-     exec tmux attach || exec tmux new-session
-   fi
 
 
