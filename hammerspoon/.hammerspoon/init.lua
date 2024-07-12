@@ -1,3 +1,7 @@
+-- TODO:
+-- https://github.com/zzamboni/dot-hammerspoon/blob/master/init.org#url-dispatching-to-site-specific-browsers
+--
+--https://github.com/zzamboni/dot-hammerspoon/blob/master/init.org#caffeine-control-systemdisplay-sleep
 hs.window.animationDuration = 0
 super = { "alt", "cmd" }
 
@@ -32,6 +36,7 @@ local appList = {
 	["a"] = "Anki",
 }
 local urlList = {
+    ["n"] = "https://claude.ai/",
 	["n"] = "https://claude.ai/",
 }
 
