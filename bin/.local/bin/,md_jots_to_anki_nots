@@ -22,6 +22,8 @@ def convert_markdown_to_html(markdown_text):
         result = result.stdout.decode("utf-8")
         # remove newlines and extra whitespace
         clean_result = result.strip().replace("\n", "<br>")
+        # escape double quotes https://docs.ankiweb.net/importing/text-files.html
+        clean_result = clean_result.replace('"', '""')
         return f'"{clean_result}"'
 
     except subprocess.CalledProcessError as e:
@@ -74,8 +76,6 @@ def main():
     # if the output file wasn't specified, use the input file name with .anki-html.txt extension
     if not args.output_file:
         args.output_file = args.input_file.replace(".md", ".anki-html.txt")
-   
-    
 
     process_file(args.input_file, args.output_file)
     print(f"Conversion complete. Output written to {args.output_file}")
