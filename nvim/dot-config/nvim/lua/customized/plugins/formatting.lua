@@ -21,6 +21,7 @@ return {
         lua = { "stylua" },
         python = { "isort", "black" },
         sql = { "sqlfluff" },
+        dbt = { "sqlfluff" },
       },
     })
 
