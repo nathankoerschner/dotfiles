@@ -13,6 +13,7 @@ return {
       python = { "pylint" },
       sql = { "sqlfluff" },
       dbt = { "sqlfluff" },
+            lua = { "luacheck" },
     }
 
     local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
@@ -25,7 +26,11 @@ return {
     })
 
     vim.keymap.set("n", "<leader>lf", function()
+      vim.notify("Linting...")
       lint.try_lint()
+      -- give some feedback
+      --
+      vim.notify("Linting complete")
     end, { desc = "Trigger linting for current file" })
   end,
 }

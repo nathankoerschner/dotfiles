@@ -41,6 +41,8 @@ return {
 				"pylint",
 				"eslint_d",
 				"sqlfluff",
+                "sqlfmt",
+                "luacheck",
 			},
 		})
 	end,

@@ -84,9 +84,9 @@ return {
           filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
         })
       end,
-      ["lua_ls"] = function()
+      ["lua"] = function()
         -- configure lua server (with special settings)
-        lspconfig["lua_ls"].setup({
+        lspconfig["lua"].setup({
           capabilities = capabilities,
           settings = {
             Lua = {
@@ -104,4 +104,3 @@ return {
     })
   end,
 }
-

@@ -20,8 +20,8 @@ return {
         liquid = { "prettier" },
         lua = { "stylua" },
         python = { "isort", "black" },
-        sql = { "sqlfluff" },
-        dbt = { "sqlfluff" },
+        sql = { "sqlfmt" },
+        dbt = { "sqlfmt" },
       },
     })
 
