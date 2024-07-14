@@ -32,3 +32,10 @@ vim.opt.updatetime = 50
 
 vim.opt.colorcolumn = "80"
 
+-- folding options via https://www.reddit.com/r/neovim/comments/10q2mjq/comment/j6nmuw8/
+--
+vim.opt.fillchars = { fold = " " }
+vim.opt.foldmethod = "indent"
+vim.opt.foldenable = false
+vim.opt.foldlevel = 99
+--g.markdown_folding = 1 -- enable markdown folding

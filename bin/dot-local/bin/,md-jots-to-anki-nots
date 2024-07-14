@@ -78,6 +78,21 @@ def main():
         args.output_file = args.input_file.replace(".md", ".anki-html.txt")
 
     process_file(args.input_file, args.output_file)
+
+    # insert headers at the top of the output file
+    headers = """#separator:Pipe
+#html:true
+#notetype:cloze
+#deck:All Notes
+"""
+    with open(args.output_file, "r+", encoding="utf-8") as f:
+        data = f.read()
+        f.seek(0)
+        f.truncate()
+        f.write(headers)
+        f.write("\n")
+        f.write(data)
+
     print(f"Conversion complete. Output written to {args.output_file}")
 
 
