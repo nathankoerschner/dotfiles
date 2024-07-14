@@ -2,5 +2,5 @@
 
 Various scripts avilable in the Bin folder.
 
-Would like to know how to not have these files start with dots, but still have stow work...
+Uses Stow (and it's glorious `--dotfiles` option) to manage all dotfiles.
 
