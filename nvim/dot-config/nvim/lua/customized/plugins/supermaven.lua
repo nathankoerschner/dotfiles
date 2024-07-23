@@ -12,9 +12,9 @@ return {
         suggestion_color = "#ffffff",
         cterm = 244,
       },
-      log_level = "off", -- "off", or set to "info" to disable logging 
-      disable_inline_completion = false, -- disables inline completion for use with cmp
-      disable_keymaps = false, -- disables built in keymaps for more manual control
+      log_level = "off", -- "off", or set to "info" to disable logging
+      disable_inline_completion = true, -- disables inline completion for use with cmp
+      disable_keymaps = true, -- disables built in keymaps for more manual control
     })
   end,
 }
