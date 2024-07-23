@@ -1,5 +1,7 @@
 return {
-  "tpope/vim-dadbod",
-  "kristijanhusak/vim-dadbod-completion",
-  "kristijanhusak/vim-dadbod-ui"
+  {
+    "ctdunc/vim-dadbod-snowflake",
+    branch = "snowflake",
+  },
+  "kristijanhusak/vim-dadbod-ui",
 }

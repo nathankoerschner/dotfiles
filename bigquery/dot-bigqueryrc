@@ -1,0 +1,6 @@
+credential_file = /Users/nathankoerschner/.config/gcloud/legacy_credentials/nathan@redfox.io/singlestore_bq.json
+project_id = red-fox-prod
+
+[query]
+--use_legacy_sql=false
+--max_rows=10000
