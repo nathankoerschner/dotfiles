@@ -94,19 +94,33 @@ non_modifier_tap = hs.eventtap
 	end)
 	:start()
 
-google_clipboard = function()
-	-- Simulate cmd + c to copy highlighted text
-	hs.eventtap.keyStroke({ "cmd" }, "c")
 
-	-- Wait a moment for the clipboard to update
-	hs.timer.doAfter(0.2, function()
-		local clipboard_content = hs.pasteboard.getContents()
-		if clipboard_content and clipboard_content ~= "" then
-			local url = "https://www.google.com/search?q=" .. hs.http.encodeForQuery(clipboard_content)
-			hs.execute("open " .. url)
-		else
-			hs.alert.show("Clipboard is empty or invalid")
-		end
-	end)
+
+------------ Alternate Window Shortcut ------------
+
+-- Store the current and previous window
+local currentWindow = nil
+local previousWindow = nil
+
+-- Function to update window history
+local function updateWindowHistory()
+    local win = hs.window.focusedWindow()
+    if win and win ~= currentWindow then
+        previousWindow = currentWindow
+        currentWindow = win
+    end
 end
 
+-- Set up window filter to track window focus changes
+local windowFilter = hs.window.filter.new()
+windowFilter:subscribe(hs.window.filter.windowFocused, updateWindowHistory)
+
+-- Function to switch to the previous window
+local function switchToPreviousWindow()
+    if previousWindow and previousWindow:isVisible() then
+        previousWindow:focus()
+    end
+end
+
+-- Bind the hotkey (change to your preferred key combination)
+hs.hotkey.bind({"cmd", "alt"}, "tab", switchToPreviousWindow)
