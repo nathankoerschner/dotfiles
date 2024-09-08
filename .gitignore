@@ -1,6 +1,6 @@
 .DS_Store
 
 # from emacs
-dot-emacs.d/auto-save-list/
-dot-emacs.d/elpa/
+emacs/dot-emacs.d/auto-save-list/
+emacs/dot-emacs.d/elpa/
 *~
