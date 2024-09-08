@@ -9,7 +9,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(evil evil-visual-mark-mode)))
+ '(package-selected-packages '(helm evil evil-visual-mark-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -26,12 +26,25 @@
   (require 'use-package))
 
 (use-package evil
-  :ensure t)
-  ;; no :pin needed, as package.el will choose the version in melpa
+  :ensure t
+  :config
+  (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
+  (evil-mode t))  
+;; no :pin needed, as package.el will choose the version in melpa
+
 
 (use-package org
   :ensure t
   ;; ignore org-mode from upstream and use a manually installed version
 )
 
-(evil-mode t)
+
+;; THEME AND APPEARANCE
+
+;; Theme: zenburn
+(use-package zenburn-theme
+  :ensure t
+  :config
+  (load-theme 'zenburn t)
+)
+
