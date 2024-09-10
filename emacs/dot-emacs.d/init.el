@@ -1,3 +1,7 @@
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/") t)
+
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -23,6 +27,11 @@
   ;; ignore org-mode from upstream and use a manually installed version
 )
 
+;; denote
+(use-package denote
+  :ensure t
+  ;; ignore org-mode from upstream and use a manually installed version
+)
 
 ;; UI
 
