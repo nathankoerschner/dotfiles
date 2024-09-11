@@ -5,11 +5,7 @@ for folder in $(echo $STOW_FOLDERS | sed "s/,/ /g")
 do
     echo "stow $folder"
     stow -D $folder --dotfiles
-    if [ "$folder" = "emacs" ]; then
-        echo "Using --no-folding for emacs"
-        stow $folder --no-folding
-    else
-        stow $folder
-    fi
+    stow $folder
 done
 popd
+
