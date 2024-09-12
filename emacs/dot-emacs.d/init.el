@@ -1,3 +1,8 @@
+;; Move customization variables to a separate file and load it
+(setq custom-file (locate-user-emacs-file "custom-vars.el"))
+(load custom-file 'noerror 'nomessage)
+
+;; PACKAGES
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
@@ -47,6 +52,8 @@
 
 
 ;; THEME AND APPEARANCE
+(set-face-attribute 'default nil :height 180)
+
 
 ;; inhibit startup message
 (setq inhibit-startup-message t)
@@ -58,7 +65,4 @@
   (load-theme 'zenburn t)
 )
 
-;; Move customization variables to a separate file and load it
-(setq custom-file (locate-user-emacs-file "custom-vars.el"))
-(load custom-file 'noerror 'nomessage)
 
