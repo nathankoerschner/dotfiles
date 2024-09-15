@@ -28,8 +28,12 @@
 ;; org-mode
 (use-package org
   :ensure t
+  :config
+  (setq org-agenda-files '("~/Documents/"))
+  (setq org-image-actual-width (list 550))
   ;; ignore org-mode from upstream and use a manually installed version
 )
+
 
 ;; denote
 (use-package denote
@@ -43,6 +47,20 @@
 (tool-bar-mode -1) ; hide the toolbar (which has save icon button and so forth)
 (hl-line-mode 1) ; highlight the current line
 
+  (use-package org-download
+    :after org
+    :defer nil
+    :custom
+    (org-download-method 'directory)
+    (org-download-image-dir "images")
+    (org-download-heading-lvl nil)
+    (org-download-timestamp "%Y%m%d-%H%M%S_")
+    (org-image-actual-width 300)
+    (org-download-screenshot-method "/opt/homebrew/bin/pngpaste %s")
+    :bind
+    ("C-M-y" . org-download-screenshot)
+    :config
+    (require 'org-download))
 
 ;; Revert buffers when the underlying file has changed
 (global-auto-revert-mode 1)
