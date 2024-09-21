@@ -72,6 +72,8 @@ defaults write com.apple.finder NSUserKeyEquivalents -dict-add "New Terminal at 
 # disable recent used spaces re-ordering
 defaults write com.apple.dock mru-spaces -bool false
 
+# disable apple's font smoothing, such that the OS doesn't modify the pixle outputs for text
+defaults -currentHost write -g AppleFontSmoothing -int 0
 
 if [[ -z $STOW_FOLDERS ]]; then
     STOW_FOLDERS="bin,nvim,tmux,zsh,hammerspoon"
