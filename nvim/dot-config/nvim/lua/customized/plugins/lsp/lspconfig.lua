@@ -10,6 +10,16 @@ return {
     -- import lspconfig plugin
     local lspconfig = require("lspconfig")
 
+    lspconfig.lua_ls.setup({
+      -- stop the lua lsp complaining about calling `vim`
+      settings = {
+        Lua = {
+          diagnostics = {
+            globals = { "vim" },
+          },
+        },
+      },
+    })
     -- import mason_lspconfig plugin
     local mason_lspconfig = require("mason-lspconfig")
 
