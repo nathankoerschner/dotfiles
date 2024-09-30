@@ -5,6 +5,9 @@ vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
+vim.opt.wrap = false
+vim.opt.scrolloff = 999
+vim.opt.clipboard = "unnamedplus"
 
 vim.opt.ignorecase = true
 -- if search is mixed case, then be case-sensitive
