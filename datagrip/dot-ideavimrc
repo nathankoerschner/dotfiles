@@ -1,1 +1,3 @@
 set relativenumber
+set ignorecase is hls " Search settings: case insensitive incrimental search with highlighting
+
