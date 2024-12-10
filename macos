@@ -27,6 +27,9 @@ defaults write -g InitialKeyRepeat -int 15
 # Remap caps-lock to escape
 hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}'
 
+# add the click anywhere to move window feature (https://mmazzarolo.com/blog/2022-04-16-drag-window-by-clicking-anywhere-on-macos/)
+defaults write -g NSWindowShouldDragOnGesture -bool true
+
 
 # disable text correction
 defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
@@ -39,6 +42,7 @@ defaults write -g NSAutomaticCapitalizationEnabled -bool false
 defaults write -g com.apple.swipescrolldirection -bool true
 defaults write NSGlobalDomain com.apple.mouse.scddaling -float "3.0"
 defaults write NSGlobalDomain com.apple.trackpad.scaling -int 5
+defaults write -g com.apple.mouse.scaling  9.0
 
 
 # expand print panel by default
