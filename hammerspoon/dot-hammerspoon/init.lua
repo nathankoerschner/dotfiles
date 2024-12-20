@@ -26,7 +26,7 @@ require("winman")
 local module = {}
 local appList = {
     ["h"] = "Stickies",
-	["j"] = "Terminal",
+	["j"] = "iTerm",
 	["k"] = "Visual Studio Code",
     ["l"] = "Google Chrome",
 	["u"] = "Calendar",
