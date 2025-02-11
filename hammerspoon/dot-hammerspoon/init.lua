@@ -25,14 +25,15 @@ require("winman")
 
 local module = {}
 local appList = {
-    ["h"] = "Stickies",
+	["h"] = "Stickies",
 	["j"] = "Ghostty",
 	["k"] = "Visual Studio Code",
-    ["l"] = "Google Chrome",
+	["l"] = "Google Chrome",
 	["u"] = "Calendar",
 	["g"] = "DataGrip",
 	["1"] = "1Password",
 	["s"] = "Slack",
+	["r"] = "Reminders",
 }
 local urlList = {
 	["n"] = "https://chat.deepseek.com/",
@@ -93,8 +94,6 @@ non_modifier_tap = hs.eventtap
 	end)
 	:start()
 
-
-
 ------------ Alternate Window Shortcut ------------
 
 -- Store the current and previous window
@@ -103,11 +102,11 @@ local previousWindow = nil
 
 -- Function to update window history
 local function updateWindowHistory()
-    local win = hs.window.focusedWindow()
-    if win and win ~= currentWindow then
-        previousWindow = currentWindow
-        currentWindow = win
-    end
+	local win = hs.window.focusedWindow()
+	if win and win ~= currentWindow then
+		previousWindow = currentWindow
+		currentWindow = win
+	end
 end
 
 -- Set up window filter to track window focus changes
@@ -116,10 +115,10 @@ windowFilter:subscribe(hs.window.filter.windowFocused, updateWindowHistory)
 
 -- Function to switch to the previous window
 local function switchToPreviousWindow()
-    if previousWindow and previousWindow:isVisible() then
-        previousWindow:focus()
-    end
+	if previousWindow and previousWindow:isVisible() then
+		previousWindow:focus()
+	end
 end
 
 -- Bind the hotkey (change to your preferred key combination)
-hs.hotkey.bind({"cmd", "alt"}, "tab", switchToPreviousWindow)
+hs.hotkey.bind({ "cmd", "alt" }, "tab", switchToPreviousWindow)
