@@ -41,6 +41,7 @@ local appList = {
 }
 local urlList = {
 	["n"] = "https://claude.ai/new",
+	["0"] = "https://calendar.google.com",
 }
 
 for k, v in pairs(urlList) do
@@ -126,3 +127,7 @@ end
 
 -- Bind the hotkey (change to your preferred key combination)
 hs.hotkey.bind({ "cmd", "alt" }, "tab", switchToPreviousWindow)
+
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
+  hs.reload()
+end)
