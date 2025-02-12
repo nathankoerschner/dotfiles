@@ -27,16 +27,20 @@ local module = {}
 local appList = {
 	["h"] = "Stickies",
 	["j"] = "Ghostty",
-	["k"] = "Visual Studio Code",
 	["l"] = "Google Chrome",
 	["u"] = "Calendar",
-	["g"] = "DataGrip",
 	["1"] = "1Password",
 	["s"] = "Slack",
 	["r"] = "Reminders",
+	["i"] = "Music",
+	["a"] = "Anki",
+	["t"] = "Transmit",
+	["p"] = "Preview",
+	["w"] = "WhatsApp",
+	["m"] = "Messages",
 }
 local urlList = {
-	["n"] = "https://chat.deepseek.com/",
+	["n"] = "https://claude.ai/new",
 }
 
 for k, v in pairs(urlList) do

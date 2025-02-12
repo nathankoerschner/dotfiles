@@ -10,6 +10,10 @@ defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock "orientation" -string "right"
 defaults write com.apple.dock "tilesize" -int "45"
 
+# Move windows by holding ctrl+cmd and clicking
+defaults write -g NSWindowShouldDragOnGesture -bool true
+
+
 # translucent dock icons for hidden apps
 defaults write com.apple.dock showhidden -bool true
 

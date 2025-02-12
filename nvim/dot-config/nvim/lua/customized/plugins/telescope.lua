@@ -8,7 +8,19 @@ return {
   },
 
   config = function()
+    local actions = require("telescope.actions")
+
     require("telescope").setup({
+      defaults = {
+        mappings = {
+          i = {
+            ["<C-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
+          },
+          n = {
+            ["<C-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
+          },
+        },
+      },
 
       pickers = {
 
@@ -23,7 +35,7 @@ return {
     -- vim.keymap.set("n", "<leader>pf", builtin.find_files, {})
     vim.keymap.set("n", "<leader>pg", builtin.git_files, {})
     --vim.keymap.set("n", "<leader>ps", function()
-     -- builtin.grep_string({ search = vim.fn.input("Grep > ") })
+    -- builtin.grep_string({ search = vim.fn.input("Grep > ") })
     -- end)
   end,
 }
