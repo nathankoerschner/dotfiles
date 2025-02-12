@@ -5,24 +5,6 @@
 hs.window.animationDuration = 0
 super = { "alt", "cmd" }
 
--- -- Keybindings for window management
-winmanHotkeys = {
-	resizeDown = "j",
-	resizeUp = "k",
-	resizeRight = "l",
-	resizeLeft = "h",
-	showDesktop = "o",
-	cascadeAllWindows = ",",
-	cascadeAppWindows = ".",
-	snapToGrid = "/",
-	maximizeWindow = ";",
-	moveUp = "Up",
-	moveDown = "Down",
-	moveLeft = "Left",
-	moveRight = "Right",
-}
-require("winman")
-
 local module = {}
 local appList = {
 	["h"] = "Stickies",
