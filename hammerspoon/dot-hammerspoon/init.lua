@@ -5,6 +5,24 @@
 hs.window.animationDuration = 0
 super = { "alt", "cmd" }
 
+-- -- Keybindings for window management
+winmanHotkeys = {
+	resizeDown = "j",
+	resizeUp = "k",
+	resizeRight = "l",
+	resizeLeft = "h",
+	showDesktop = "o",
+	cascadeAllWindows = ",",
+	cascadeAppWindows = ".",
+	snapToGrid = "/",
+	maximizeWindow = ";",
+	moveUp = "Up",
+	moveDown = "Down",
+	moveLeft = "Left",
+	moveRight = "Right",
+}
+require("winman")
+
 local module = {}
 local appList = {
 	["h"] = "Stickies",
@@ -107,8 +125,6 @@ local function switchToPreviousWindow()
 	end
 end
 
--- Bind the hotkey (change to your preferred key combination)
-hs.hotkey.bind({ "cmd", "alt" }, "tab", switchToPreviousWindow)
 
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
   hs.reload()
