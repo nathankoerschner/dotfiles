@@ -25,22 +25,16 @@ require("winman")
 
 local module = {}
 local appList = {
-	["h"] = "Stickies",
-	["j"] = "Ghostty",
+	["n"] = "Notes",
 	["l"] = "Google Chrome",
-	["u"] = "Calendar",
-	["1"] = "1Password",
+	["j"] = "Calendar",
+    ["f"] = "Ghostty",
 	["s"] = "Slack",
-	["r"] = "Reminders",
-	["i"] = "Music",
-	["a"] = "Anki",
-	["t"] = "Transmit",
-	["p"] = "Preview",
-	["w"] = "WhatsApp",
-	["m"] = "Messages",
+	["d"] = "Reminders",
+    ["1"] = "1Password",
 }
 local urlList = {
-	["n"] = "https://claude.ai/new",
+	["a"] = "https://claude.ai/new",
 	["0"] = "https://calendar.google.com",
 }
 
