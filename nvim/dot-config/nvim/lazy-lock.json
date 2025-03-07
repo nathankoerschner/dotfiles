@@ -22,6 +22,7 @@
   "nvim-treesitter": { "branch": "master", "commit": "2c4c8c10ed440ddf8df5ac8811d5c8ee5fc23d11" },
   "oil.nvim": { "branch": "master", "commit": "975a77cce3c8cb742bc1b3629f4328f5ca977dad" },
   "plenary.nvim": { "branch": "master", "commit": "857c5ac632080dba10aae49dba902ce3abf91b35" },
+  "supermaven-nvim": { "branch": "main", "commit": "07d20fce48a5629686aefb0a7cd4b25e33947d50" },
   "telescope.nvim": { "branch": "master", "commit": "d90956833d7c27e73c621a61f20b29fdb7122709" },
   "undotree": { "branch": "master", "commit": "2556c6800b210b2096b55b66e74b4cc1d9ebbe4f" },
   "vim-dadbod-snowflake": { "branch": "snowflake", "commit": "36b22c177671955098ecf9a58c141231eee491dd" },

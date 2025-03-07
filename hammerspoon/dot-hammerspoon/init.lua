@@ -26,11 +26,12 @@ require("winman")
 local module = {}
 local appList = {
 	["n"] = "Notes",
-	["l"] = "Google Chrome",
-	["j"] = "Calendar",
-    ["f"] = "Ghostty",
+    ["l"] = "Timelines",
+	["f"] = "Google Chrome",
+	["k"] = "Calendar",
+    ["j"] = "Ghostty",
 	["s"] = "Slack",
-	["d"] = "Reminders",
+	["r"] = "Reminders",
     ["1"] = "1Password",
 }
 local urlList = {
