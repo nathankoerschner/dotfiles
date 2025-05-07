@@ -124,6 +124,8 @@ bindkey '^N' down-line-or-beginning-search
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+alias v="nvim"
+# use \vim to use the old vim
 
 alias gs="git status"
 alias ga="git add"
