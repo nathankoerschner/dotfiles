@@ -94,6 +94,48 @@ non_modifier_tap = hs.eventtap
 	end)
 	:start()
 
+---------------------------------------
+---
+---
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
+  -- Step 1: Create a new Chrome window
+  hs.osascript.applescript([[
+    tell application "Google Chrome"
+      activate
+      make new window
+    end tell
+  ]])
+
+  -- Step 2: After delay, set URL and move window
+  hs.timer.doAfter(1.0, function()
+    -- Now set the URL
+    hs.osascript.applescript([[
+      tell application "Google Chrome"
+        set URL of active tab of front window to "https://monkeytype.com"
+      end tell
+    ]])
+
+    -- Then reposition the window
+    local chrome = hs.appfinder.appFromName("Google Chrome")
+    if not chrome then return end
+
+    local win = chrome:mainWindow()
+    if not win then return end
+
+    local screenFrame = win:screen():frame()
+    local winWidth = screenFrame.w / 2
+    local winHeight = screenFrame.h / 2
+
+    win:setFrame({
+      x = screenFrame.x,
+      y = screenFrame.y + screenFrame.h - winHeight,
+      w = winWidth,
+      h = winHeight
+    })
+  end)
+end)
+
+
 ------------ Alternate Window Shortcut ------------
 
 -- Store the current and previous window
