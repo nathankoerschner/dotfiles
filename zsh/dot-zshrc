@@ -194,3 +194,6 @@ alias ,venv2="source venv/bin/activate"
 if [ -f '/Users/natkoersch/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/natkoersch/google-cloud-sdk/path.zsh.inc'; fi
 
 export PATH=~/.local/.npm-global/bin:$PATH
+
+# Created by `pipx` on 2025-05-25 20:56:23
+export PATH="$PATH:/Users/natkoersch/dotfiles/bin/dot-local/bin"

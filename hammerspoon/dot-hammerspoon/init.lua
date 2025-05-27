@@ -5,23 +5,6 @@
 hs.window.animationDuration = 0
 super = { "alt", "cmd" }
 
--- -- Keybindings for window management
-winmanHotkeys = {
-	resizeDown = "j",
-	resizeUp = "k",
-	resizeRight = "l",
-	resizeLeft = "h",
-	showDesktop = "o",
-	cascadeAllWindows = ",",
-	cascadeAppWindows = ".",
-	snapToGrid = "/",
-	maximizeWindow = ";",
-	moveUp = "Up",
-	moveDown = "Down",
-	moveLeft = "Left",
-	moveRight = "Right",
-}
-require("winman")
 
 local module = {}
 local appList = {
@@ -93,74 +76,6 @@ non_modifier_tap = hs.eventtap
 		return false
 	end)
 	:start()
-
----------------------------------------
----
----
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
-  -- Step 1: Create a new Chrome window
-  hs.osascript.applescript([[
-    tell application "Google Chrome"
-      activate
-      make new window
-    end tell
-  ]])
-
-  -- Step 2: After delay, set URL and move window
-  hs.timer.doAfter(1.0, function()
-    -- Now set the URL
-    hs.osascript.applescript([[
-      tell application "Google Chrome"
-        set URL of active tab of front window to "https://monkeytype.com"
-      end tell
-    ]])
-
-    -- Then reposition the window
-    local chrome = hs.appfinder.appFromName("Google Chrome")
-    if not chrome then return end
-
-    local win = chrome:mainWindow()
-    if not win then return end
-
-    local screenFrame = win:screen():frame()
-    local winWidth = screenFrame.w / 2
-    local winHeight = screenFrame.h / 2
-
-    win:setFrame({
-      x = screenFrame.x,
-      y = screenFrame.y + screenFrame.h - winHeight,
-      w = winWidth,
-      h = winHeight
-    })
-  end)
-end)
-
-
------------- Alternate Window Shortcut ------------
-
--- Store the current and previous window
-local currentWindow = nil
-local previousWindow = nil
-
--- Function to update window history
-local function updateWindowHistory()
-	local win = hs.window.focusedWindow()
-	if win and win ~= currentWindow then
-		previousWindow = currentWindow
-		currentWindow = win
-	end
-end
-
--- Set up window filter to track window focus changes
-local windowFilter = hs.window.filter.new()
-windowFilter:subscribe(hs.window.filter.windowFocused, updateWindowHistory)
-
--- Function to switch to the previous window
-local function switchToPreviousWindow()
-	if previousWindow and previousWindow:isVisible() then
-		previousWindow:focus()
-	end
-end
 
 
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()

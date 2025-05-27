@@ -2,3 +2,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # added by Snowflake SnowSQL installer v1.2
 export PATH=/Applications/SnowSQL.app/Contents/MacOS:$PATH
+
+# Created by `pipx` on 2025-05-25 20:56:23
+export PATH="$PATH:/Users/natkoersch/dotfiles/bin/dot-local/bin"
