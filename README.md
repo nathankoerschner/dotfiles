@@ -39,6 +39,7 @@ Dev Env Setup
 # Misc
 - brew install gh
     - gh auth login
+- configure git
 - SnowSQL
 - Install Jump Desktop and configure it for connecting to relevant machines.
 - Install and sign in to Slack
