@@ -36,3 +36,10 @@ Dev Env Setup
     - brew install node
     - start nvim and watch everything install through lazy
 
+# Misc
+- Install Jump Desktop and configure it for connecting to relevant machines.
+- Install and sign in to Slack
+- Install Transmit for S3 file access
+
+
+- Unmount installation discs and clear downloads
