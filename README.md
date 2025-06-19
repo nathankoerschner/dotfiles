@@ -37,6 +37,9 @@ Dev Env Setup
     - start nvim and watch everything install through lazy
 
 # Misc
+- brew install gh
+    - gh auth login
+- SnowSQL
 - Install Jump Desktop and configure it for connecting to relevant machines.
 - Install and sign in to Slack
 - Install Transmit for S3 file access
