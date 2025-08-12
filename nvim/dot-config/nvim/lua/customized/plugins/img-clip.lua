@@ -4,7 +4,7 @@ return {
   opts = {
     -- add options here
     --
-    dir_path = "~/org/assets",
+    dir_path = "~/org/.assets",
     use_absolute_path = true,
 
     -- or leave it empty to use the default settings
