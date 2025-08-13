@@ -6,7 +6,7 @@ return {
     require("orgmode").setup({
       org_agenda_files = "~/org/**/*",
       org_default_notes_file = "~/org/doc.org",
-      win_split_mode = "float",
+      win_split_mode = "tabnew",
       org_todo_keywords = { "TODO(t)", "|", "WAITING(w)", "DONE(d)", "CANCELED(c)" },
       org_todo_keyword_faces = {
         WAITING = ":foreground blue :weight bold",
