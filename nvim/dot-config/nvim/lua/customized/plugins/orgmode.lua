@@ -4,8 +4,8 @@ return {
   ft = { "org" },
   config = function()
     require("orgmode").setup({
-      org_agenda_files = "~/org/**/*",
-      org_default_notes_file = "~/org/doc.org",
+      org_agenda_files = "~/Documents/**/*",
+      org_default_notes_file = "~/Documents/doc.org",
       win_split_mode = "tabnew",
       org_todo_keywords = { "TODO(t)", "|", "WAITING(w)", "DONE(d)", "CANCELED(c)" },
       org_todo_keyword_faces = {
