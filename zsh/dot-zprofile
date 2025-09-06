@@ -5,3 +5,6 @@ export PATH=/Applications/SnowSQL.app/Contents/MacOS:$PATH
 
 # Created by `pipx` on 2025-05-25 20:56:23
 export PATH="$PATH:/Users/natkoersch/dotfiles/bin/dot-local/bin"
+
+# Added by `rbenv init` on Fri Aug 29 09:05:55 EDT 2025
+eval "$(rbenv init - --no-rehash zsh)"
