@@ -1,6 +1,5 @@
 vim.g.netrw_bufsettings = "noma nomod nu rnu nobl nowrap ro"
 
-
 vim.opt.relativenumber = true
 vim.opt.number = true
 vim.opt.tabstop = 4
@@ -42,3 +41,9 @@ vim.opt.foldmethod = "indent"
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
 vim.g.markdown_folding = 1 -- enable markdown folding
+
+vim.keymap.set("n", "<leader>oc", function()
+  local file = vim.fn.shellescape(vim.fn.expand("%:p"))
+  local line = vim.fn.line(".")
+  vim.cmd(string.format("silent !cursor -g %s:%s", file, line))
+end, { desc = "Open file in Cursor" })
