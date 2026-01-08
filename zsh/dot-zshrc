@@ -197,6 +197,7 @@ export PATH=~/.local/.npm-global/bin:$PATH
 
 # Created by `pipx` on 2025-05-25 20:56:23
 export PATH="$PATH:/Users/natkoersch/dotfiles/bin/dot-local/bin"
+export PATH="$HOME/.local/bin:$PATH"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm

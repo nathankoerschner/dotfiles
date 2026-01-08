@@ -8,6 +8,8 @@ vim.opt.expandtab = true
 vim.opt.smartindent = true
 vim.opt.wrap = false
 vim.opt.scrolloff = 999
+--Keep at least 9 columns visible to the left and right of the cursor
+vim.opt.sidescrolloff=35
 
 vim.opt.ignorecase = true
 -- if search is mixed case, then be case-sensitive
