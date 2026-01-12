@@ -22,6 +22,7 @@ winmanHotkeys = {
 	moveRight = "Right",
 }
 require("winman")
+require("timetracker")
 
 local module = {}
 local appList = {
@@ -76,6 +77,22 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
 			end
 		end
 	end)
+end)
+
+-- Quick reminder creation
+hs.hotkey.bind({ "cmd", "shift" }, "space", function()
+	local button, text = hs.dialog.textPrompt("New Reminder", "Enter reminder text:", "", "Add", "Cancel")
+	if button == "Add" and text ~= "" then
+		local escapedText = text:gsub('"', '\\"')
+		local script = string.format([[
+tell application "Reminders"
+	tell list "Reminders"
+		make new reminder with properties {name:"%s"}
+	end tell
+end tell
+]], escapedText)
+		hs.execute("osascript -e '" .. script:gsub("'", "'\\''") .. "'")
+	end
 end)
 
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
