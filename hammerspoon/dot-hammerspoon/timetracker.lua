@@ -4,7 +4,7 @@
 local timetracker = {}
 
 -- Configuration
-local INTERVAL_MINUTES = 5  -- Change back to 15 after testing
+local INTERVAL_MINUTES = 15
 local IDLE_THRESHOLD_SECONDS = 900 -- 15 minutes
 
 -- State
