@@ -23,7 +23,9 @@ local caffeinateWatcher = hs.caffeinate.watcher.new(function(event)
     if event == hs.caffeinate.watcher.screensDidUnlock or
        event == hs.caffeinate.watcher.systemDidWake then
         returnedActiveAt = os.time()
+        promptOpen = false  -- Clear stale prompt state
         print("Time Tracker: User returned at " .. os.date("%H:%M:%S", returnedActiveAt))
+        scheduleNextPrompt()  -- Ensure timer is valid after wake
     end
 end)
 caffeinateWatcher:start()
