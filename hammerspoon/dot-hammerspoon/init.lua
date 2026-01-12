@@ -51,6 +51,33 @@ for k, v in pairs(appList) do
 	end)
 end
 
+-- MonkeyType launcher with custom window size
+hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
+	-- Open monkeytype in a new Chrome window
+	local task = hs.task.new("/usr/bin/open", nil, { "-na", "Google Chrome", "--args", "--new-window", "https://monkeytype.com/" })
+	task:start()
+
+	-- Wait for the new window to appear, then resize and center it
+	hs.timer.doAfter(0.5, function()
+		local chrome = hs.application.find("Google Chrome")
+		if chrome then
+			local win = chrome:focusedWindow()
+			if win then
+				local screen = win:screen()
+				local screenFrame = screen:frame()
+
+				-- Calculate 50% width, 60% height, centered
+				local newWidth = screenFrame.w * 0.5
+				local newHeight = screenFrame.h * 0.6
+				local newX = screenFrame.x + (screenFrame.w - newWidth) / 2
+				local newY = screenFrame.y + (screenFrame.h - newHeight) / 2
+
+				win:setFrame(hs.geometry.rect(newX, newY, newWidth, newHeight))
+			end
+		end
+	end)
+end)
+
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
 len = function(t)
