@@ -152,8 +152,10 @@ export PATH="/Users/nathankoerschner/.local/bin/:$PATH"
 alias bigquery-query='bq query --use_legacy_sql=false'
 alias generate-iphone-8plus-sized-screenshot-from-iphone-se-screenshot='magick convert  -resize 1242x2209 -crop 1242x2208+0+0'
 export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
+export PATH="/opt/homebrew/bin:$PATH" # for python
 export PATH="/usr/local/opt/sqlite/bin:$PATH"
 export PATH=$PATH:$HOME/go/bin
+
 
 
 
@@ -202,3 +204,13 @@ export PATH="$HOME/.local/bin:$PATH"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+. "$HOME/.local/bin/env"
+export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+
+# bun completions
+[ -s "/Users/natkoersch/.bun/_bun" ] && source "/Users/natkoersch/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

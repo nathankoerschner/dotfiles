@@ -2,51 +2,75 @@ return {
   "hrsh7th/nvim-cmp",
   event = "InsertEnter",
   dependencies = {
-    "hrsh7th/cmp-buffer", -- source for text in buffer
-    "hrsh7th/cmp-path", -- source for file system paths
+    "hrsh7th/cmp-buffer",
+    "hrsh7th/cmp-path",
     {
       "L3MON4D3/LuaSnip",
-      -- follow latest release.
-      version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-      -- install jsregexp (optional!).
+      version = "v2.*",
       build = "make install_jsregexp",
     },
-    "saadparwaiz1/cmp_luasnip", -- for autocompletion
-    "rafamadriz/friendly-snippets", -- useful snippets
-    "onsails/lspkind.nvim", -- vs-code like pictograms
+    "saadparwaiz1/cmp_luasnip",
+    "rafamadriz/friendly-snippets",
+    "onsails/lspkind.nvim",
+
+    -- Copilot as a cmp source
+    { "zbirenbaum/copilot-cmp", dependencies = { "zbirenbaum/copilot.lua" } },
   },
   config = function()
     local cmp = require("cmp")
-
     local luasnip = require("luasnip")
-
-    -- loads vscode style snippets from installed plugins (e.g. friendly-snippets)
     require("luasnip.loaders.from_vscode").lazy_load()
 
+    local has_words_before = function()
+      if vim.api.nvim_get_option_value("buftype", { buf = 0 }) == "prompt" then
+        return false
+      end
+      local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+      if col == 0 then
+        return false
+      end
+      local txt = vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]
+      return txt and not txt:match("^%s*$")
+    end
+
     cmp.setup({
-      completion = {
-        completeopt = "menu,menuone,preview,noselect",
-      },
-      snippet = { -- configure how nvim-cmp interacts with snippet engine
+      completion = { completeopt = "menu,menuone,preview,noselect" },
+      snippet = {
         expand = function(args)
           luasnip.lsp_expand(args.body)
         end,
       },
+
+      sorting = {
+        priority_weight = 2,
+        comparators = {
+          require("copilot_cmp.comparators").prioritize,
+          cmp.config.compare.offset,
+          cmp.config.compare.exact,
+          cmp.config.compare.score,
+          cmp.config.compare.recently_used,
+          cmp.config.compare.locality,
+          cmp.config.compare.kind,
+          cmp.config.compare.sort_text,
+          cmp.config.compare.length,
+          cmp.config.compare.order,
+        },
+      },
+
       mapping = cmp.mapping.preset.insert({
-        ["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
-        ["<C-j>"] = cmp.mapping.select_next_item(), -- next suggestion
+        ["<C-k>"] = cmp.mapping.select_prev_item(),
+        ["<C-j>"] = cmp.mapping.select_next_item(),
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
-        ["<C-Space>"] = cmp.mapping.complete(), -- show completion suggestions
-        ["<C-e>"] = cmp.mapping.abort(), -- close completion window
+        ["<C-Space>"] = cmp.mapping.complete(),
+        ["<C-e>"] = cmp.mapping.abort(),
+
         ["<CR>"] = cmp.mapping(function(fallback)
           if cmp.visible() then
             if luasnip.expandable() then
               luasnip.expand()
             else
-              cmp.confirm({
-                select = true,
-              })
+              cmp.confirm({ select = true })
             end
           else
             fallback()
@@ -54,8 +78,8 @@ return {
         end),
 
         ["<Tab>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.select_next_item()
+          if cmp.visible() and has_words_before() then
+            cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
           elseif luasnip.locally_jumpable(1) then
             luasnip.jump(1)
           else
@@ -64,8 +88,8 @@ return {
         end, { "i", "s" }),
 
         ["<S-Tab>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.select_prev_item()
+          if cmp.visible() and has_words_before() then
+            cmp.select_prev_item({ behavior = cmp.SelectBehavior.Select })
           elseif luasnip.locally_jumpable(-1) then
             luasnip.jump(-1)
           else
@@ -73,14 +97,17 @@ return {
           end
         end, { "i", "s" }),
       }),
-      -- sources for autocompletion
+
       sources = cmp.config.sources({
-        { name = "supermaven" },
-        { name = "nvim_lsp" },
-        { name = "luasnip" }, -- snippets
-        { name = "buffer" }, -- text within current buffer
-        { name = "path" }, -- file system paths
+        { name = "copilot", group_index = 2 },
+        { name = "supermaven", group_index = 2 },
+        { name = "nvim_lsp", group_index = 2 },
+        { name = "luasnip", group_index = 2 },
+        { name = "buffer", group_index = 2 },
+        { name = "path", group_index = 2 },
       }),
     })
+
+    require("copilot_cmp").setup()
   end,
 }
