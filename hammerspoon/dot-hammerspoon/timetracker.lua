@@ -167,6 +167,7 @@ local function showPrompt()
         informativeText = promptText,
         hasReplyButton = true,
         withdrawAfter = 0,  -- Don't auto-withdraw
+        soundName = "Glass",
     })
     notification:send()
     print("Time Tracker: notification sent - " .. promptText)
