@@ -5,30 +5,14 @@ local timetracker = {}
 
 -- Configuration
 local INTERVAL_MINUTES = 15
-local IDLE_THRESHOLD_SECONDS = 900 -- 15 minutes
 
 -- State
 local promptTimer = nil
 local promptOpen = false
 local lastPromptTime = nil
-local returnedActiveAt = nil  -- timestamp when user returned from being away
-local partialStartTime = nil  -- start time for partial period (used in callback)
-local wasIdleOnLastPrompt = false  -- track if we skipped due to idle
 
 -- Forward declaration
 local scheduleNextPrompt
-
--- Caffeinate watcher for wake/unlock events
-local caffeinateWatcher = hs.caffeinate.watcher.new(function(event)
-    if event == hs.caffeinate.watcher.screensDidUnlock or
-       event == hs.caffeinate.watcher.systemDidWake then
-        returnedActiveAt = os.time()
-        promptOpen = false  -- Clear stale prompt state
-        print("Time Tracker: User returned at " .. os.date("%H:%M:%S", returnedActiveAt))
-        scheduleNextPrompt()  -- Ensure timer is valid after wake
-    end
-end)
-caffeinateWatcher:start()
 
 -- Calculate the next aligned time (next :00, :15, :30, or :45)
 local function getNextAlignedTime()
@@ -95,82 +79,32 @@ end
 
 -- Handle notification callback
 local function notificationCallback(notification)
-    print("Time Tracker: notification callback triggered")
     promptOpen = false
-
     local response = notification:response()
     if response and response ~= "" then
         local endTime = lastPromptTime
-        local startTime
-        if partialStartTime then
-            -- Use partial period start time
-            startTime = partialStartTime
-        else
-            -- Full 15-minute block
-            startTime = endTime - (INTERVAL_MINUTES * 60)
-        end
+        local startTime = endTime - (INTERVAL_MINUTES * 60)
         createCalendarEntry(response, startTime, endTime)
     end
-    -- If dismissed or empty, do nothing (gap in tracking)
 end
 
 -- Show the prompt notification
 local function showPrompt()
-    print("Time Tracker: showPrompt called, promptOpen=" .. tostring(promptOpen))
     if promptOpen then
-        print("Time Tracker: prompt already open, skipping")
         return -- Don't stack prompts
-    end
-
-    -- Check idle state
-    local idleTime = hs.host.idleTime()
-    if idleTime >= IDLE_THRESHOLD_SECONDS then
-        -- User is idle, skip this prompt (timer callback will reschedule)
-        print("Time Tracker: user idle for " .. math.floor(idleTime) .. "s, skipping prompt")
-        wasIdleOnLastPrompt = true
-        return
     end
 
     promptOpen = true
     lastPromptTime = os.time()
 
-    -- Determine if this is a partial period (returning from away)
-    local promptText = string.format("What did you spend the last %d minutes doing?", INTERVAL_MINUTES)
-    partialStartTime = nil  -- Reset for full period by default
-
-    if wasIdleOnLastPrompt or returnedActiveAt then
-        -- User returned from being away
-        local activeStart = returnedActiveAt
-        if not activeStart then
-            -- Estimate return time based on current idle time
-            activeStart = os.time() - math.floor(idleTime)
-        end
-
-        -- Only use partial if return was within this 15-min interval
-        local intervalStart = lastPromptTime - (INTERVAL_MINUTES * 60)
-        if activeStart > intervalStart then
-            local minutesSinceReturn = math.floor((lastPromptTime - activeStart) / 60)
-            if minutesSinceReturn > 0 and minutesSinceReturn < INTERVAL_MINUTES then
-                promptText = string.format("What did you do for the last %d minute%s?",
-                    minutesSinceReturn, minutesSinceReturn == 1 and "" or "s")
-                partialStartTime = activeStart
-            end
-        end
-
-        -- Clear the flags
-        wasIdleOnLastPrompt = false
-        returnedActiveAt = nil
-    end
-
     local notification = hs.notify.new(notificationCallback, {
         title = "Time Tracker",
-        informativeText = promptText,
+        informativeText = "What did you do in the last 15 minutes?",
         hasReplyButton = true,
-        withdrawAfter = 0,  -- Don't auto-withdraw
+        withdrawAfter = 0,
         soundName = "Glass",
     })
     notification:send()
-    print("Time Tracker: notification sent - " .. promptText)
 end
 
 -- Schedule the next prompt at aligned time
