@@ -59,6 +59,8 @@ set hours of endDate to %d
 set minutes of endDate to %d
 set seconds of endDate to 0
 
+tell application "Calendar" to launch
+delay 0.3
 tell application "Calendar"
     tell calendar "Actual"
         make new event with properties {summary:"%s", start date:startDate, end date:endDate}
