@@ -10,6 +10,7 @@ local INTERVAL_MINUTES = 15
 local promptTimer = nil
 local promptOpen = false
 local lastPromptTime = nil
+local activeNotification = nil
 
 -- Forward declaration
 local scheduleNextPrompt
@@ -82,6 +83,7 @@ end
 -- Handle notification callback
 local function notificationCallback(notification)
     promptOpen = false
+    activeNotification = nil
     local response = notification:response()
     if response and response ~= "" then
         local endTime = lastPromptTime
@@ -99,14 +101,14 @@ local function showPrompt()
     promptOpen = true
     lastPromptTime = os.time()
 
-    local notification = hs.notify.new(notificationCallback, {
+    activeNotification = hs.notify.new(notificationCallback, {
         title = "Time Tracker",
         informativeText = "What did you do in the last 15 minutes?",
         hasReplyButton = true,
         withdrawAfter = 0,
         soundName = "Glass",
     })
-    notification:send()
+    activeNotification:send()
 end
 
 -- Schedule the next prompt at aligned time
