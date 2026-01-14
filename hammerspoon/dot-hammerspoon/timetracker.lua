@@ -8,9 +8,6 @@ local INTERVAL_MINUTES = 15
 
 -- State
 local promptTimer = nil
-local promptOpen = false
-local lastPromptTime = nil
-local activeNotification = nil
 local wakeWatcher = nil
 
 -- Forward declaration
@@ -81,35 +78,27 @@ end tell
     end
 end
 
--- Handle notification callback
-local function notificationCallback(notification)
-    promptOpen = false
-    activeNotification = nil
-    local response = notification:response()
-    if response and response ~= "" then
-        local endTime = lastPromptTime
-        local startTime = endTime - (INTERVAL_MINUTES * 60)
-        createCalendarEntry(response, startTime, endTime)
-    end
-end
-
 -- Show the prompt notification
 local function showPrompt()
-    if promptOpen then
-        return -- Don't stack prompts
-    end
+    print("Time Tracker: showing prompt")
+    local promptTime = os.time()
 
-    promptOpen = true
-    lastPromptTime = os.time()
-
-    activeNotification = hs.notify.new(notificationCallback, {
+    -- Create notification with its own callback capturing this prompt's time
+    local notification = hs.notify.new(function(notif)
+        local response = notif:response()
+        if response and response ~= "" then
+            local endTime = promptTime
+            local startTime = endTime - (INTERVAL_MINUTES * 60)
+            createCalendarEntry(response, startTime, endTime)
+        end
+    end, {
         title = "Time Tracker",
         informativeText = "What did you do in the last 15 minutes?",
         hasReplyButton = true,
         withdrawAfter = 0,
         soundName = "Glass",
     })
-    activeNotification:send()
+    notification:send()
 end
 
 -- Schedule the next prompt at aligned time
@@ -177,8 +166,8 @@ function timetracker.status()
     local secondsToNext = getNextAlignedTime()
     local nextTime = os.date("%H:%M:%S", os.time() + secondsToNext)
     local timerRunning = promptTimer and promptTimer:running() or false
-    print(string.format("Time Tracker status: timer running=%s, next aligned time=%s (%ds), promptOpen=%s",
-        tostring(timerRunning), nextTime, secondsToNext, tostring(promptOpen)))
+    print(string.format("Time Tracker status: timer running=%s, next aligned time=%s (%ds)",
+        tostring(timerRunning), nextTime, secondsToNext))
     return timerRunning
 end
 
