@@ -11,6 +11,7 @@ local promptTimer = nil
 local promptOpen = false
 local lastPromptTime = nil
 local activeNotification = nil
+local wakeWatcher = nil
 
 -- Forward declaration
 local scheduleNextPrompt
@@ -131,8 +132,23 @@ scheduleNextPrompt = function()
     end)
 end
 
+-- Handle system wake to realign timer
+local function handleWakeEvent(event)
+    if event == hs.caffeinate.watcher.systemDidWake then
+        print("Time Tracker: system woke, rescheduling to next aligned time")
+        scheduleNextPrompt()
+    end
+end
+
 -- Start the time tracker
 function timetracker.start()
+    -- Start wake watcher to handle sleep/wake alignment
+    if wakeWatcher then
+        wakeWatcher:stop()
+    end
+    wakeWatcher = hs.caffeinate.watcher.new(handleWakeEvent)
+    wakeWatcher:start()
+
     scheduleNextPrompt()
     print("Time Tracker started - next prompt in " .. getNextAlignedTime() .. " seconds")
 end
@@ -142,6 +158,10 @@ function timetracker.stop()
     if promptTimer then
         promptTimer:stop()
         promptTimer = nil
+    end
+    if wakeWatcher then
+        wakeWatcher:stop()
+        wakeWatcher = nil
     end
     print("Time Tracker stopped")
 end
