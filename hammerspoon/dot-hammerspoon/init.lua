@@ -27,13 +27,13 @@ require("timetracker")
 local module = {}
 local appList = {
 	["n"] = "Notes",
-    ["l"] = "Timelines",
+	["l"] = "Timelines",
 	["f"] = "Google Chrome",
 	["k"] = "Calendar",
-    ["j"] = "Ghostty",
+	["j"] = "Ghostty",
 	["s"] = "Slack",
 	["r"] = "Reminders",
-    ["1"] = "1Password",
+	["1"] = "1Password",
 }
 local urlList = {
 	["a"] = "https://claude.ai/new",
@@ -55,7 +55,11 @@ end
 -- MonkeyType launcher with custom window size
 hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
 	-- Open monkeytype in a new Chrome window
-	local task = hs.task.new("/usr/bin/open", nil, { "-na", "Google Chrome", "--args", "--new-window", "https://monkeytype.com/" })
+	local task = hs.task.new(
+		"/usr/bin/open",
+		nil,
+		{ "-na", "Google Chrome", "--args", "--new-window", "https://monkeytype.com/" }
+	)
 	task:start()
 
 	-- Wait for the new window to appear, then resize and center it
@@ -84,13 +88,16 @@ hs.hotkey.bind({ "cmd", "shift" }, "space", function()
 	local button, text = hs.dialog.textPrompt("New Reminder", "Enter reminder text:", "", "Add", "Cancel")
 	if button == "Add" and text ~= "" then
 		local escapedText = text:gsub('"', '\\"')
-		local script = string.format([[
+		local script = string.format(
+			[[
 tell application "Reminders"
 	tell list "Reminders"
 		make new reminder with properties {name:"%s"}
 	end tell
 end tell
-]], escapedText)
+]],
+			escapedText
+		)
 		hs.execute("osascript -e '" .. script:gsub("'", "'\\''") .. "'")
 	end
 end)
@@ -138,7 +145,6 @@ non_modifier_tap = hs.eventtap
 	end)
 	:start()
 
-
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
-  hs.reload()
+hs.hotkey.bind({ "cmd", "alt", "ctrl" }, "h", function()
+	hs.reload()
 end)
