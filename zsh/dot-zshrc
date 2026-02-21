@@ -214,3 +214,70 @@ export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Git Worktree commands
+#
+# Create a new branch as a worktree in ../<repo>-<branch> and cd into it
+gw() {
+  if [ -z "$1" ]; then
+    echo "Usage: gw <branch-name>"
+    return 1
+  fi
+
+  branch=$1
+  repo=$(basename "$(git rev-parse --show-toplevel)")
+  dir="../${repo}-${branch}"
+
+  git worktree add "$dir" -b "$branch" && cd "$dir"
+}
+
+# Merge current worktree branch into main, clean up, and cd to main repo
+# Can be run from the worktree (no args) or from main with a branch name
+gwm() {
+  local branch dir main_dir
+
+  if [ -n "$1" ]; then
+    branch=$1
+    repo=$(basename "$(git rev-parse --show-toplevel)")
+    dir="../${repo}-${branch}"
+    main_dir="."
+  else
+    branch=$(git branch --show-current)
+    dir=$(git rev-parse --show-toplevel)
+    main_dir=$(git rev-parse --path-format=absolute --git-common-dir | sed 's|/\.git$||')
+
+    if [ "$dir" = "$main_dir" ]; then
+      echo "Error: already on main repo. Usage: gwm [branch-name]"
+      return 1
+    fi
+  fi
+
+  # Commit any uncommitted changes on the worktree branch before switching
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    git add -A && git commit -m "WIP: uncommitted changes from $branch" || return 1
+  fi
+
+  local default_branch
+  default_branch=$(cd "$main_dir" && git branch -l main master 2>/dev/null | head -1 | tr -d '* ')
+
+  # Stash any uncommitted changes on the default branch
+  cd "$main_dir" || return 1
+  local stashed=false
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    git stash && stashed=true
+  fi
+
+  git checkout "$default_branch" &&
+  git pull || true
+
+  if git merge "$branch"; then
+    git worktree remove "$dir" 2>/dev/null
+    git branch -d "$branch"
+    $stashed && git stash pop
+  else
+    echo "Merge conflicts detected. Resolve them, then run:"
+    echo "  git worktree remove $dir && git branch -d $branch"
+    $stashed && git stash pop
+  fi
+}
+
