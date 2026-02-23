@@ -34,6 +34,7 @@ local appList = {
 	["s"] = "Slack",
 	["r"] = "Reminders",
 	["1"] = "1Password",
+	["c"] = "Cursor",
 }
 local urlList = {
 	["a"] = "https://claude.ai/new",
