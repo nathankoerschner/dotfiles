@@ -281,3 +281,6 @@ gwm() {
   fi
 }
 
+
+# opencode
+export PATH=/Users/natkoersch/.opencode/bin:$PATH
