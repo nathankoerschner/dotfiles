@@ -27,11 +27,11 @@ require("timetracker")
 local module = {}
 local appList = {
 	["n"] = "Notes",
-	["l"] = "Timelines",
+	["l"] = "Calendar",
 	["f"] = "Google Chrome",
-	["k"] = "Calendar",
 	["j"] = "Ghostty",
 	["s"] = "Slack",
+	["p"] = "Spotify",
 	["r"] = "Reminders",
 	["1"] = "1Password",
 	["c"] = "Cursor",

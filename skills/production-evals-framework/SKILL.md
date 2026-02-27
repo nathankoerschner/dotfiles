@@ -18,7 +18,7 @@ Minimum output set:
 - Stage 1 golden set with pass/fail checks.
 - Stage 2 labeled scenario suite with coverage slices.
 - Stage 3 replay analysis with recorded fixtures and rich metrics.
-- Stage 4 rubric configuration and scorer.
+- Stage 4 rubric configuration with an LLM-as-judge scorer, JSON schema, and calibration notes.
 - Stage 5 experiment variant configs and comparison report.
 - An operating cadence (when each stage runs).
 
@@ -106,6 +106,7 @@ Add replayable session capture:
 - Recorder captures query, response, tool calls, source refs, timestamps.
 - Fixture files are versioned.
 - Optional manual annotations add ground truth (`relevant_sources`, `expected_tools`, `expected_facts`).
+- Queries that trigger tool calls and queries that do not trigger tool calls are both acceptable replay/profile inputs.
 
 Evaluate replay fixtures with metrics:
 - Retrieval: precision, recall, F1, MRR.
@@ -115,6 +116,7 @@ Evaluate replay fixtures with metrics:
 Default behavior:
 - Do not build deterministic no-live-call replay for Stage 3.
 - Use Stage 3 for trace replay and metric analysis over recorded sessions.
+- Include a small script for generating replay profiles/fixtures from live runs.
 - Only add cached/mock no-live replay mode if the user explicitly requests strict determinism.
 
 Anti-pattern to avoid:
@@ -139,8 +141,21 @@ Define:
 - quality thresholds (excellent/good/acceptable/etc.),
 - optional category-specific weight overrides.
 
-Use an LLM-as-judge scorer with structured JSON output.
-Calibrate rubric judgments against a small human-scored sample.
+Stage 4 must include an LLM-as-judge scorer that evaluates model responses against the rubric dimensions.
+Require structured JSON outputs from the judge with per-dimension score and short justification.
+Pin evaluation settings for judge stability (model, temperature, max tokens, prompt/version).
+Calibrate rubric judgments against a small human-scored sample and document observed agreement.
+
+Minimum Stage 4 artifacts:
+- Rubric config file (dimensions, criteria, weights, thresholds).
+- Judge prompt/template and response JSON schema.
+- Scoring runner that executes the LLM judge over replay/golden/scenario cases.
+- Calibration report (or notes) comparing judge scores vs human labels on a sample.
+
+Anti-patterns to avoid:
+- Do not treat heuristic-only or deterministic metric mapping as a full Stage 4 replacement when the user asked for rubric scoring.
+- Do not return only aggregate score; always preserve per-dimension scores and justifications.
+- Do not use unconstrained free-form judge text without JSON schema validation.
 
 Exit criteria:
 - Per-dimension averages expose quality shape (not just pass/fail).

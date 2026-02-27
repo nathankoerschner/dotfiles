@@ -54,6 +54,7 @@ scenarios:
 
 Use this as a recorded session artifact for analysis and cross-version comparison.
 It does not imply deterministic mock/no-live replay unless explicitly requested.
+Queries with and without tool calls are both acceptable replay/profile inputs.
 
 ```json
 {
@@ -74,6 +75,9 @@ It does not imply deterministic mock/no-live replay unless explicitly requested.
   }
 }
 ```
+
+Recommended companion artifact:
+- A script that runs one query and writes a versioned profile/fixture JSON.
 
 ## 4) Rubrics (`rubrics.yaml`)
 
