@@ -46,6 +46,32 @@ return {
       },
     })
 
+    -- enable servers (mason-lspconfig installs them, but they need to be enabled)
+    vim.lsp.enable("ts_ls")
+    vim.lsp.enable("lua_ls")
+    vim.lsp.enable("html")
+    vim.lsp.enable("cssls")
+    vim.lsp.enable("tailwindcss")
+    vim.lsp.enable("svelte")
+    vim.lsp.enable("graphql")
+    vim.lsp.enable("emmet_ls")
+    vim.lsp.enable("prismals")
+    vim.lsp.enable("pyright")
+
+    -- show diagnostics inline as virtual text
+    vim.diagnostic.config({
+      virtual_text = true,
+      signs = true,
+      underlines = true,
+      update_in_insert = false,
+      severity_sort = true,
+      float = {
+        source = true,
+      },
+    })
+
+    vim.lsp.config("ts_ls", {})
+
     vim.api.nvim_create_autocmd("LspAttach", {
       group = vim.api.nvim_create_augroup("UserLspConfig", {}),
       callback = function(ev)
