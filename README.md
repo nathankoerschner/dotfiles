@@ -4,7 +4,7 @@ Various scripts avilable in the Bin folder.
 
 Uses `stow` (and it's glorious `--dotfiles` option) to manage all dotfiles.
 
-## Agent skills (Claude + Codex)
+## Agent skills (Claude + Codex + Agents)
 
 Shared skill source files live in `agent-skills/_shared-skills/<skill>/SKILL.md`.
 
@@ -12,7 +12,8 @@ Claude command files in `claude/dot-claude/commands/*.md` are symlink shims to t
 
 Live paths resolve to this shared location:
 - `~/.claude/commands/<skill>.md` -> `~/dotfiles/claude/dot-claude/commands/<skill>.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
-- `~/.codex/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
+- `~/.codex/skills/<skill>/SKILL.md` -> `~/dotfiles/codex/dot-codex/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
+- `~/.agents/skills/<skill>/SKILL.md` -> `~/dotfiles/codex/dot-agents/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
 
 # Steps to follow to setup a new machine:
 
