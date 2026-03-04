@@ -1,0 +1,1 @@
+../_shared-skills/optimize/SKILL.md

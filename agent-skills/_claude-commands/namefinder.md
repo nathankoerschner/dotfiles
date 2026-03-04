@@ -1,0 +1,1 @@
+../_shared-skills/namefinder/SKILL.md

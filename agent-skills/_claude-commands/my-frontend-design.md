@@ -1,0 +1,1 @@
+../_shared-skills/my-frontend-design/SKILL.md

@@ -31,7 +31,8 @@ Global skills live in:
 Agent entry points:
 - `~/.codex/skills` -> stowed from `~/dotfiles/codex/dot-codex/skills` (symlink to shared skills)
 - `~/.agents/skills` -> stowed from `~/dotfiles/codex/dot-agents/skills` (symlink to shared skills)
-- `~/.claude/commands/<skill-name>.md` -> stowed from `~/dotfiles/claude/dot-claude/commands/<skill-name>.md` (per-skill shim symlink to shared `SKILL.md`)
+- `~/.claude/commands` -> stowed from `~/dotfiles/claude/dot-claude/commands` (single symlink to `~/dotfiles/agent-skills/_claude-commands`)
+- `~/.claude/commands/<skill-name>.md` -> `~/dotfiles/agent-skills/_claude-commands/<skill-name>.md` -> shared `SKILL.md`
 
 ### Steps
 
@@ -39,8 +40,8 @@ Agent entry points:
    - `~/dotfiles/agent-skills/_shared-skills/<skill-name>/SKILL.md`
 2. Add frontmatter with at least:
    - `name`, `description` (and optional `argument-hint`, `allowed-tools`)
-3. If Claude should have it, add shim symlink in dotfiles:
-   - `~/dotfiles/claude/dot-claude/commands/<skill-name>.md` -> `../../../agent-skills/_shared-skills/<skill-name>/SKILL.md`
+3. If Claude should have it, add shim symlink in:
+   - `~/dotfiles/agent-skills/_claude-commands/<skill-name>.md` -> `../_shared-skills/<skill-name>/SKILL.md`
 4. Re-stow packages from `~/dotfiles`:
    - `stow claude codex`
 5. Verify resolution:
