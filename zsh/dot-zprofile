@@ -5,3 +5,8 @@ export PATH=/Applications/SnowSQL.app/Contents/MacOS:$PATH
 
 # Created by `pipx` on 2025-05-25 20:56:23
 export PATH="$PATH:/Users/natkoersch/dotfiles/bin/dot-local/bin"
+
+# Load machine-local secrets and overrides (not committed in dotfiles repo)
+if [ -f "$HOME/.zprofile.local" ]; then
+  source "$HOME/.zprofile.local"
+fi
