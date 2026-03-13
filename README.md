@@ -15,6 +15,19 @@ Live paths resolve to this shared location:
 - `~/.codex/skills/<skill>/SKILL.md` -> `~/dotfiles/codex/dot-codex/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
 - `~/.agents/skills/<skill>/SKILL.md` -> `~/dotfiles/codex/dot-agents/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
 
+## Pi config
+
+Pi extensions and non-secret settings are tracked in `pi/dot-pi`.
+
+Live paths resolve like this:
+- `~/.pi/agent/extensions/*.ts` -> `~/dotfiles/pi/dot-pi/agent/extensions/*.ts`
+- `~/.pi/agent/settings.json` -> `~/dotfiles/pi/dot-pi/agent/settings.json`
+
+Intentionally not tracked in dotfiles:
+- `~/.pi/agent/auth.json`
+- `~/.pi/agent/sessions/`
+- repo-local `.pi/todos/`
+
 # Steps to follow to setup a new machine:
 
 Basic Setup
@@ -33,6 +46,7 @@ Basic Setup
     - stow dotfile, set preferences location 
 Dev Env Setup
 - stow zshrc
+- stow pi
 - brew install hammerspoon
     - enable accessibility & start on login
     - change caps lock to control in system prefs
