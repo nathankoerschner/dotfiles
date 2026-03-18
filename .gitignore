@@ -4,3 +4,6 @@
 emacs/dot-emacs.d/auto-save-list/
 emacs/dot-emacs.d/elpa/
 *~
+
+# Nia API key should live outside this repo, but ignore any accidental local copy
+.config/nia/api_key
