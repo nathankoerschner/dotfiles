@@ -49,8 +49,8 @@ end)
 vim.keymap.set("v", "<leader>z", 'c{{c1::<C-r>"}}<ESC>F{ll')
 
 -- Remaps for fzf
--- Use git-tracked files so large untracked dirs like node_modules are excluded
-vim.keymap.set("n", "<leader>pf", ":GFiles<CR>")
+-- <leader>pf searches all files; <leader>pg stays limited to git files
+vim.keymap.set("n", "<leader>pf", ":Files<CR>")
 vim.keymap.set("n", "<leader>pg", ":GFiles<CR>")
 vim.keymap.set("n", "<leader>ps", ":RG<CR>")
 vim.keymap.set("n", "<leader>b", ":Buffers <CR>")

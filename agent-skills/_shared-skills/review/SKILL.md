@@ -1,11 +1,11 @@
 ---
 name: review
-description: Run a code review sub-agent
+description: Run the reviewer sub-agent for code review
 argument-hint: "[target or extra review instructions] [optional: --provider <provider> --model <model>]"
 allowed-tools: bash
 ---
 
-Spawn a Pi sub-agent via bash and have it perform the review.
+Spawn the Pi `reviewer` sub-agent via bash and have it perform the review.
 
 Run:
 
