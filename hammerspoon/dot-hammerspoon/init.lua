@@ -53,13 +53,13 @@ for k, v in pairs(appList) do
 	end)
 end
 
--- Keybr launcher with custom window size
+-- Monkeytype launcher with custom window size
 hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
-	-- Open Keybr in a new Chrome window
+	-- Open Monkeytype in a new Chrome window
 	local task = hs.task.new(
 		"/usr/bin/open",
 		nil,
-		{ "-na", "Google Chrome", "--args", "--new-window", "https://www.keybr.com/" }
+		{ "-na", "Google Chrome", "--args", "--new-window", "https://monkeytype.com/" }
 	)
 	task:start()
 
