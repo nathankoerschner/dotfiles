@@ -27,14 +27,14 @@ require("timetracker")
 local module = {}
 local appList = {
 	["n"] = "Notes",
-	["l"] = "Calendar",
+	["c"] = "Calendar",
 	["f"] = "Google Chrome",
 	["j"] = "Ghostty",
 	["s"] = "Slack",
 	["p"] = "Spotify",
 	["r"] = "Reminders",
 	["1"] = "1Password",
-	["c"] = "Cursor",
+	["i"] = "Finder",
 }
 local urlList = {
 	["a"] = "https://claude.ai/new",
@@ -75,6 +75,31 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
 				-- Calculate 50% width, 60% height, centered
 				local newWidth = screenFrame.w * 0.5
 				local newHeight = screenFrame.h * 0.6
+				local newX = screenFrame.x + (screenFrame.w - newWidth) / 2
+				local newY = screenFrame.y + (screenFrame.h - newHeight) / 2
+
+				win:setFrame(hs.geometry.rect(newX, newY, newWidth, newHeight))
+			end
+		end
+	end)
+end)
+
+-- Books launcher with large custom window size
+hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
+	hs.application.launchOrFocus("Books")
+
+	-- Wait for the app window to appear, then resize and center it
+	hs.timer.doAfter(0.5, function()
+		local books = hs.application.find("Books")
+		if books then
+			local win = books:focusedWindow() or books:mainWindow()
+			if win then
+				local screen = win:screen()
+				local screenFrame = screen:frame()
+
+				-- Calculate 75% width, 85% height, centered
+				local newWidth = screenFrame.w * 0.75
+				local newHeight = screenFrame.h * 0.85
 				local newX = screenFrame.x + (screenFrame.w - newWidth) / 2
 				local newY = screenFrame.y + (screenFrame.h - newHeight) / 2
 
