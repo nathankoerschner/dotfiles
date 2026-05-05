@@ -22,7 +22,6 @@ winmanHotkeys = {
 	moveRight = "Right",
 }
 require("winman")
-require("timetracker")
 
 local module = {}
 local appList = {

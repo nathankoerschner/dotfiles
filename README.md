@@ -31,10 +31,10 @@ Intentionally not tracked in dotfiles:
 # Steps to follow to setup a new machine:
 
 Basic Setup
-- fork dotfiles 
+- clone dotfiles 
     - run macos script, restart
 - Install Brew
-    - install stow
+- Install stow
 - download Chrome
     - signin
     - configure sync 
@@ -60,6 +60,7 @@ Dev Env Setup
     - brew install lua
     - brew install node
     - start nvim and watch everything install through lazy
+- brew install --cask cleanshot
 
 # Misc
 - brew install gh
