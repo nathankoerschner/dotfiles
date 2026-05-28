@@ -4,16 +4,11 @@ Various scripts avilable in the Bin folder.
 
 Uses `stow` (and it's glorious `--dotfiles` option) to manage all dotfiles.
 
-## Agent skills (Claude + Codex + Agents)
+## Agent skills
 
-Shared skill source files live in `agent-skills/_shared-skills/<skill>/SKILL.md`.
+User skills live in `agents/dot-agents/skills/<skill>/SKILL.md`. Stowing the `agents` package symlinks them into `~/.agents/skills/<skill>/SKILL.md`, which is what pi (and other tools) load via `settings.json` (`"skills": ["~/.agents/skills"]`).
 
-Claude command shims live in `agent-skills/_claude-commands/<skill>.md` and are exposed through a single symlinked commands directory in `claude/dot-claude/commands`.
-
-Live paths resolve to this shared location:
-- `~/.claude/commands/<skill>.md` -> `~/dotfiles/agent-skills/_claude-commands/<skill>.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
-- `~/.codex/skills/<skill>/SKILL.md` -> `~/dotfiles/codex/dot-codex/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
-- `~/.agents/skills/<skill>/SKILL.md` -> `~/dotfiles/codex/dot-agents/skills/<skill>/SKILL.md` -> `~/dotfiles/agent-skills/_shared-skills/<skill>/SKILL.md`
+Codex system skills live alongside under `agents/dot-agents/.system/` and stow to `~/.agents/.system/`.
 
 ## Pi config
 
@@ -54,12 +49,15 @@ Dev Env Setup
 - brew install tmux
 - install ohmyzsh (get command from site)
 - brew install fzf
+- brew install ripgrep
 - stow bin 
     - confirm tmux sessionizer works
 - brew install neovim
     - brew install lua
+    - brew install luarocks (required for Mason to install luacheck)
     - brew install node
     - start nvim and watch everything install through lazy
+    - on machines where you want SQL formatting, run `:MasonInstall sqlfmt` (not in `ensure_installed` since it's not required on all systems)
 - brew install --cask cleanshot
 
 # Misc
