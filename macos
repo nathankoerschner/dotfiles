@@ -31,6 +31,11 @@ defaults write -g InitialKeyRepeat -int 15
 # Remap caps-lock to escape
 hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}'
 
+# Disable the system-wide "Look Up in Dictionary" service that hijacks ctrl+cmd+d
+# (Hammerspoon uses ctrl+cmd+d to open Discord)
+defaults write pbs NSServicesStatus -dict-add '"(null) - Look Up in Dictionary - openDictionaryServiceEntry"' '{ "enabled_context_menu" = 0; "enabled_services_menu" = 0; "presentation_modes" = { ContextMenu = 0; ServicesMenu = 0; }; }'
+/System/Library/CoreServices/pbs -flush 2>/dev/null || true
+
 # add the click anywhere to move window feature (https://mmazzarolo.com/blog/2022-04-16-drag-window-by-clicking-anywhere-on-macos/)
 defaults write -g NSWindowShouldDragOnGesture -bool true
 
