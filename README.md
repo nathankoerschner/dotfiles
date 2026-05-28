@@ -43,6 +43,7 @@ Dev Env Setup
 - stow zshrc
 - stow pi
 - brew install hammerspoon
+    - brew install m1ddc (used by Hammerspoon to set external monitor brightness)
     - enable accessibility & start on login
     - change caps lock to control in system prefs
 - brew Install Ghosty

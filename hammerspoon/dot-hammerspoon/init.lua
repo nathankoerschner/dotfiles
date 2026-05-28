@@ -36,6 +36,60 @@ winmanScreenProfiles = {
 }
 require("winman")
 
+-- ─── Ultrawide brightness override ──────────────────────────────────────────
+-- The MPG 491C OLED ignores DDC brightness while HDR is enabled. With HDR off,
+-- push SDR luminance to max whenever the monitor is connected.
+local M1DDC = "/opt/homebrew/bin/m1ddc"
+local ULTRAWIDE_NAME = "MPG 491C OLED"
+
+local function ultrawideDisplayId()
+	local out = hs.execute(M1DDC .. " display list")
+	if not out then
+		return nil
+	end
+	for line in out:gmatch("[^\n]+") do
+		local id, name = line:match("^%[(%d+)%]%s+(.-)%s+%(")
+		if id and name == ULTRAWIDE_NAME then
+			return id
+		end
+	end
+	return nil
+end
+
+local function setUltrawideBrightness()
+	local id = ultrawideDisplayId()
+	if id then
+		hs.execute(string.format("%s display %s set luminance 100", M1DDC, id))
+	end
+end
+
+-- Run once on load (covers Hammerspoon reload while monitor is already plugged in)
+hs.timer.doAfter(1, setUltrawideBrightness)
+
+-- Re-apply whenever displays change (plug/unplug, wake from sleep)
+local lastUltrawidePresent = false
+ultrawideWatcher = hs.screen.watcher.new(function()
+	local present = false
+	for _, s in ipairs(hs.screen.allScreens()) do
+		if s:name() == ULTRAWIDE_NAME then
+			present = true
+			break
+		end
+	end
+	if present and not lastUltrawidePresent then
+		hs.timer.doAfter(2, setUltrawideBrightness)
+	end
+	lastUltrawidePresent = present
+end)
+ultrawideWatcher:start()
+for _, s in ipairs(hs.screen.allScreens()) do
+	if s:name() == ULTRAWIDE_NAME then
+		lastUltrawidePresent = true
+		break
+	end
+end
+-- ────────────────────────────────────────────────────────────────────────────
+
 local module = {}
 local appList = {
 	["n"] = "Notes",
