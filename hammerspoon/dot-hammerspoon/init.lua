@@ -21,19 +21,36 @@ winmanHotkeys = {
 	moveLeft = "Left",
 	moveRight = "Right",
 }
+
+winmanScreenProfiles = {
+	ultrawide = {
+		screenNamePattern = "^MPG 491C OLED$",
+		minWidth = 3400,
+		minAspectRatio = 2.8,
+		layouts = {
+			centered = { x = 0.2, y = 0, w = 0.6, h = 1 },
+			leftFocus = { x = 0, y = 0, w = 0.2, h = 1 },
+			rightFocus = { x = 0.8, y = 0, w = 0.2, h = 1 },
+		},
+	},
+}
 require("winman")
 
 local module = {}
 local appList = {
 	["n"] = "Notes",
-	["c"] = "Calendar",
+	["l"] = "Calendar",
+	["c"] = "Google Chat",
 	["f"] = "Google Chrome",
 	["j"] = "Ghostty",
 	["s"] = "Slack",
+	["w"] = "WorkFlowy",
+	["d"] = "Discord",
 	["p"] = "Spotify",
 	["r"] = "Reminders",
 	["1"] = "1Password",
 	["i"] = "Finder",
+	["o"] = "Obsidian",
 }
 local urlList = {
 	["a"] = "https://claude.ai/new",

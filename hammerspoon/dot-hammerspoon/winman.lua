@@ -43,8 +43,95 @@ local hotkeys = winmanHotkeys or {
     -- moveRight = "Right", -- Move window right one cell
 }
 
+
+local screenProfiles = winmanScreenProfiles or {}
+local ultrawideProfile = screenProfiles["ultrawide"]
+local ultrawideScreenWatcher = nil
+
+
 local cascadeSpacing = 40 -- the minimum visible margin for each window
                           -- set to 0 to disable cascading
+
+
+local function mergeModifiers(modifiers, extraModifiers)
+    local merged = {}
+    for _, modifier in ipairs(modifiers) do
+        merged[#merged + 1] = modifier
+    end
+    for _, modifier in ipairs(extraModifiers) do
+        merged[#merged + 1] = modifier
+    end
+    return merged
+end
+
+local superShift = mergeModifiers(super, {"shift"})
+
+local function isUltrawideScreen(screen)
+    if not ultrawideProfile or not screen then
+        return false
+    end
+
+    local screenNamePattern = ultrawideProfile.screenNamePattern
+    local screenName = screen:name() or ""
+    if screenNamePattern and screenName:match(screenNamePattern) then
+        return true
+    end
+
+    local frame = screen:fullFrame()
+    if not frame or frame.h == 0 then
+        return false
+    end
+
+    local minWidth = ultrawideProfile.minWidth or math.huge
+    local minAspectRatio = ultrawideProfile.minAspectRatio or math.huge
+    return frame.w >= minWidth and (frame.w / frame.h) >= minAspectRatio
+end
+
+local function hasUltrawideScreen()
+    for _, screen in ipairs(hs.screen.allScreens()) do
+        if isUltrawideScreen(screen) then
+            return true
+        end
+    end
+    return false
+end
+
+local function focusedWindowOnUltrawide()
+    local win = hs.window.focusedWindow()
+    return win and isUltrawideScreen(win:screen()) or false
+end
+
+local function applyUnitRect(window, unitRect)
+    if not unitRect then
+        return
+    end
+
+    local win = window or hs.window.focusedWindow()
+    if not win then
+        return
+    end
+
+    local screen = win:screen()
+    if not screen then
+        return
+    end
+
+    win:setFrame(screen:fromUnitRect(unitRect))
+end
+
+local function applyUltrawideLayout(layoutName)
+    if not ultrawideProfile then
+        return
+    end
+
+    local win = hs.window.focusedWindow()
+    if not win or not isUltrawideScreen(win:screen()) then
+        return
+    end
+
+    local layouts = ultrawideProfile.layouts or {}
+    applyUnitRect(win, layouts[layoutName])
+end
 
 
 -------------------------------------------------------------------
@@ -376,7 +463,48 @@ end-- }}}3
 
 -- Resize windows {{{2
 
-hs.hotkey.bind(super, hotkeys["maximizeWindow"], grid.maximizeWindow)
+local function maximizeFocusedWindow()
+    if focusedWindowOnUltrawide() then
+        applyUltrawideLayout("centered")
+        return
+    end
+
+    grid.maximizeWindow()
+end
+
+local maximizeWindowHotkey = hs.hotkey.new(super, hotkeys["maximizeWindow"], maximizeFocusedWindow)
+maximizeWindowHotkey:enable()
+
+if ultrawideProfile then
+    local ultrawideHotkeys = {
+        hs.hotkey.new(superShift, hotkeys["resizeLeft"], function()
+            applyUltrawideLayout("leftFocus")
+        end),
+        hs.hotkey.new(superShift, hotkeys["resizeRight"], function()
+            applyUltrawideLayout("rightFocus")
+        end),
+        hs.hotkey.new(superShift, hotkeys["maximizeWindow"], function()
+            if focusedWindowOnUltrawide() then
+                grid.maximizeWindow()
+            end
+        end),
+    }
+
+    local function refreshUltrawideHotkeys()
+        local shouldEnable = hasUltrawideScreen()
+        for _, hotkey in ipairs(ultrawideHotkeys) do
+            if shouldEnable then
+                hotkey:enable()
+            else
+                hotkey:disable()
+            end
+        end
+    end
+
+    ultrawideScreenWatcher = hs.screen.watcher.new(refreshUltrawideHotkeys)
+    ultrawideScreenWatcher:start()
+    refreshUltrawideHotkeys()
+end
 
 hs.hotkey.bind(super, hotkeys["resizeDown"], function()-- {{{3
     local win = hs.window.focusedWindow()
