@@ -215,6 +215,15 @@ export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
+# mise manages project-pinned tool versions (including Bun).
+# Keep this after Bun's PATH entry so mise's shims take precedence for `bun`,
+# while commands installed in ~/.bun/bin (like `omp`) remain available.
+eval "$(mise activate zsh)"
+
+# OMP requires Bun >= 1.3.14, while some projects are pinned lower.
+# ~/.bun/bin/omp is a wrapper that runs OMP with Bun 1.3.14;
+# normal `bun` remains controlled by mise/project config.
+
 # Git Worktree commands
 #
 # Create a new branch as a worktree in ../<repo>-<branch> and cd into it
