@@ -180,23 +180,272 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
 end)
 
 -- Quick reminder creation
-hs.hotkey.bind({ "cmd", "shift" }, "space", function()
-	local button, text = hs.dialog.textPrompt("New Reminder", "Enter reminder text:", "", "Add", "Cancel")
-	if button == "Add" and text ~= "" then
-		local escapedText = text:gsub('"', '\\"')
-		local script = string.format(
-			[[
+local quickReminderWebview = nil
+
+local function appleScriptString(value)
+	value = tostring(value or "")
+	value = value:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\r\n", "\n"):gsub("\r", "\n")
+	return '"' .. value:gsub("\n", '" & return & "') .. '"'
+end
+
+local function htmlEscape(value)
+	value = tostring(value or "")
+	return value:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
+end
+
+local function getReminderLists()
+	local ok, lists = hs.osascript.applescript([[tell application "Reminders" to get name of every list]])
+	if ok then
+		if type(lists) == "table" and #lists > 0 then
+			return lists
+		elseif type(lists) == "string" and lists ~= "" then
+			return { lists }
+		end
+	end
+	return { "Reminders" }
+end
+
+local function normalizeTags(tags)
+	local normalized = {}
+	for rawTag in tostring(tags or ""):gmatch("[^,%s]+") do
+		local tag = rawTag:gsub("^#+", "")
+		if tag ~= "" then
+			table.insert(normalized, "#" .. tag)
+		end
+	end
+	return table.concat(normalized, " ")
+end
+
+local function createReminder(title, notes, listName, tags)
+	local tagText = normalizeTags(tags)
+	if tagText ~= "" then
+		notes = tostring(notes or "")
+		if notes ~= "" then
+			notes = notes .. "\n\nTags: " .. tagText
+		else
+			notes = "Tags: " .. tagText
+		end
+	end
+
+	local properties = "name:" .. appleScriptString(title)
+	if notes and notes ~= "" then
+		properties = properties .. ", body:" .. appleScriptString(notes)
+	end
+
+	local script = string.format(
+		[[
 tell application "Reminders"
-	tell list "Reminders"
-		make new reminder with properties {name:"%s"}
+	tell list %s
+		make new reminder with properties {%s}
 	end tell
 end tell
 ]],
-			escapedText
-		)
-		hs.execute("osascript -e '" .. script:gsub("'", "'\\''") .. "'")
+		appleScriptString(listName or "Reminders"),
+		properties
+	)
+
+	local ok, _, descriptor = hs.osascript.applescript(script)
+	if not ok then
+		hs.alert.show("Could not add reminder")
+		print("Reminder AppleScript error: " .. hs.inspect(descriptor))
 	end
-end)
+end
+
+local function showQuickReminderDialog()
+	if quickReminderWebview then
+		quickReminderWebview:delete()
+		quickReminderWebview = nil
+	end
+
+	local screenFrame = hs.screen.mainScreen():frame()
+	local width, height = 520, 480
+	local rect = hs.geometry.rect(
+		screenFrame.x + (screenFrame.w - width) / 2,
+		screenFrame.y + (screenFrame.h - height) / 2,
+		width,
+		height
+	)
+
+	local controller = hs.webview.usercontent.new("reminder")
+	controller:setCallback(function(message)
+		if not message or not message.body then
+			return
+		end
+
+		local body = message.body
+		if body.action == "cancel" then
+			if quickReminderWebview then
+				quickReminderWebview:delete()
+				quickReminderWebview = nil
+			end
+			return
+		end
+
+		if body.action == "add" then
+			local title = body.title or ""
+			local notes = body.notes or ""
+			local listName = body.listName or "Reminders"
+			local tags = body.tags or ""
+			if title:gsub("%s+", "") == "" then
+				hs.alert.show("Reminder title is required")
+				return
+			end
+
+			createReminder(title, notes, listName, tags)
+			if quickReminderWebview then
+				quickReminderWebview:delete()
+				quickReminderWebview = nil
+			end
+		end
+	end)
+
+	local listOptions = ""
+	for _, listName in ipairs(getReminderLists()) do
+		local selected = listName == "Reminders" and " selected" or ""
+		listOptions = listOptions .. string.format(
+			'<option value="%s"%s>%s</option>',
+			htmlEscape(listName),
+			selected,
+			htmlEscape(listName)
+		)
+	end
+
+	local html = [[
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+	:root { color-scheme: light dark; }
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		font: 14px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+		background: #f5f5f7;
+		color: #1d1d1f;
+	}
+	.main { padding: 24px; }
+	h1 { margin: 0 0 6px; font-size: 22px; font-weight: 650; }
+	.subtitle { margin: 0 0 20px; color: #6e6e73; }
+	label { display: block; margin: 16px 0 7px; font-weight: 600; }
+	input, textarea, select {
+		width: 100%;
+		border: 1px solid #d2d2d7;
+		border-radius: 10px;
+		padding: 10px 12px;
+		font: inherit;
+		background: white;
+		color: inherit;
+		outline: none;
+	}
+	input:focus, textarea:focus, select:focus {
+		border-color: #007aff;
+		box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+	}
+	.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+	select { height: 41px; }
+	textarea { min-height: 135px; resize: vertical; line-height: 1.35; }
+	.footer {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 18px;
+	}
+	button {
+		border: 0;
+		border-radius: 9px;
+		padding: 8px 16px;
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.secondary { background: #e8e8ed; color: #1d1d1f; }
+	.primary { background: #007aff; color: white; }
+	.muted { color: #86868b; font-size: 12px; font-weight: 500; }
+	@media (prefers-color-scheme: dark) {
+		body { background: #1c1c1e; color: #f5f5f7; }
+		.subtitle, .muted { color: #a1a1a6; }
+		input, textarea, select { background: #2c2c2e; border-color: #48484a; }
+		.secondary { background: #3a3a3c; color: #f5f5f7; }
+	}
+</style>
+</head>
+<body>
+	<div class="main">
+		<h1>New Reminder</h1>
+
+		<label for="title">Reminder</label>
+		<input id="title" autocomplete="off" placeholder="What do you want to remember?" autofocus>
+
+		<label for="notes">Notes</label>
+		<textarea id="notes" placeholder="Optional details…"></textarea>
+
+		<div class="row">
+			<div>
+				<label for="list">List</label>
+				<select id="list">__LIST_OPTIONS__</select>
+			</div>
+			<div>
+				<label for="tags">Tags</label>
+				<input id="tags" autocomplete="off">
+			</div>
+		</div>
+
+		<div class="footer">
+			<button class="secondary" id="cancel">Cancel</button>
+			<button class="primary" id="add">Add Reminder</button>
+		</div>
+	</div>
+
+<script>
+	const title = document.getElementById('title');
+	const list = document.getElementById('list');
+	const tags = document.getElementById('tags');
+	const notes = document.getElementById('notes');
+
+	function post(message) {
+		webkit.messageHandlers.reminder.postMessage(message);
+	}
+
+	function addReminder() {
+		post({ action: 'add', title: title.value, listName: list.value, tags: tags.value, notes: notes.value });
+	}
+
+	document.getElementById('add').addEventListener('click', addReminder);
+	document.getElementById('cancel').addEventListener('click', () => post({ action: 'cancel' }));
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			event.stopPropagation();
+			post({ action: 'cancel' });
+		}
+		if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+			event.preventDefault();
+			event.stopPropagation();
+			addReminder();
+		}
+	});
+	setTimeout(() => title.focus(), 50);
+</script>
+</body>
+</html>
+]]
+	html = html:gsub("__LIST_OPTIONS__", function()
+		return listOptions
+	end)
+
+	quickReminderWebview = hs.webview.new(rect, { developerExtrasEnabled = true }, controller)
+	quickReminderWebview:windowStyle({ "titled", "closable", "utility" })
+	quickReminderWebview:allowTextEntry(true)
+	quickReminderWebview:closeOnEscape(true)
+	quickReminderWebview:deleteOnClose(true)
+	quickReminderWebview:shadow(true)
+	quickReminderWebview:html(html)
+	quickReminderWebview:show()
+	quickReminderWebview:hswindow():focus()
+end
+
+hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
