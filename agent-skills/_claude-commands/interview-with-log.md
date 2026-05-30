@@ -1,1 +1,0 @@
-../_shared-skills/interview-with-log/SKILL.md

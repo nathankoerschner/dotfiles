@@ -1,1 +1,0 @@
-../_shared-skills/add-skill/SKILL.md

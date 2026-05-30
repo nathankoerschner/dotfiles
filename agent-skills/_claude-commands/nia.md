@@ -1,1 +1,0 @@
-../_shared-skills/nia/SKILL.md

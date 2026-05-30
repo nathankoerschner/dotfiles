@@ -1,1 +1,0 @@
-../_shared-skills/snowsql/SKILL.md

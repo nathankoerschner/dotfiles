@@ -1,1 +1,0 @@
-../_shared-skills/stack-go-js-pg/SKILL.md
