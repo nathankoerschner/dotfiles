@@ -181,6 +181,8 @@ end)
 
 -- Quick reminder creation
 local quickReminderWebview = nil
+local reminderListCache = { "Reminders" }
+local reminderListRefreshInFlight = false
 
 local function appleScriptString(value)
 	value = tostring(value or "")
@@ -193,40 +195,82 @@ local function htmlEscape(value)
 	return value:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
 end
 
+local function parseReminderLists(text)
+	local lists = {}
+	for listName in tostring(text or ""):gmatch("[^\r\n]+") do
+		if listName ~= "" then
+			table.insert(lists, listName)
+		end
+	end
+	return #lists > 0 and lists or { "Reminders" }
+end
+
+local function refreshReminderLists()
+	if reminderListRefreshInFlight then
+		return
+	end
+	reminderListRefreshInFlight = true
+	hs.task.new("/usr/bin/osascript", function(exitCode, stdOut, stdErr)
+		reminderListRefreshInFlight = false
+		if exitCode == 0 then
+			reminderListCache = parseReminderLists(stdOut)
+		elseif stdErr and stdErr ~= "" then
+			print("Reminder list refresh error: " .. stdErr)
+		end
+	end, {
+		"-e",
+		[[tell application "Reminders"
+	set listNames to name of every list
+	set AppleScript's text item delimiters to linefeed
+	set listText to listNames as text
+	set AppleScript's text item delimiters to ""
+	return listText
+end tell]],
+	}):start()
+end
+
 local function getReminderLists()
-	local ok, lists = hs.osascript.applescript([[tell application "Reminders" to get name of every list]])
-	if ok then
-		if type(lists) == "table" and #lists > 0 then
-			return lists
-		elseif type(lists) == "string" and lists ~= "" then
-			return { lists }
-		end
-	end
-	return { "Reminders" }
+	return reminderListCache
 end
 
-local function normalizeTags(tags)
-	local normalized = {}
-	for rawTag in tostring(tags or ""):gmatch("[^,%s]+") do
-		local tag = rawTag:gsub("^#+", "")
-		if tag ~= "" then
-			table.insert(normalized, "#" .. tag)
-		end
+local function appleScriptDateSetter(dateString)
+	local year, month, day = tostring(dateString or ""):match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
+	if not year then
+		return ""
 	end
-	return table.concat(normalized, " ")
+	local monthNames = {
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	}
+	local monthName = monthNames[tonumber(month)]
+	if not monthName then
+		return ""
+	end
+	return string.format(
+		[[
+		set dueDateValue to current date
+		set year of dueDateValue to %d
+		set month of dueDateValue to %s
+		set day of dueDateValue to %d
+		set time of dueDateValue to 0
+		set allday due date of newReminder to dueDateValue]],
+		year,
+		monthName,
+		day
+	)
 end
 
-local function createReminder(title, notes, listName, tags)
-	local tagText = normalizeTags(tags)
-	if tagText ~= "" then
-		notes = tostring(notes or "")
-		if notes ~= "" then
-			notes = notes .. "\n\nTags: " .. tagText
-		else
-			notes = "Tags: " .. tagText
-		end
-	end
-
+local function createReminder(title, notes, listName, dueDate)
 	local properties = "name:" .. appleScriptString(title)
 	if notes and notes ~= "" then
 		properties = properties .. ", body:" .. appleScriptString(notes)
@@ -236,12 +280,13 @@ local function createReminder(title, notes, listName, tags)
 		[[
 tell application "Reminders"
 	tell list %s
-		make new reminder with properties {%s}
+		set newReminder to make new reminder with properties {%s}%s
 	end tell
 end tell
 ]],
 		appleScriptString(listName or "Reminders"),
-		properties
+		properties,
+		appleScriptDateSetter(dueDate)
 	)
 
 	local ok, _, descriptor = hs.osascript.applescript(script)
@@ -251,6 +296,8 @@ end tell
 	end
 end
 
+hs.timer.doAfter(1, refreshReminderLists)
+
 local function showQuickReminderDialog()
 	if quickReminderWebview then
 		quickReminderWebview:delete()
@@ -258,7 +305,7 @@ local function showQuickReminderDialog()
 	end
 
 	local screenFrame = hs.screen.mainScreen():frame()
-	local width, height = 520, 480
+	local width, height = 560, 510
 	local rect = hs.geometry.rect(
 		screenFrame.x + (screenFrame.w - width) / 2,
 		screenFrame.y + (screenFrame.h - height) / 2,
@@ -273,6 +320,21 @@ local function showQuickReminderDialog()
 		end
 
 		local body = message.body
+		if body.action == "resize" then
+			local desiredHeight = tonumber(body.height)
+			if desiredHeight and quickReminderWebview then
+				local frame = quickReminderWebview:frame()
+				local maxHeight = hs.screen.mainScreen():frame().h - 80
+				local newHeight = math.min(maxHeight, math.max(360, math.ceil(desiredHeight + 44)))
+				if math.abs(frame.h - newHeight) > 3 then
+					frame.y = frame.y + ((frame.h - newHeight) / 2)
+					frame.h = newHeight
+					quickReminderWebview:frame(frame)
+				end
+			end
+			return
+		end
+
 		if body.action == "cancel" then
 			if quickReminderWebview then
 				quickReminderWebview:delete()
@@ -285,13 +347,13 @@ local function showQuickReminderDialog()
 			local title = body.title or ""
 			local notes = body.notes or ""
 			local listName = body.listName or "Reminders"
-			local tags = body.tags or ""
+			local dueDate = body.dueDate or ""
 			if title:gsub("%s+", "") == "" then
 				hs.alert.show("Reminder title is required")
 				return
 			end
 
-			createReminder(title, notes, listName, tags)
+			createReminder(title, notes, listName, dueDate)
 			if quickReminderWebview then
 				quickReminderWebview:delete()
 				quickReminderWebview = nil
@@ -323,6 +385,7 @@ local function showQuickReminderDialog()
 		font: 14px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 		background: #f5f5f7;
 		color: #1d1d1f;
+		overflow: hidden;
 	}
 	.main { padding: 24px; }
 	h1 { margin: 0 0 6px; font-size: 22px; font-weight: 650; }
@@ -344,7 +407,7 @@ local function showQuickReminderDialog()
 	}
 	.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 	select { height: 41px; }
-	textarea { min-height: 135px; resize: vertical; line-height: 1.35; }
+	textarea { min-height: 150px; resize: none; line-height: 1.35; }
 	.footer {
 		display: flex;
 		justify-content: flex-end;
@@ -386,8 +449,8 @@ local function showQuickReminderDialog()
 				<select id="list">__LIST_OPTIONS__</select>
 			</div>
 			<div>
-				<label for="tags">Tags</label>
-				<input id="tags" autocomplete="off">
+				<label for="dueDate">Date</label>
+				<input id="dueDate" type="date">
 			</div>
 		</div>
 
@@ -400,7 +463,7 @@ local function showQuickReminderDialog()
 <script>
 	const title = document.getElementById('title');
 	const list = document.getElementById('list');
-	const tags = document.getElementById('tags');
+	const dueDate = document.getElementById('dueDate');
 	const notes = document.getElementById('notes');
 
 	function post(message) {
@@ -408,7 +471,12 @@ local function showQuickReminderDialog()
 	}
 
 	function addReminder() {
-		post({ action: 'add', title: title.value, listName: list.value, tags: tags.value, notes: notes.value });
+		post({ action: 'add', title: title.value, listName: list.value, dueDate: dueDate.value, notes: notes.value });
+	}
+
+	function resizeToContent() {
+		const main = document.querySelector('.main');
+		post({ action: 'resize', height: Math.ceil(main.getBoundingClientRect().height) });
 	}
 
 	document.getElementById('add').addEventListener('click', addReminder);
@@ -425,6 +493,8 @@ local function showQuickReminderDialog()
 			addReminder();
 		}
 	});
+	window.addEventListener('load', resizeToContent);
+	setTimeout(resizeToContent, 50);
 	setTimeout(() => title.focus(), 50);
 </script>
 </body>
