@@ -40,10 +40,10 @@ vim.keymap.set("n", "<leader>da", "ggdG", { silent = true })
 vim.keymap.set("n", "<leader>va", "ggVG", { silent = true })
 
 vim.keymap.set("n", "<leader>%", ':let @" = expand("%")<CR>p', { silent = true })
--- yank the file path to the clipboard
+-- yank the full file path to the clipboard
 vim.keymap.set("n", "<leader>yf", function()
-  local filename = vim.fn.expand("%:t")
-  vim.fn.setreg("+", filename)
+  local filepath = vim.fn.expand("%:p")
+  vim.fn.setreg("+", filepath)
 end)
 
 vim.keymap.set("v", "<leader>z", 'c{{c1::<C-r>"}}<ESC>F{ll')
