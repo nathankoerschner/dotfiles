@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+
+const SOURCE = "npm:pi-mcp-extension";
+const DISABLED_ENTRY = { source: SOURCE, extensions: [] };
+
+const agentDir = process.env.PI_CODING_AGENT_DIR || path.join(os.homedir(), ".pi", "agent");
+const settingsPath = path.join(agentDir, "settings.json");
+const command = (process.argv[2] || "status").toLowerCase();
+
+function readSettings() {
+  if (!fs.existsSync(settingsPath)) return {};
+  return JSON.parse(fs.readFileSync(settingsPath, "utf8"));
+}
+
+function writeSettings(settings) {
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
+}
+
+function packageSource(entry) {
+  if (typeof entry === "string") return entry;
+  if (entry && typeof entry === "object") return entry.source;
+  return undefined;
+}
+
+function isMcpEntry(entry) {
+  return packageSource(entry) === SOURCE;
+}
+
+function isEnabled(settings) {
+  const entry = (settings.packages || []).find(isMcpEntry);
+  if (!entry) return false;
+  return typeof entry === "string" || !Array.isArray(entry.extensions) || entry.extensions.length > 0;
+}
+
+function setEnabled(enabled) {
+  const settings = readSettings();
+  const packages = Array.isArray(settings.packages) ? settings.packages : [];
+  const withoutMcp = packages.filter((entry) => !isMcpEntry(entry));
+  settings.packages = [...withoutMcp, enabled ? SOURCE : DISABLED_ENTRY];
+  writeSettings(settings);
+  return settings;
+}
+
+if (!["on", "off", "status"].includes(command)) {
+  console.error("Usage: pi-mcp-toggle [on|off|status]");
+  process.exit(2);
+}
+
+if (command === "on") {
+  setEnabled(true);
+  console.log(`MCP support enabled in ${settingsPath}`);
+  console.log("Restart Pi or run /reload in Pi for the change to take effect.");
+} else if (command === "off") {
+  setEnabled(false);
+  console.log(`MCP support disabled in ${settingsPath}`);
+  console.log("Restart Pi or run /reload in Pi for the change to take effect.");
+} else {
+  const settings = readSettings();
+  console.log(`MCP support is ${isEnabled(settings) ? "enabled" : "disabled"}`);
+  console.log(`Settings: ${settingsPath}`);
+  console.log(`Config:   ${path.join(agentDir, "mcp.json")}`);
+}
