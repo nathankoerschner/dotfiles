@@ -41,9 +41,20 @@ vim.keymap.set("n", "<leader>va", "ggVG", { silent = true })
 
 vim.keymap.set("n", "<leader>%", ':let @" = expand("%")<CR>p', { silent = true })
 -- yank the full file path to the clipboard
+-- In oil buffers, yank the directory the buffer is showing.
 vim.keymap.set("n", "<leader>yf", function()
-  local filepath = vim.fn.expand("%:p")
+  local filepath
+  if vim.bo.filetype == "oil" then
+    local ok, oil = pcall(require, "oil")
+    if ok then
+      filepath = oil.get_current_dir()
+    end
+  end
+  if not filepath or filepath == "" then
+    filepath = vim.fn.expand("%:p")
+  end
   vim.fn.setreg("+", filepath)
+  vim.notify("Yanked: " .. filepath)
 end)
 
 vim.keymap.set("v", "<leader>z", 'c{{c1::<C-r>"}}<ESC>F{ll')
