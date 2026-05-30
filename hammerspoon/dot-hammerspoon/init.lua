@@ -100,6 +100,7 @@ local appList = {
 	["s"] = "Slack",
 	["w"] = "WorkFlowy",
 	["d"] = "Discord",
+	["e"] = "Linear",
 	["p"] = "Spotify",
 	["r"] = "Reminders",
 	["1"] = "1Password",
@@ -289,11 +290,16 @@ end tell
 		appleScriptDateSetter(dueDate)
 	)
 
-	local ok, _, descriptor = hs.osascript.applescript(script)
-	if not ok then
-		hs.alert.show("Could not add reminder")
-		print("Reminder AppleScript error: " .. hs.inspect(descriptor))
-	end
+	-- Run AppleScript asynchronously so the UI can close immediately.
+	hs.task
+		.new("/usr/bin/osascript", function(exitCode, _, stdErr)
+			if exitCode ~= 0 then
+				hs.alert.show("Could not add reminder")
+				print("Reminder AppleScript error: " .. tostring(stdErr))
+			end
+		end, { "-" })
+		:setInput(script)
+		:start()
 end
 
 hs.timer.doAfter(1, refreshReminderLists)
@@ -353,11 +359,13 @@ local function showQuickReminderDialog()
 				return
 			end
 
-			createReminder(title, notes, listName, dueDate)
+			-- Close the window first so it feels as snappy as Escape, then
+			-- create the reminder in the background.
 			if quickReminderWebview then
 				quickReminderWebview:delete()
 				quickReminderWebview = nil
 			end
+			createReminder(title, notes, listName, dueDate)
 		end
 	end)
 
