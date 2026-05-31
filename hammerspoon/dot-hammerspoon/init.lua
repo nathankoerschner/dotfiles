@@ -182,7 +182,8 @@ end)
 
 -- Quick reminder creation
 local quickReminderWebview = nil
-local reminderListCache = { "Reminders" }
+local defaultReminderListName = "Reminders"
+local reminderListCache = { defaultReminderListName }
 local reminderListRefreshInFlight = false
 
 local function appleScriptString(value)
@@ -196,6 +197,10 @@ local function htmlEscape(value)
 	return value:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
 end
 
+local function reminderListBaseName(listName)
+	return tostring(listName or ""):gsub("%s*—%s*.*$", "")
+end
+
 local function parseReminderLists(text)
 	local lists = {}
 	for listName in tostring(text or ""):gmatch("[^\r\n]+") do
@@ -203,7 +208,18 @@ local function parseReminderLists(text)
 			table.insert(lists, listName)
 		end
 	end
-	return #lists > 0 and lists or { "Reminders" }
+	return #lists > 0 and lists or { defaultReminderListName }
+end
+
+local function resolveReminderListName(preferredName)
+	preferredName = preferredName or defaultReminderListName
+	local preferredBaseName = reminderListBaseName(preferredName)
+	for _, listName in ipairs(reminderListCache) do
+		if listName == preferredName or reminderListBaseName(listName) == preferredBaseName then
+			return listName
+		end
+	end
+	return preferredName
 end
 
 local function refreshReminderLists()
@@ -285,7 +301,7 @@ tell application "Reminders"
 	end tell
 end tell
 ]],
-		appleScriptString(listName or "Reminders"),
+		appleScriptString(resolveReminderListName(listName)),
 		properties,
 		appleScriptDateSetter(dueDate)
 	)
@@ -352,7 +368,7 @@ local function showQuickReminderDialog()
 		if body.action == "add" then
 			local title = body.title or ""
 			local notes = body.notes or ""
-			local listName = body.listName or "Reminders"
+			local listName = body.listName or defaultReminderListName
 			local dueDate = body.dueDate or ""
 			if title:gsub("%s+", "") == "" then
 				hs.alert.show("Reminder title is required")
@@ -371,12 +387,13 @@ local function showQuickReminderDialog()
 
 	local listOptions = ""
 	for _, listName in ipairs(getReminderLists()) do
-		local selected = listName == "Reminders" and " selected" or ""
+		local displayName = reminderListBaseName(listName)
+		local selected = displayName == defaultReminderListName and " selected" or ""
 		listOptions = listOptions .. string.format(
 			'<option value="%s"%s>%s</option>',
 			htmlEscape(listName),
 			selected,
-			htmlEscape(listName)
+			htmlEscape(displayName)
 		)
 	end
 
