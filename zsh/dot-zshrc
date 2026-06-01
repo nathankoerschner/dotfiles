@@ -136,11 +136,6 @@ alias gp="git push"
 alias dotfile="echo '~/.zshrc'"
 alias youtube-to-mp3="yt-dlp -x --audio-format mp3 --concat-playlist always --yes-playlist"
 
-# Pi MCP support toggle (restart Pi or run /reload after changing)
-alias pi-mcp-on="pi-mcp-toggle on"
-alias pi-mcp-off="pi-mcp-toggle off"
-alias pi-mcp-status="pi-mcp-toggle status"
-
 # dotfile git directory
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 
