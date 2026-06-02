@@ -143,6 +143,19 @@ bindkey -v # v for vi mode, e for emacs mode
 
 alias daasity_dbt='source /Users/nathankoerschner/all-client-dbt/daasity-dbt-env/bin/activate'
 
+# Run a command and tint the tmux pane when it finishes until the pane is focused.
+ringpane() {
+  "$@"
+  local rc=$?
+
+  if [[ -n "$TMUX" ]] && command -v tmux >/dev/null 2>&1; then
+    tmux set-option -p @rang 1
+    tmux set-option -p window-style 'bg=colour240'
+  fi
+
+  return $rc
+}
+
 # Vim
 export EDITOR=nvim
 
