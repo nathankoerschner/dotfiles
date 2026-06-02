@@ -1,6 +1,12 @@
 vim.g.mapleader = " "
 
 vim.keymap.set("n", "<leader>pv", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+vim.keymap.set("n", "<leader>pi", function()
+  require("customized.pi").ask_buffer()
+end, { desc = "Ask Pi about current buffer" })
+vim.keymap.set("v", "<leader>pi", function()
+  require("customized.pi").ask_visual()
+end, { desc = "Ask Pi about selection" })
 vim.keymap.set("n", "<leader>pq", ":silent !sqlfluff fix % --dialect snowflake<CR><CR>", { silent = true })
 vim.keymap.set("n", "<leader><C-d><C-t><C-f>", ":!rm % <CR> :q<CR>")
 vim.keymap.set("n", "<leader><C-f>", ":silent !tmux new-window tmux-sessionizer<CR>", { silent = true })
