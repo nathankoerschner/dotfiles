@@ -1,0 +1,22 @@
+# Send macOS-style shortcuts through to tmux instead of using Ghostty actions.
+# tmux default prefix is Ctrl-b. Existing tmux split bindings use " for a
+# vertical split and % for a horizontal split.
+keybind = super+d=text:\x02\"
+keybind = super+shift+d=text:\x02%
+
+# Tmux window/pane management.
+keybind = super+t=text:\x02c
+keybind = super+w=text:\x02x
+
+# Switch tmux windows with Cmd-<number>. tmux is configured with base-index 1.
+# Use digit_N to override Ghostty's default Cmd-N tab switching on macOS.
+keybind = super+digit_1=text:\x021
+keybind = super+digit_2=text:\x022
+keybind = super+digit_3=text:\x023
+keybind = super+digit_4=text:\x024
+keybind = super+digit_5=text:\x025
+keybind = super+digit_6=text:\x026
+keybind = super+digit_7=text:\x027
+keybind = super+digit_8=text:\x028
+keybind = super+digit_9=text:\x029
+keybind = super+0=text:\x020
