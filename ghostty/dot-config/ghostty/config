@@ -1,8 +1,8 @@
 # Send macOS-style shortcuts through to tmux instead of using Ghostty actions.
-# tmux default prefix is Ctrl-b. Existing tmux split bindings use " for a
-# vertical split and % for a horizontal split.
-keybind = super+d=text:\x02\"
-keybind = super+shift+d=text:\x02%
+# tmux default prefix is Ctrl-b. Existing tmux split bindings use % for a
+# right split and " for an up/down split.
+keybind = super+d=text:\x02%
+keybind = super+shift+d=text:\x02\"
 
 # Tmux window/pane management.
 keybind = super+t=text:\x02c
