@@ -183,7 +183,7 @@ end)
 -- Quick reminder creation
 local quickReminderWebview = nil
 local defaultReminderListName = "Reminders"
-local reminderListCache = { defaultReminderListName }
+local reminderListCache = { { id = "", name = defaultReminderListName, accountName = "" } }
 local reminderListRefreshInFlight = false
 
 local function appleScriptString(value)
@@ -197,29 +197,50 @@ local function htmlEscape(value)
 	return value:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
 end
 
-local function reminderListBaseName(listName)
-	return tostring(listName or ""):gsub("%s*—%s*.*$", "")
+local function reminderListName(listInfo)
+	if type(listInfo) == "table" then
+		return listInfo.name or ""
+	end
+	return tostring(listInfo or "")
+end
+
+local function reminderListBaseName(listInfo)
+	return reminderListName(listInfo):gsub("%s*—%s*.*$", "")
 end
 
 local function parseReminderLists(text)
 	local lists = {}
-	for listName in tostring(text or ""):gmatch("[^\r\n]+") do
-		if listName ~= "" then
-			table.insert(lists, listName)
+	for line in tostring(text or ""):gmatch("[^\r\n]+") do
+		local id, name, accountName = line:match("^([^\t]*)\t([^\t]*)\t?(.*)$")
+		if name and name ~= "" then
+			table.insert(lists, { id = id or "", name = name, accountName = accountName or "" })
 		end
 	end
-	return #lists > 0 and lists or { defaultReminderListName }
+	return #lists > 0 and lists or { { id = "", name = defaultReminderListName, accountName = "" } }
 end
 
-local function resolveReminderListName(preferredName)
-	preferredName = preferredName or defaultReminderListName
-	local preferredBaseName = reminderListBaseName(preferredName)
-	for _, listName in ipairs(reminderListCache) do
-		if listName == preferredName or reminderListBaseName(listName) == preferredBaseName then
-			return listName
+local function isDefaultReminderList(listInfo)
+	return reminderListBaseName(listInfo) == defaultReminderListName
+end
+
+local function isSharedDefaultReminderList(listInfo)
+	return isDefaultReminderList(listInfo) and (listInfo.accountName == "iCloud" or listInfo.accountName == "")
+end
+
+local function resolveReminderList(preferredValue)
+	preferredValue = preferredValue or defaultReminderListName
+	local preferredBaseName = reminderListBaseName(preferredValue)
+	local fallbackMatch = nil
+	for _, listInfo in ipairs(reminderListCache) do
+		local matches = listInfo.id == preferredValue or listInfo.name == preferredValue or reminderListBaseName(listInfo) == preferredBaseName
+		if matches then
+			if preferredBaseName == defaultReminderListName and isSharedDefaultReminderList(listInfo) then
+				return listInfo
+			end
+			fallbackMatch = fallbackMatch or listInfo
 		end
 	end
-	return preferredName
+	return fallbackMatch or { id = "", name = preferredValue, accountName = "" }
 end
 
 local function refreshReminderLists()
@@ -237,9 +258,18 @@ local function refreshReminderLists()
 	end, {
 		"-e",
 		[[tell application "Reminders"
-	set listNames to name of every list
+	set listLines to {}
+	repeat with reminderList in every list
+		set listId to id of reminderList
+		set listName to name of reminderList
+		set accountName to ""
+		try
+			set accountName to name of container of reminderList
+		end try
+		set end of listLines to listId & tab & listName & tab & accountName
+	end repeat
 	set AppleScript's text item delimiters to linefeed
-	set listText to listNames as text
+	set listText to listLines as text
 	set AppleScript's text item delimiters to ""
 	return listText
 end tell]],
@@ -293,15 +323,22 @@ local function createReminder(title, notes, listName, dueDate)
 		properties = properties .. ", body:" .. appleScriptString(notes)
 	end
 
+	local resolvedList = resolveReminderList(listName)
+	local listSelector = "list " .. appleScriptString(resolvedList.name)
+	if resolvedList.id and resolvedList.id ~= "" then
+		listSelector = "first list whose id is " .. appleScriptString(resolvedList.id)
+	end
+
 	local script = string.format(
 		[[
 tell application "Reminders"
-	tell list %s
+	set targetList to %s
+	tell targetList
 		set newReminder to make new reminder with properties {%s}%s
 	end tell
 end tell
 ]],
-		appleScriptString(resolveReminderListName(listName)),
+		listSelector,
 		properties,
 		appleScriptDateSetter(dueDate)
 	)
@@ -386,12 +423,13 @@ local function showQuickReminderDialog()
 	end)
 
 	local listOptions = ""
-	for _, listName in ipairs(getReminderLists()) do
-		local displayName = reminderListBaseName(listName)
-		local selected = displayName == defaultReminderListName and " selected" or ""
+	local defaultList = resolveReminderList(defaultReminderListName)
+	for _, listInfo in ipairs(getReminderLists()) do
+		local displayName = reminderListBaseName(listInfo)
+		local selected = listInfo.id == defaultList.id and listInfo.name == defaultList.name and " selected" or ""
 		listOptions = listOptions .. string.format(
 			'<option value="%s"%s>%s</option>',
-			htmlEscape(listName),
+			htmlEscape((listInfo.id and listInfo.id ~= "") and listInfo.id or listInfo.name),
 			selected,
 			htmlEscape(displayName)
 		)
