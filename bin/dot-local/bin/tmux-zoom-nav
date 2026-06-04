@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 2 ]]; then
+  echo "usage: tmux-zoom-nav <L|R|U|D> <pane-id>" >&2
+  exit 2
+fi
+
+dir="$1"
+pane="$2"
+window="$(tmux display-message -p -t "$pane" '#{window_id}')"
+zoomed="$(tmux display-message -p -t "$window" '#{window_zoomed_flag}')"
+
+if [[ "$zoomed" == "1" ]]; then
+  # Temporarily unzoom so tmux can see the real pane layout, try the requested
+  # movement, and only stay unzoomed if that movement actually changed panes.
+  tmux resize-pane -Z -t "$pane"
+  tmux select-pane -t "$pane" "-$dir"
+
+  new_pane="$(tmux display-message -p -t "$window" '#{pane_id}')"
+  if [[ "$new_pane" == "$pane" ]]; then
+    tmux resize-pane -Z -t "$pane"
+  fi
+else
+  tmux select-pane -t "$pane" "-$dir"
+fi
