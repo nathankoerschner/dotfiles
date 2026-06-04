@@ -593,6 +593,59 @@ end
 send_escape = false
 prev_modifiers = {}
 
+local terminal_app_names = {
+	["Alacritty"] = true,
+	["Ghostty"] = true,
+	["iTerm2"] = true,
+	["Terminal"] = true,
+	["WezTerm"] = true,
+}
+
+local function frontmost_app_is_terminal()
+	local app = hs.application.frontmostApplication()
+	return app ~= nil and terminal_app_names[app:name()] == true
+end
+
+local function command_is_agent(command)
+	-- Pi and Codex run as Node CLIs, so tmux reports their pane command as
+	-- "node". This intentionally treats an active tmux node pane as agentic so
+	-- the common Pi/Codex case is fast and does not require scanning process
+	-- descendants on every Control tap.
+	return command == "node" or command == "pi" or command == "codex" or command == "claude"
+end
+
+local tmux_agent_pane_is_active = false
+local tmux_agent_check_running = false
+
+local function update_tmux_agent_pane_is_active()
+	if tmux_agent_check_running then
+		return
+	end
+
+	if not frontmost_app_is_terminal() then
+		tmux_agent_pane_is_active = false
+		return
+	end
+
+	tmux_agent_check_running = true
+	hs.task
+		.new("/opt/homebrew/bin/tmux", function(_, stdout)
+			local agent_active = false
+			for attached, window_active, pane_active, command in (stdout or ""):gmatch("(%d+)%s+(%d+)%s+(%d+)%s+([^\n]+)") do
+				if tonumber(attached) > 0 and window_active == "1" and pane_active == "1" and command_is_agent(command) then
+					agent_active = true
+					break
+				end
+			end
+			tmux_agent_pane_is_active = agent_active
+			tmux_agent_check_running = false
+		end, { "list-panes", "-a", "-F", "#{session_attached} #{window_active} #{pane_active} #{pane_current_command}" })
+		:start()
+end
+
+update_tmux_agent_pane_is_active()
+tmux_agent_pane_timer = hs.timer.doEvery(0.5, update_tmux_agent_pane_is_active)
+
 modifier_handler = function(evt)
 	-- evt:getFlags() holds the modifiers that are currently held down
 	local curr_modifiers = evt:getFlags()
@@ -603,7 +656,9 @@ modifier_handler = function(evt)
 		send_escape = true
 	elseif prev_modifiers["ctrl"] and len(curr_modifiers) == 0 and send_escape then
 		send_escape = false
-		hs.eventtap.keyStroke({}, "ESCAPE")
+		if not tmux_agent_pane_is_active then
+			hs.eventtap.keyStroke({}, "ESCAPE")
+		end
 	else
 		send_escape = false
 	end
