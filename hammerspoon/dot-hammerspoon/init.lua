@@ -36,6 +36,13 @@ winmanScreenProfiles = {
 }
 require("winman")
 
+-- This WorkSmart reminder should only run on this Mac, not every machine that
+-- uses these dotfiles.
+local thisMacUUID = hs.execute([[ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformUUID/{print $4}']])
+if tostring(thisMacUUID):match("603D3362%-8D95%-5386%-8575%-B6C7FF89EA6E") then
+	require("worksmart_monitor")
+end
+
 -- ─── Ultrawide brightness override ──────────────────────────────────────────
 -- The MPG 491C OLED ignores DDC brightness while HDR is enabled. With HDR off,
 -- push SDR luminance to max whenever the monitor is connected.
