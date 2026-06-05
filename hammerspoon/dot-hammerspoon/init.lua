@@ -606,12 +606,40 @@ local function frontmost_app_is_terminal()
 	return app ~= nil and terminal_app_names[app:name()] == true
 end
 
+local function command_basename(command)
+	return tostring(command or ""):match("([^/]+)$") or ""
+end
+
 local function command_is_agent(command)
-	-- Pi and Codex run as Node CLIs, so tmux reports their pane command as
-	-- "node". This intentionally treats an active tmux node pane as agentic so
-	-- the common Pi/Codex case is fast and does not require scanning process
-	-- descendants on every Control tap.
+	-- Pi and Codex run as Node CLIs, so tmux often reports their pane command as
+	-- "node". Treat those as agentic unless an editor child process is active.
+	command = command_basename(command)
 	return command == "node" or command == "pi" or command == "codex" or command == "claude"
+end
+
+local function command_is_editor(command)
+	command = command_basename(command)
+	return command == "vim" or command == "nvim" or command == "vi"
+end
+
+local function descendants_include_editor(root_pid, children_by_ppid, command_by_pid)
+	local stack = { tostring(root_pid) }
+	local seen = {}
+
+	while #stack > 0 do
+		local pid = table.remove(stack)
+		if not seen[pid] then
+			seen[pid] = true
+			if pid ~= tostring(root_pid) and command_is_editor(command_by_pid[pid]) then
+				return true
+			end
+			for _, child_pid in ipairs(children_by_ppid[pid] or {}) do
+				table.insert(stack, child_pid)
+			end
+		end
+	end
+
+	return false
 end
 
 local tmux_agent_pane_is_active = false
@@ -629,17 +657,39 @@ local function update_tmux_agent_pane_is_active()
 
 	tmux_agent_check_running = true
 	hs.task
-		.new("/opt/homebrew/bin/tmux", function(_, stdout)
+		.new("/bin/bash", function(_, stdout)
+			local panes_output, ps_output = (stdout or ""):match("^(.-)\n__PI_PS__\n(.*)$")
+			panes_output = panes_output or ""
+			ps_output = ps_output or ""
+
+			local children_by_ppid = {}
+			local command_by_pid = {}
+			for pid, ppid, command in ps_output:gmatch("%s*(%d+)%s+(%d+)%s+([^\n]+)") do
+				command_by_pid[pid] = command
+				children_by_ppid[ppid] = children_by_ppid[ppid] or {}
+				table.insert(children_by_ppid[ppid], pid)
+			end
+
 			local agent_active = false
-			for attached, window_active, pane_active, command in (stdout or ""):gmatch("(%d+)%s+(%d+)%s+(%d+)%s+([^\n]+)") do
-				if tonumber(attached) > 0 and window_active == "1" and pane_active == "1" and command_is_agent(command) then
-					agent_active = true
-					break
+			for attached, window_active, pane_active, pane_pid, command in panes_output:gmatch("(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+([^\n]+)") do
+				if tonumber(attached) > 0 and window_active == "1" and pane_active == "1" then
+					if command_is_editor(command) then
+						agent_active = false
+						break
+					end
+
+					if command_is_agent(command) and not descendants_include_editor(pane_pid, children_by_ppid, command_by_pid) then
+						agent_active = true
+						break
+					end
 				end
 			end
 			tmux_agent_pane_is_active = agent_active
 			tmux_agent_check_running = false
-		end, { "list-panes", "-a", "-F", "#{session_attached} #{window_active} #{pane_active} #{pane_current_command}" })
+		end, {
+			"-lc",
+			"/opt/homebrew/bin/tmux list-panes -a -F '#{session_attached} #{window_active} #{pane_active} #{pane_pid} #{pane_current_command}'; printf '\n__PI_PS__\n'; ps -Ao pid=,ppid=,comm=",
+		})
 		:start()
 end
 
