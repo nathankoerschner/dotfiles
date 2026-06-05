@@ -14,6 +14,10 @@
 keybind = super+d=text:\x02%
 keybind = super+shift+d=text:\x02\"
 keybind = super+shift+enter=text:\x02z
+keybind = super+h=text:\x02h
+keybind = super+j=text:\x02j
+keybind = super+k=text:\x02k
+keybind = super+l=text:\x02l
 
 # Windows/sessions.
 # Cmd-t -> prefix c -> new window

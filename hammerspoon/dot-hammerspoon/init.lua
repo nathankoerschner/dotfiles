@@ -5,6 +5,36 @@
 hs.window.animationDuration = 0
 super = { "alt", "cmd" }
 
+-- Prevent macOS's default Cmd+h "Hide" behavior. For Ghostty, implement
+-- Cmd+h/j/k/l here by sending tmux prefix + h/j/k/l and swallowing the Cmd key
+-- event, which avoids the application menu's Hide shortcut winning first.
+cmdTmuxPaneNav = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
+	local flags = event:getFlags()
+	if not (flags.cmd and not flags.alt and not flags.ctrl and not flags.shift and not flags.fn) then
+		return false
+	end
+
+	local keyCode = event:getKeyCode()
+	local paneKeyByCode = {
+		[hs.keycodes.map.h] = "h",
+		[hs.keycodes.map.j] = "j",
+		[hs.keycodes.map.k] = "k",
+		[hs.keycodes.map.l] = "l",
+	}
+	local paneKey = paneKeyByCode[keyCode]
+	if paneKey then
+		local app = hs.application.frontmostApplication()
+		if app and app:name() == "Ghostty" then
+			hs.eventtap.keyStroke({ "ctrl" }, "b", 0)
+			hs.eventtap.keyStroke({}, paneKey, 0)
+		end
+		return true
+	end
+
+	return false
+end)
+cmdTmuxPaneNav:start()
+
 -- -- Keybindings for window management
 winmanHotkeys = {
 	resizeDown = "j",

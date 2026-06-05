@@ -36,6 +36,10 @@ hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x70
 defaults write pbs NSServicesStatus -dict-add '"(null) - Look Up in Dictionary - openDictionaryServiceEntry"' '{ "enabled_context_menu" = 0; "enabled_services_menu" = 0; "presentation_modes" = { ContextMenu = 0; ServicesMenu = 0; }; }'
 /System/Library/CoreServices/pbs -flush 2>/dev/null || true
 
+# Move Ghostty's app-menu Hide shortcut off Cmd+h. Hammerspoon also intercepts
+# Cmd+h globally, but this keeps Ghostty from hiding if Hammerspoon is not yet loaded.
+defaults write com.mitchellh.ghostty NSUserKeyEquivalents -dict-add "Hide Ghostty" '@^~$h'
+
 # add the click anywhere to move window feature (https://mmazzarolo.com/blog/2022-04-16-drag-window-by-clicking-anywhere-on-macos/)
 defaults write -g NSWindowShouldDragOnGesture -bool true
 
