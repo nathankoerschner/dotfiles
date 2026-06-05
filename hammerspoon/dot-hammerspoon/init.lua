@@ -187,6 +187,158 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
 	end)
 end)
 
+-- Discord + Gmail side-by-side, filling the screen
+local discordGmailStack = {
+	isOpen = false,
+	generation = 0,
+	discordWindowId = nil,
+	gmailWindowId = nil,
+	gmailChromeWindowId = nil,
+	previousChromeWindowIds = {},
+}
+
+local function sideBySideFrame(screenFrame, position)
+	local halfWidth = screenFrame.w * 0.5
+	local x = screenFrame.x
+	if position == "right" then
+		x = screenFrame.x + halfWidth
+	end
+	return hs.geometry.rect(x, screenFrame.y, halfWidth, screenFrame.h)
+end
+
+local function windowById(id)
+	return id and hs.window.get(id) or nil
+end
+
+local function appleScriptBounds(rect)
+	return string.format("{%d, %d, %d, %d}", rect.x, rect.y, rect.x + rect.w, rect.y + rect.h)
+end
+
+local function windowIds(appName)
+	local ids = {}
+	local app = hs.application.find(appName)
+	if app then
+		for _, win in ipairs(app:allWindows()) do
+			ids[win:id()] = true
+		end
+	end
+	return ids
+end
+
+local function newestWindow(appName, previousIds)
+	local app = hs.application.find(appName)
+	if not app then
+		return nil
+	end
+	local fallback = app:focusedWindow() or app:mainWindow()
+	for _, win in ipairs(app:allWindows()) do
+		if win:isStandard() and not previousIds[win:id()] then
+			return win
+		end
+	end
+	return fallback
+end
+
+local function closeDiscordGmailStack()
+	local discordWin = windowById(discordGmailStack.discordWindowId)
+
+	-- If the second press happens while the open timers are still running, the
+	-- window id may not have been captured yet. Fall back to the Discord window
+	-- we just brought forward so the toggle still behaves as expected.
+	if not discordWin then
+		local discord = hs.application.find("Discord")
+		discordWin = discord and (discord:mainWindow() or discord:focusedWindow()) or nil
+	end
+
+	if discordWin then
+		discordWin:close()
+	end
+	if discordGmailStack.gmailChromeWindowId then
+		hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	try
+		close (first window whose id is %s)
+	end try
+end tell]], discordGmailStack.gmailChromeWindowId))
+	else
+		local gmailWin = windowById(discordGmailStack.gmailWindowId)
+		if not gmailWin then
+			gmailWin = newestWindow("Google Chrome", discordGmailStack.previousChromeWindowIds or {})
+		end
+		if gmailWin then
+			gmailWin:close()
+		end
+	end
+	discordGmailStack.isOpen = false
+	discordGmailStack.discordWindowId = nil
+	discordGmailStack.gmailWindowId = nil
+	discordGmailStack.gmailChromeWindowId = nil
+	discordGmailStack.previousChromeWindowIds = {}
+end
+
+local function openGmailInNewChromeWindow(frame)
+	local ok, chromeWindowId = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	activate
+	set newWindow to make new window
+	set URL of active tab of newWindow to "https://mail.google.com/mail/u/0/#inbox"
+	set bounds of newWindow to %s
+	return id of newWindow
+end tell]], appleScriptBounds(frame)))
+	if ok and chromeWindowId then
+		discordGmailStack.gmailChromeWindowId = tostring(chromeWindowId)
+	else
+		hs.alert.show("Could not open Gmail")
+	end
+end
+
+hs.hotkey.bind({ "ctrl", "cmd" }, "m", function()
+	discordGmailStack.generation = discordGmailStack.generation + 1
+	local generation = discordGmailStack.generation
+
+	if discordGmailStack.isOpen then
+		closeDiscordGmailStack()
+		return
+	end
+
+	discordGmailStack.isOpen = true
+	local screen = hs.screen.mainScreen()
+	local screenFrame = screen:frame()
+	local previousChromeWindowIds = windowIds("Google Chrome")
+	discordGmailStack.previousChromeWindowIds = previousChromeWindowIds
+
+	hs.application.launchOrFocus("Discord")
+	hs.timer.doAfter(0.7, function()
+		if discordGmailStack.generation ~= generation or not discordGmailStack.isOpen then
+			return
+		end
+		local discord = hs.application.find("Discord")
+		if discord then
+			local win = discord:mainWindow() or discord:focusedWindow()
+			if win then
+				win:moveToScreen(screen)
+				win:setFrame(sideBySideFrame(screenFrame, "left"))
+				discordGmailStack.discordWindowId = win:id()
+			end
+		end
+	end)
+
+	hs.timer.doAfter(0.2, function()
+		if discordGmailStack.generation == generation and discordGmailStack.isOpen then
+			openGmailInNewChromeWindow(sideBySideFrame(screenFrame, "right"))
+		end
+	end)
+	hs.timer.doAfter(1.0, function()
+		if discordGmailStack.generation ~= generation or not discordGmailStack.isOpen then
+			return
+		end
+		local win = newestWindow("Google Chrome", previousChromeWindowIds)
+		if win then
+			win:moveToScreen(screen)
+			win:setFrame(sideBySideFrame(screenFrame, "right"))
+			discordGmailStack.gmailWindowId = win:id()
+		end
+	end)
+end)
+
 -- Quick reminder creation
 local quickReminderWebview = nil
 local defaultReminderListName = "Reminders"
