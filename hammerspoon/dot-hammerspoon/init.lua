@@ -67,10 +67,11 @@ winmanScreenProfiles = {
 }
 require("winman")
 
--- This WorkSmart reminder should only run on this Mac, not every machine that
+-- Machine-local features should only run on this Mac, not every machine that
 -- uses these dotfiles.
 local thisMacUUID = hs.execute([[ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformUUID/{print $4}']])
-if tostring(thisMacUUID):match("603D3362%-8D95%-5386%-8575%-B6C7FF89EA6E") then
+local isThisMac = tostring(thisMacUUID):match("603D3362%-8D95%-5386%-8575%-B6C7FF89EA6E") ~= nil
+if isThisMac then
 	require("worksmart_monitor")
 end
 
@@ -785,7 +786,9 @@ local function showQuickLinearInput()
 	end)
 end
 
-hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickLinearInput)
+if isThisMac then
+	hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickLinearInput)
+end
 
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
