@@ -138,7 +138,6 @@ local appList = {
 	["w"] = "WorkFlowy",
 	["d"] = "Discord",
 	["e"] = "Linear",
-	["p"] = "Spotify",
 	["r"] = "Reminders",
 	["1"] = "1Password",
 	["i"] = "Finder",
@@ -146,6 +145,7 @@ local appList = {
 }
 local urlList = {
 	["a"] = "https://claude.ai/new",
+	["p"] = "https://www.perplexity.ai/computer/tasks",
 	["0"] = "https://calendar.google.com",
 }
 
@@ -767,7 +767,24 @@ local function showQuickReminderDialog()
 	quickReminderWebview:hswindow():focus()
 end
 
-hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
+local function showQuickLinearInput()
+	hs.application.launchOrFocus("Linear")
+
+	hs.timer.doAfter(0.4, function()
+		local linear = hs.application.find("Linear")
+		if not linear then
+			hs.alert.show("Linear not found")
+			return
+		end
+
+		linear:activate(true)
+		hs.timer.doAfter(0.1, function()
+			hs.eventtap.keyStroke({}, "c", 0, linear)
+		end)
+	end)
+end
+
+hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickLinearInput)
 
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
