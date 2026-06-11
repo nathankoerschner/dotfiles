@@ -22,20 +22,33 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
--- Remaps to skip yanking of text in common scenarios
+-- Keep normal yanks on the system clipboard, but send destructive operations to
+-- the black-hole register by default. Use leader-prefixed variants when you
+-- actually want a cut/change/delete to replace the clipboard contents.
 vim.keymap.set("x", "<leader>p", [["_dP]])
-vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
+vim.keymap.set({ "n", "v" }, "d", [["_d]])
+vim.keymap.set({ "n", "v" }, "D", [["_D]])
+vim.keymap.set({ "n", "v" }, "c", [["_c]])
+vim.keymap.set({ "n", "v" }, "C", [["_C]])
+vim.keymap.set({ "n", "v" }, "x", [["_x]])
+vim.keymap.set({ "n", "v" }, "X", [["_X]])
+vim.keymap.set({ "n", "v" }, "s", [["_s]])
+vim.keymap.set({ "n", "v" }, "S", [["_S]])
+vim.keymap.set({ "n", "v" }, "<leader>d", "d")
+vim.keymap.set({ "n", "v" }, "<leader>D", "D")
+vim.keymap.set({ "n", "v" }, "<leader>c", "c")
+vim.keymap.set({ "n", "v" }, "<leader>C", "C")
+vim.keymap.set({ "n", "v" }, "<leader>x", "x")
+vim.keymap.set({ "n", "v" }, "<leader>X", "X")
 
 -- next greatest remap ever : asbjornHaland
-vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
-vim.keymap.set("n", "<leader>Y", [["+Y]])
+vim.keymap.set({ "n", "v" }, "<leader>y", "y")
+vim.keymap.set("n", "<leader>Y", "Y")
 
 vim.keymap.set("n", "Q", "<nop>") -- disable ex mode
 
 -- start renaming selected word
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
-
-vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
 vim.keymap.set("n", "<leader><leader>", function()
   vim.cmd("so")
 end)
