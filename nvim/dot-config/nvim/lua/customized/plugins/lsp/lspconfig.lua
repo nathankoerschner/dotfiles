@@ -46,6 +46,29 @@ return {
       },
     })
 
+    -- marksman
+    vim.lsp.config("marksman", {
+      filetypes = { "markdown", "markdown.mdx" },
+      root_dir = function(bufnr, on_dir)
+        local filename = vim.api.nvim_buf_get_name(bufnr)
+        local root = vim.fs.root(filename, { ".marksman.toml", ".git" })
+        if root then
+          return on_dir(root)
+        end
+
+        -- Personal notes live outside git; give Marksman the whole vault so
+        -- wiki links like [[Nils]] can resolve to sibling files such as Nils.md.
+        local notes_root = vim.fs.normalize(vim.fn.expand("~/Documents/Documents—SB"))
+        local normalized_filename = vim.fs.normalize(filename)
+        if normalized_filename == notes_root or vim.startswith(normalized_filename, notes_root .. "/") then
+          return on_dir(notes_root)
+        end
+
+        -- Fallback keeps Marksman useful for ad-hoc markdown directories.
+        on_dir(vim.fs.dirname(filename))
+      end,
+    })
+
     -- enable servers (mason-lspconfig installs them, but they need to be enabled)
     vim.lsp.enable("ts_ls")
     vim.lsp.enable("lua_ls")
@@ -55,6 +78,7 @@ return {
     vim.lsp.enable("svelte")
     vim.lsp.enable("graphql")
     vim.lsp.enable("emmet_ls")
+    vim.lsp.enable("marksman")
     vim.lsp.enable("prismals")
     vim.lsp.enable("pyright")
 
@@ -85,6 +109,7 @@ return {
 
         opts.desc = "Show LSP definitions"
         keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
+        keymap.set("n", "<leader>gd", "<cmd>Telescope lsp_definitions<CR>", opts)
 
         opts.desc = "Show LSP implementations"
         keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
