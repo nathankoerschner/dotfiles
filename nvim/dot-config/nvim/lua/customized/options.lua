@@ -7,7 +7,6 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
 vim.opt.wrap = false
-vim.opt.clipboard = "unnamedplus"
 vim.opt.scrolloff = 999
 --Keep at least 9 columns visible to the left and right of the cursor
 vim.opt.sidescrolloff=35
