@@ -29,7 +29,13 @@ return {
         desc = "Toggle Neo-tree",
       },
     },
-    opts = {},
+    opts = {
+      window = {
+        width = function()
+          return math.max(45, math.floor(vim.o.columns * 0.2))
+        end,
+      },
+    },
     config = function(_, opts)
       require("neo-tree").setup(opts)
 
