@@ -1,0 +1,12 @@
+[include]
+	path = ~/.gitconfig.local
+
+[alias]
+	# Move HEAD back to the branch point so committed branch changes show up
+	# as working-tree changes in tools like Neo-tree/Gitsigns.
+	# Optional base: git review-start origin/main
+	review-start = "!f() { base=${1:-origin/main}; save=$(git rev-parse --git-path REVIEW_HEAD) || exit; original=$(git rev-parse --verify HEAD) || exit; target=$(git merge-base HEAD \"$base\") || exit; printf '%s\n' \"$original\" > \"$save\" || exit; git reset --mixed \"$target\" || exit; echo \"Review view on: reset to $target; original HEAD saved in $save\"; echo \"Undo with: git review-undo\"; }; f"
+
+	# Undo git review-start by returning to the saved HEAD.
+	# This resets the worktree back to that commit.
+	review-undo = "!f() { save=$(git rev-parse --git-path REVIEW_HEAD) || exit; test -f \"$save\" || { echo \"No saved review-start state for this worktree.\" >&2; exit 1; }; original=$(cat \"$save\") || exit; git reset --hard \"$original\" || exit; rm -f \"$save\"; echo \"Restored HEAD to $original\"; }; f"
