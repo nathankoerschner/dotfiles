@@ -96,81 +96,6 @@ return {
 
     vim.lsp.config("ts_ls", {})
 
-    local function find_wiki_link_under_cursor()
-      local line = vim.api.nvim_get_current_line()
-      local col = vim.api.nvim_win_get_cursor(0)[2] + 1
-      local search_start = 1
-
-      while true do
-        local link_start, link_end, target = line:find("%[%[([^%]]+)%]%]", search_start)
-        if not link_start then
-          return nil
-        end
-
-        if col >= link_start and col <= link_end then
-          target = target:gsub("|.*$", ""):gsub("#.*$", "")
-          target = vim.trim(target)
-          return target ~= "" and target or nil
-        end
-
-        search_start = link_end + 1
-      end
-    end
-
-    local function has_definition(client, bufnr)
-      local params = vim.lsp.util.make_position_params(0, client.offset_encoding or "utf-16")
-      local response = client:request_sync("textDocument/definition", params, 1000, bufnr)
-      local result = response and response.result
-
-      if not result then
-        return false
-      end
-
-      return result.uri ~= nil or #result > 0
-    end
-
-    local function create_missing_marksman_note(client, bufnr)
-      local target = find_wiki_link_under_cursor()
-      if not target then
-        vim.cmd("Telescope lsp_definitions")
-        return
-      end
-
-      local root = client.config.root_dir or vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
-      local note_path = target:match("%.md$") and target or (target .. ".md")
-      local filename = vim.fs.normalize(vim.fs.joinpath(root, note_path))
-      local normalized_root = vim.fs.normalize(root)
-
-      if not vim.startswith(filename, normalized_root .. "/") then
-        vim.notify("Refusing to create note outside Marksman root: " .. target, vim.log.levels.ERROR)
-        return
-      end
-
-      vim.fn.mkdir(vim.fs.dirname(filename), "p")
-      if vim.fn.filereadable(filename) == 0 then
-        vim.fn.writefile({}, filename)
-      end
-
-      vim.cmd.edit(vim.fn.fnameescape(filename))
-    end
-
-    local function marksman_definition_or_create(bufnr)
-      local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "marksman" })
-      local client = clients[1]
-
-      if not client then
-        vim.cmd("Telescope lsp_definitions")
-        return
-      end
-
-      if has_definition(client, bufnr) then
-        vim.cmd("Telescope lsp_definitions")
-        return
-      end
-
-      create_missing_marksman_note(client, bufnr)
-    end
-
     local function current_note_title(bufnr)
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
       for _, line in ipairs(lines) do
@@ -229,9 +154,6 @@ return {
 
         opts.desc = "Show LSP definitions"
         keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
-        keymap.set("n", "<leader>gd", function()
-          marksman_definition_or_create(ev.buf)
-        end, opts)
 
         opts.desc = "Show LSP implementations"
         keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
