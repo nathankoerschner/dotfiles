@@ -11,6 +11,12 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Some plugins still call the deprecated Neovim 0.11 API. Replace the shim
+-- early so those calls go directly to the new API without warning spam.
+if vim.lsp.get_clients then
+  vim.lsp.get_active_clients = vim.lsp.get_clients
+end
+
 require("lazy").setup({ { import = "customized.plugins" }, { import = "customized.plugins.lsp" } }, {
   checker = {
     enabled = true,
