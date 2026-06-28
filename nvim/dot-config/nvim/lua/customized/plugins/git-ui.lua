@@ -34,6 +34,10 @@ return {
         width = function()
           return math.max(45, math.floor(vim.o.columns * 0.2))
         end,
+        mappings = {
+          ["E"] = "expand_all_nodes",
+          ["W"] = "close_all_nodes",
+        },
       },
     },
     config = function(_, opts)

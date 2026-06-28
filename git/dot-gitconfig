@@ -2,10 +2,13 @@
 	path = ~/.gitconfig.local
 
 [alias]
-	# Move HEAD back to the branch point so committed branch changes show up
-	# as working-tree changes in tools like Neo-tree/Gitsigns.
-	# Optional base: git review-start origin/main
-	review-start = "!f() { base=${1:-origin/main}; save=$(git rev-parse --git-path REVIEW_HEAD) || exit; original=$(git rev-parse --verify HEAD) || exit; target=$(git merge-base HEAD \"$base\") || exit; printf '%s\n' \"$original\" > \"$save\" || exit; git reset --mixed \"$target\" || exit; echo \"Review view on: reset to $target; original HEAD saved in $save\"; echo \"Undo with: git review-undo\"; }; f"
+	# Put the PR's own committed changes back into the working tree so file-browser
+	# tools like Neo-tree/Gitsigns can review them as local modifications.
+	# By default, reset to the merge-base with the default/base branch instead of the
+	# branch creation point, so changes brought in by `git merge` from that branch
+	# are not shown as part of the review view. Pass an explicit base if needed:
+	# git review-start origin/main
+	review-start = "!f() { find_default_base() { for candidate in upstream/HEAD origin/HEAD upstream/main origin/main upstream/master origin/master main master; do git rev-parse --verify --quiet \"$candidate^{commit}\" >/dev/null && { printf '%s\n' \"$candidate\"; return 0; }; done; return 1; }; save=$(git rev-parse --git-path REVIEW_HEAD) || exit; original=$(git rev-parse --verify HEAD) || exit; if test -n \"$1\"; then base=$1; target=$(git merge-base HEAD \"$base\") || exit; note=\"merge-base with $base\"; elif base=$(find_default_base); then target=$(git merge-base HEAD \"$base\") || exit; note=\"merge-base with $base\"; else ref=$(git symbolic-ref --quiet HEAD) || { echo \"review-start requires a branch or explicit base.\" >&2; exit 1; }; target=$(git reflog show --format=%H \"$ref\" | tail -n 1) || exit; test -n \"$target\" || { echo \"Could not find branch creation point from reflog.\" >&2; exit 1; }; note=\"branch creation point fallback; merged base-branch changes may appear\"; fi; printf '%s\n' \"$original\" > \"$save\" || exit; git reset --mixed \"$target\" || exit; echo \"Review view on: reset to $target ($note); original HEAD saved in $save\"; echo \"Undo with: git review-undo\"; }; f"
 
 	# Undo git review-start by returning to the saved HEAD.
 	# This resets the worktree back to that commit.
