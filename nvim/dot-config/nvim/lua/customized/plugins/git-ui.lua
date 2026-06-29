@@ -1,3 +1,17 @@
+local refresh_neo_tree_git_status = function()
+  local ok, neo_tree = pcall(require, "neo-tree")
+  if not ok then
+    return
+  end
+
+  local config = neo_tree.ensure_config and neo_tree.ensure_config() or neo_tree.config
+  if not config then
+    return
+  end
+
+  pcall(require("neo-tree.git").status_async, vim.uv.cwd(), nil, config.git_status_async_options)
+end
+
 return {
   {
     "lewis6991/gitsigns.nvim",
@@ -24,7 +38,7 @@ return {
         "<leader>e",
         function()
           require("neo-tree.command").execute({ toggle = true })
-          require("neo-tree.git").status_async(vim.uv.cwd(), nil, require("neo-tree").config.git_status_async_options)
+          refresh_neo_tree_git_status()
         end,
         desc = "Toggle Neo-tree",
       },
@@ -43,20 +57,16 @@ return {
     config = function(_, opts)
       require("neo-tree").setup(opts)
 
-      local refresh_git_status = function()
-        require("neo-tree.git").status_async(vim.uv.cwd(), nil, require("neo-tree").config.git_status_async_options)
-      end
-
       vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "ShellCmdPost" }, {
         group = vim.api.nvim_create_augroup("UserNeoTreeGitRefresh", { clear = true }),
-        callback = refresh_git_status,
+        callback = refresh_neo_tree_git_status,
       })
 
       vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold" }, {
         group = vim.api.nvim_create_augroup("UserNeoTreeGitRefreshOnTree", { clear = true }),
         callback = function()
           if vim.bo.filetype == "neo-tree" then
-            refresh_git_status()
+            refresh_neo_tree_git_status()
           end
         end,
       })
