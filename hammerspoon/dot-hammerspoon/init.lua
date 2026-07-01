@@ -70,8 +70,8 @@ require("winman")
 -- Machine-local features should only run on this Mac, not every machine that
 -- uses these dotfiles.
 local thisMacUUID = hs.execute([[ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformUUID/{print $4}']])
-local isThisMac = tostring(thisMacUUID):match("603D3362%-8D95%-5386%-8575%-B6C7FF89EA6E") ~= nil
-if isThisMac then
+local isSuperbuildersMac = tostring(thisMacUUID):match("603D3362%-8D95%-5386%-8575%-B6C7FF89EA6E") ~= nil
+if isSuperbuildersMac then
 	require("worksmart_monitor")
 end
 
@@ -131,7 +131,7 @@ end
 
 local module = {}
 local appList = {
-	["n"] = "Notes",
+	["n"] = isSuperbuildersMac and "Nessie" or "Notes",
 	["l"] = "Calendar",
 	["c"] = "Google Chat",
 	["f"] = "Google Chrome",
