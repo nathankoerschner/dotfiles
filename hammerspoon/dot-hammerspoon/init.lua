@@ -330,79 +330,6 @@ end tell]], appleScriptBounds(frame)))
 	end
 end
 
-local okSpaces, spaces = pcall(require, "hs.spaces")
-if not okSpaces then
-	spaces = nil
-	print("Could not load hs.spaces")
-end
-
-local researchStack = {
-	spaceId = hs.settings.get("researchStack.spaceId"),
-	tweetdeckChromeWindowId = nil,
-	chatgptChromeWindowId = nil,
-	opening = false,
-}
-
-local function chromeWindowExists(chromeWindowId)
-	if not chromeWindowId then
-		return false
-	end
-	local ok, exists = hs.osascript.applescript(string.format([[tell application "Google Chrome"
-	repeat with chromeWindow in windows
-		if id of chromeWindow is %s then return true
-	end repeat
-	return false
-end tell]], chromeWindowId))
-	return ok and tostring(exists) == "true"
-end
-
-local function appleScriptLiteral(value)
-	value = tostring(value or "")
-	value = value:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\r\n", "\n"):gsub("\r", "\n")
-	return '"' .. value:gsub("\n", '" & return & "') .. '"'
-end
-
-local function findChromeWindowByUrlText(urlText)
-	local ok, chromeWindowId = hs.osascript.applescript(string.format([[tell application "Google Chrome"
-	repeat with chromeWindow in windows
-		repeat with tabIndex from 1 to count of tabs of chromeWindow
-			set chromeTab to tab tabIndex of chromeWindow
-			set tabUrl to URL of chromeTab as string
-			if tabUrl contains %s then
-				set active tab index of chromeWindow to tabIndex
-				return id of chromeWindow
-			end if
-		end repeat
-	end repeat
-	return ""
-end tell]], appleScriptLiteral(urlText)))
-	if ok and chromeWindowId and tostring(chromeWindowId) ~= "" then
-		return tostring(chromeWindowId)
-	end
-	return nil
-end
-
-local function setChromeWindowFrame(chromeWindowId, frame)
-	if not chromeWindowId then
-		return false
-	end
-	local ok = hs.osascript.applescript(string.format([[tell application "Google Chrome"
-	set bounds of (first window whose id is %s) to %s
-end tell]], chromeWindowId, appleScriptBounds(frame)))
-	return ok
-end
-
-local function focusChromeWindow(chromeWindowId)
-	if not chromeWindowId then
-		return false
-	end
-	local ok = hs.osascript.applescript(string.format([[tell application "Google Chrome"
-	activate
-	set index of (first window whose id is %s) to 1
-end tell]], chromeWindowId))
-	return ok
-end
-
 local function focusChatGPTPrompt(chromeWindowId, attempt)
 	attempt = attempt or 1
 	if not chromeWindowId or attempt > 12 then
@@ -423,201 +350,31 @@ end tell]], chromeWindowId))
 	end
 end
 
-local function spaceExists(spaceId)
-	if not spaceId or not spaces then
-		return false
-	end
-	spaceId = tonumber(spaceId)
-	local allSpaces = spaces.allSpaces()
-	if not allSpaces then
-		return false
-	end
-	for _, screenSpaces in pairs(allSpaces) do
-		for _, candidateSpaceId in ipairs(screenSpaces) do
-			if candidateSpaceId == spaceId then
-				return true
-			end
-		end
-	end
-	return false
-end
-
-local function newestSpace(before, after)
-	local seen = {}
-	for _, spaceId in ipairs(before or {}) do
-		seen[spaceId] = true
-	end
-	for _, spaceId in ipairs(after or {}) do
-		if not seen[spaceId] then
-			return spaceId
-		end
-	end
-	return after and after[#after] or nil
-end
-
-local function ensureResearchSpace(callback)
-	if not spaces then
-		hs.alert.show("hs.spaces is unavailable")
-		callback(nil)
-		return
-	end
-
-	local existingSpaceId = tonumber(researchStack.spaceId)
-	if spaceExists(existingSpaceId) then
-		callback(existingSpaceId)
-		return
-	end
-
-	local screen = hs.screen.mainScreen()
-	local before = spaces.spacesForScreen(screen) or {}
-	local ok, err = spaces.addSpaceToScreen(screen)
-	if not ok then
-		hs.alert.show("Could not create research Space")
-		print("Research Space error: " .. tostring(err))
-		callback(nil)
-		return
-	end
-
-	hs.timer.doAfter(1.0, function()
-		local after = spaces.spacesForScreen(screen) or {}
-		local spaceId = newestSpace(before, after)
-		if spaceId then
-			researchStack.spaceId = spaceId
-			hs.settings.set("researchStack.spaceId", spaceId)
-		end
-		callback(spaceId)
-	end)
-end
-
-local function moveFocusedChromeWindowToSpace(chromeWindowId, spaceId, callback)
-	if not (chromeWindowId and spaceId and spaces) then
-		if callback then
-			callback()
-		end
-		return
-	end
-
-	focusChromeWindow(chromeWindowId)
-	hs.timer.doAfter(0.15, function()
-		local chrome = hs.application.find("Google Chrome")
-		local win = chrome and chrome:focusedWindow()
-		if win then
-			spaces.moveWindowToSpace(win, spaceId)
-		end
-		if callback then
-			callback()
-		end
-	end)
-end
-
-local function discoverResearchStackWindows()
-	researchStack.tweetdeckChromeWindowId = chromeWindowExists(researchStack.tweetdeckChromeWindowId)
-		and researchStack.tweetdeckChromeWindowId
-		or findChromeWindowByUrlText("pro.x.com")
-		or findChromeWindowByUrlText("x.com")
-	researchStack.chatgptChromeWindowId = chromeWindowExists(researchStack.chatgptChromeWindowId)
-		and researchStack.chatgptChromeWindowId
-		or findChromeWindowByUrlText("chatgpt.com")
-end
-
-local function createMissingResearchStackWindows()
+local function openResearchStack()
 	local screenFrame = hs.screen.mainScreen():frame()
 	local topFrame = topBottomFrame(screenFrame, "top")
 	local bottomFrame = topBottomFrame(screenFrame, "bottom")
-	local scriptLines = { [[tell application "Google Chrome"]], [[	activate]] }
-
-	if not researchStack.tweetdeckChromeWindowId then
-		table.insert(scriptLines, string.format([[	set tweetdeckWindow to make new window
+	local ok, chatgptWindowId = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	activate
+	set tweetdeckWindow to make new window
 	set URL of active tab of tweetdeckWindow to "https://pro.x.com/"
-	set bounds of tweetdeckWindow to %s]], appleScriptBounds(topFrame)))
-	else
-		setChromeWindowFrame(researchStack.tweetdeckChromeWindowId, topFrame)
-	end
+	set bounds of tweetdeckWindow to %s
 
-	if not researchStack.chatgptChromeWindowId then
-		table.insert(scriptLines, string.format([[	set chatgptWindow to make new window
+	set chatgptWindow to make new window
 	set URL of active tab of chatgptWindow to "https://chatgpt.com/?hints=research"
-	set bounds of chatgptWindow to %s]], appleScriptBounds(bottomFrame)))
+	set bounds of chatgptWindow to %s
+	return id of chatgptWindow
+end tell]], appleScriptBounds(topFrame), appleScriptBounds(bottomFrame)))
+	if ok and chatgptWindowId then
+		hs.timer.doAfter(1.0, function()
+			focusChatGPTPrompt(tostring(chatgptWindowId))
+		end)
 	else
-		setChromeWindowFrame(researchStack.chatgptChromeWindowId, bottomFrame)
-	end
-
-	table.insert(scriptLines, [[	set tweetdeckId to ""
-	set chatgptId to ""
-	try
-		set tweetdeckId to id of tweetdeckWindow as string
-	end try
-	try
-		set chatgptId to id of chatgptWindow as string
-	end try
-	return tweetdeckId & tab & chatgptId
-end tell]])
-
-	local ok, windowIds = hs.osascript.applescript(table.concat(scriptLines, "\n"))
-	if ok and windowIds then
-		local tweetdeckWindowId, chatgptWindowId = tostring(windowIds):match("([^\t]*)\t([^\t]*)")
-		if tweetdeckWindowId and tweetdeckWindowId ~= "" then
-			researchStack.tweetdeckChromeWindowId = tweetdeckWindowId
-		end
-		if chatgptWindowId and chatgptWindowId ~= "" then
-			researchStack.chatgptChromeWindowId = chatgptWindowId
-		end
-		return true
-	end
-	return false
-end
-
-local function arrangeResearchStackInCurrentSpace(spaceId)
-	local screenFrame = hs.screen.mainScreen():frame()
-	discoverResearchStackWindows()
-	if not createMissingResearchStackWindows() then
 		hs.alert.show("Could not open research stack")
-		return
 	end
-
-	moveFocusedChromeWindowToSpace(researchStack.tweetdeckChromeWindowId, spaceId, function()
-		setChromeWindowFrame(researchStack.tweetdeckChromeWindowId, topBottomFrame(screenFrame, "top"))
-		moveFocusedChromeWindowToSpace(researchStack.chatgptChromeWindowId, spaceId, function()
-			setChromeWindowFrame(researchStack.chatgptChromeWindowId, topBottomFrame(screenFrame, "bottom"))
-			if spaceId and spaces then
-				spaces.gotoSpace(spaceId)
-			end
-			hs.timer.doAfter(0.5, function()
-				focusChatGPTPrompt(researchStack.chatgptChromeWindowId)
-			end)
-		end)
-	end)
 end
 
-local function openResearchStack()
-	if researchStack.opening then
-		return
-	end
-	researchStack.opening = true
-	ensureResearchSpace(function(spaceId)
-		if not spaceId then
-			researchStack.opening = false
-			return
-		end
-		if spaces then
-			spaces.gotoSpace(spaceId)
-		end
-		hs.timer.doAfter(0.8, function()
-			arrangeResearchStackInCurrentSpace(spaceId)
-			researchStack.opening = false
-		end)
-	end)
-end
-
-_G.openResearchStack = openResearchStack
-hs.hotkey.bind({ "ctrl", "cmd" }, "c", function()
-	local ok, err = xpcall(openResearchStack, debug.traceback)
-	if not ok then
-		researchStack.opening = false
-		hs.alert.show("Research shortcut failed")
-		print("Research shortcut failed: " .. tostring(err))
-	end
-end)
+hs.hotkey.bind({ "ctrl", "cmd" }, "c", openResearchStack)
 
 hs.hotkey.bind({ "ctrl", "cmd" }, "m", function()
 	discordGmailStack.generation = discordGmailStack.generation + 1
