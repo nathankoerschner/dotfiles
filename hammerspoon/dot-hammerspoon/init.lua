@@ -133,7 +133,6 @@ local module = {}
 local appList = {
 	["n"] = isSuperbuildersMac and "Nessie" or "Notes",
 	["l"] = "Calendar",
-	["c"] = "Google Chat",
 	["f"] = "Google Chrome",
 	["j"] = "Ghostty",
 	["s"] = "Slack",
@@ -238,6 +237,15 @@ local function sideBySideFrame(screenFrame, position)
 	return hs.geometry.rect(x, screenFrame.y, halfWidth, screenFrame.h)
 end
 
+local function topBottomFrame(screenFrame, position)
+	local halfHeight = screenFrame.h * 0.5
+	local y = screenFrame.y
+	if position == "bottom" then
+		y = screenFrame.y + halfHeight
+	end
+	return hs.geometry.rect(screenFrame.x, y, screenFrame.w, halfHeight)
+end
+
 local function windowById(id)
 	return id and hs.window.get(id) or nil
 end
@@ -321,6 +329,141 @@ end tell]], appleScriptBounds(frame)))
 		hs.alert.show("Could not open Gmail")
 	end
 end
+
+local researchStack = {
+	tweetdeckChromeWindowId = nil,
+	chatgptChromeWindowId = nil,
+}
+
+local function chromeWindowExists(chromeWindowId)
+	if not chromeWindowId then
+		return false
+	end
+	local ok, exists = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	repeat with chromeWindow in windows
+		if id of chromeWindow is %s then return true
+	end repeat
+	return false
+end tell]], chromeWindowId))
+	return ok and tostring(exists) == "true"
+end
+
+local function appleScriptLiteral(value)
+	value = tostring(value or "")
+	value = value:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\r\n", "\n"):gsub("\r", "\n")
+	return '"' .. value:gsub("\n", '" & return & "') .. '"'
+end
+
+local function findChromeWindowByUrlPrefix(urlPrefix)
+	local ok, chromeWindowId = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	repeat with chromeWindow in windows
+		repeat with chromeTab in tabs of chromeWindow
+			if (URL of chromeTab as string) starts with %s then
+				set active tab index of chromeWindow to index of chromeTab
+				return id of chromeWindow
+			end if
+		end repeat
+	end repeat
+	return ""
+end tell]], appleScriptLiteral(urlPrefix)))
+	if ok and chromeWindowId and tostring(chromeWindowId) ~= "" then
+		return tostring(chromeWindowId)
+	end
+	return nil
+end
+
+local function setChromeWindowFrame(chromeWindowId, frame)
+	if not chromeWindowId then
+		return false
+	end
+	local ok = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	set bounds of (first window whose id is %s) to %s
+end tell]], chromeWindowId, appleScriptBounds(frame)))
+	return ok
+end
+
+local function focusChromeWindow(chromeWindowId)
+	if not chromeWindowId then
+		return false
+	end
+	local ok = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	activate
+	set index of (first window whose id is %s) to 1
+end tell]], chromeWindowId))
+	return ok
+end
+
+local function focusChatGPTPrompt(chromeWindowId, attempt)
+	attempt = attempt or 1
+	if not chromeWindowId or attempt > 12 then
+		return
+	end
+
+	local ok, focused = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	activate
+	set targetWindow to first window whose id is %s
+	set index of targetWindow to 1
+	execute targetWindow's active tab javascript "(() => { const candidates = [...document.querySelectorAll('#prompt-textarea, textarea, [contenteditable=\"true\"]')]; const el = candidates.find((node) => node.offsetParent !== null) || candidates[0]; if (!el) return false; el.focus(); el.click(); if (el.isContentEditable) { const range = document.createRange(); range.selectNodeContents(el); range.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); } return document.activeElement === el || el.contains(document.activeElement); })();"
+end tell]], chromeWindowId))
+
+	if not (ok and tostring(focused) == "true") then
+		hs.timer.doAfter(0.5, function()
+			focusChatGPTPrompt(chromeWindowId, attempt + 1)
+		end)
+	end
+end
+
+local function restoreResearchStack()
+	local screenFrame = hs.screen.mainScreen():frame()
+	researchStack.tweetdeckChromeWindowId = chromeWindowExists(researchStack.tweetdeckChromeWindowId)
+		and researchStack.tweetdeckChromeWindowId
+		or findChromeWindowByUrlPrefix("https://pro.x.com/")
+	researchStack.chatgptChromeWindowId = chromeWindowExists(researchStack.chatgptChromeWindowId)
+		and researchStack.chatgptChromeWindowId
+		or findChromeWindowByUrlPrefix("https://chatgpt.com/")
+
+	if not (researchStack.tweetdeckChromeWindowId and researchStack.chatgptChromeWindowId) then
+		return false
+	end
+
+	setChromeWindowFrame(researchStack.tweetdeckChromeWindowId, topBottomFrame(screenFrame, "top"))
+	setChromeWindowFrame(researchStack.chatgptChromeWindowId, topBottomFrame(screenFrame, "bottom"))
+	focusChatGPTPrompt(researchStack.chatgptChromeWindowId)
+	return true
+end
+
+local function openResearchStack()
+	if restoreResearchStack() then
+		return
+	end
+
+	local screenFrame = hs.screen.mainScreen():frame()
+	local topFrame = topBottomFrame(screenFrame, "top")
+	local bottomFrame = topBottomFrame(screenFrame, "bottom")
+	local ok, windowIds = hs.osascript.applescript(string.format([[tell application "Google Chrome"
+	activate
+	set tweetdeckWindow to make new window
+	set URL of active tab of tweetdeckWindow to "https://pro.x.com/"
+	set bounds of tweetdeckWindow to %s
+
+	set chatgptWindow to make new window
+	set URL of active tab of chatgptWindow to "https://chatgpt.com/?hints=research"
+	set bounds of chatgptWindow to %s
+	return (id of tweetdeckWindow as string) & tab & (id of chatgptWindow as string)
+end tell]], appleScriptBounds(topFrame), appleScriptBounds(bottomFrame)))
+	if ok and windowIds then
+		local tweetdeckWindowId, chatgptWindowId = tostring(windowIds):match("([^\t]+)\t([^\t]+)")
+		researchStack.tweetdeckChromeWindowId = tweetdeckWindowId
+		researchStack.chatgptChromeWindowId = chatgptWindowId
+		hs.timer.doAfter(1.0, function()
+			focusChatGPTPrompt(chatgptWindowId)
+		end)
+	else
+		hs.alert.show("Could not open research stack")
+	end
+end
+
+hs.hotkey.bind({ "ctrl", "cmd" }, "c", openResearchStack)
 
 hs.hotkey.bind({ "ctrl", "cmd" }, "m", function()
 	discordGmailStack.generation = discordGmailStack.generation + 1
