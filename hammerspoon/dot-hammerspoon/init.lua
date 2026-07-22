@@ -162,6 +162,15 @@ for k, v in pairs(appList) do
 	end)
 end
 
+local function centerWindow(win, widthRatio, heightRatio)
+	local screenFrame = win:screen():frame()
+	local width = screenFrame.w * widthRatio
+	local height = screenFrame.h * heightRatio
+	local x = screenFrame.x + (screenFrame.w - width) / 2
+	local y = screenFrame.y + (screenFrame.h - height) / 2
+	win:setFrame(hs.geometry.rect(x, y, width, height))
+end
+
 -- Monkeytype launcher with custom window size
 hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
 	-- Open Monkeytype in a new Chrome window
@@ -178,16 +187,7 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "t", function()
 		if chrome then
 			local win = chrome:focusedWindow()
 			if win then
-				local screen = win:screen()
-				local screenFrame = screen:frame()
-
-				-- Calculate 50% width, 60% height, centered
-				local newWidth = screenFrame.w * 0.5
-				local newHeight = screenFrame.h * 0.6
-				local newX = screenFrame.x + (screenFrame.w - newWidth) / 2
-				local newY = screenFrame.y + (screenFrame.h - newHeight) / 2
-
-				win:setFrame(hs.geometry.rect(newX, newY, newWidth, newHeight))
+				centerWindow(win, 0.5, 0.6)
 			end
 		end
 	end)
@@ -203,16 +203,7 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
 		if books then
 			local win = books:focusedWindow() or books:mainWindow()
 			if win then
-				local screen = win:screen()
-				local screenFrame = screen:frame()
-
-				-- Calculate 75% width, 85% height, centered
-				local newWidth = screenFrame.w * 0.75
-				local newHeight = screenFrame.h * 0.85
-				local newX = screenFrame.x + (screenFrame.w - newWidth) / 2
-				local newY = screenFrame.y + (screenFrame.h - newHeight) / 2
-
-				win:setFrame(hs.geometry.rect(newX, newY, newWidth, newHeight))
+				centerWindow(win, 0.75, 0.85)
 			end
 		end
 	end)
@@ -427,6 +418,14 @@ end)
 
 -- Quick reminder creation
 local quickReminderWebview = nil
+
+local function closeQuickReminderWebview()
+	if quickReminderWebview then
+		quickReminderWebview:delete()
+		quickReminderWebview = nil
+	end
+end
+
 local defaultReminderListName = "Reminders"
 local reminderListCache = { { id = "", name = defaultReminderListName, accountName = "" } }
 local reminderListRefreshInFlight = false
@@ -603,10 +602,7 @@ end
 hs.timer.doAfter(1, refreshReminderLists)
 
 local function showQuickReminderDialog()
-	if quickReminderWebview then
-		quickReminderWebview:delete()
-		quickReminderWebview = nil
-	end
+	closeQuickReminderWebview()
 
 	local screenFrame = hs.screen.mainScreen():frame()
 	local width, height = 560, 510
@@ -640,10 +636,7 @@ local function showQuickReminderDialog()
 		end
 
 		if body.action == "cancel" then
-			if quickReminderWebview then
-				quickReminderWebview:delete()
-				quickReminderWebview = nil
-			end
+			closeQuickReminderWebview()
 			return
 		end
 
@@ -659,10 +652,7 @@ local function showQuickReminderDialog()
 
 			-- Close the window first so it feels as snappy as Escape, then
 			-- create the reminder in the background.
-			if quickReminderWebview then
-				quickReminderWebview:delete()
-				quickReminderWebview = nil
-			end
+			closeQuickReminderWebview()
 			createReminder(title, notes, listName, dueDate)
 		end
 	end)

@@ -69,18 +69,23 @@ return {
       end,
     })
 
-    -- enable servers (mason-lspconfig installs them, but they need to be enabled)
-    vim.lsp.enable("ts_ls")
-    vim.lsp.enable("lua_ls")
-    vim.lsp.enable("html")
-    vim.lsp.enable("cssls")
-    vim.lsp.enable("tailwindcss")
-    vim.lsp.enable("svelte")
-    vim.lsp.enable("graphql")
-    vim.lsp.enable("emmet_ls")
-    vim.lsp.enable("marksman")
-    vim.lsp.enable("prismals")
-    vim.lsp.enable("pyright")
+    -- mason-lspconfig installs these servers, but they still need to be enabled.
+    local servers = {
+      "ts_ls",
+      "lua_ls",
+      "html",
+      "cssls",
+      "tailwindcss",
+      "svelte",
+      "graphql",
+      "emmet_ls",
+      "marksman",
+      "prismals",
+      "pyright",
+    }
+    for _, server in ipairs(servers) do
+      vim.lsp.enable(server)
+    end
 
     -- show diagnostics inline as virtual text
     vim.diagnostic.config({
