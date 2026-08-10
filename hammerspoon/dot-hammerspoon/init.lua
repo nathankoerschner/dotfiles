@@ -803,6 +803,11 @@ local function showQuickReminderDialog()
 	end)
 
 	quickReminderWebview = hs.webview.new(rect, { developerExtrasEnabled = true }, controller)
+	quickReminderWebview:windowCallback(function(action, webview)
+		if action == "closing" and quickReminderWebview == webview then
+			quickReminderWebview = nil
+		end
+	end)
 	quickReminderWebview:windowStyle({ "titled", "closable", "utility" })
 	quickReminderWebview:allowTextEntry(true)
 	quickReminderWebview:closeOnEscape(true)
@@ -813,26 +818,7 @@ local function showQuickReminderDialog()
 	quickReminderWebview:hswindow():focus()
 end
 
-local function showQuickLinearInput()
-	hs.application.launchOrFocus("Linear")
-
-	hs.timer.doAfter(0.4, function()
-		local linear = hs.application.find("Linear")
-		if not linear then
-			hs.alert.show("Linear not found")
-			return
-		end
-
-		linear:activate(true)
-		hs.timer.doAfter(0.1, function()
-			hs.eventtap.keyStroke({}, "c", 0, linear)
-		end)
-	end)
-end
-
-if isThisMac then
-	hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickLinearInput)
-end
+hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
