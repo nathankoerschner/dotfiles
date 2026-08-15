@@ -303,3 +303,8 @@ gwm() {
 
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
+
+# Machine-local secrets and overrides. Kept outside this repo so tokens are
+# never committed; see ~/.zshenv.local. Claude Code reads ANTHROPIC_AUTH_TOKEN
+# from the environment, and codex resolves TFY_TOKEN via its provider env_key.
+[[ -f ~/.zshenv.local ]] && source ~/.zshenv.local
