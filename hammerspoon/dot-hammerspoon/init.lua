@@ -5,37 +5,6 @@
 hs.window.animationDuration = 0
 super = { "alt", "cmd" }
 
--- For Ghostty only, use Cmd+h/j/k/l as tmux pane/window navigation by
--- sending tmux prefix + h/j/k/l. Return false outside Ghostty so normal app
--- shortcuts like Chrome Cmd+L are not swallowed globally.
-cmdTmuxPaneNav = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
-	local flags = event:getFlags()
-	if not (flags.cmd and not flags.alt and not flags.ctrl and not flags.shift and not flags.fn) then
-		return false
-	end
-
-	local paneKeyByCode = {
-		[hs.keycodes.map.h] = "h",
-		[hs.keycodes.map.j] = "j",
-		[hs.keycodes.map.k] = "k",
-		[hs.keycodes.map.l] = "l",
-	}
-	local paneKey = paneKeyByCode[event:getKeyCode()]
-	if not paneKey then
-		return false
-	end
-
-	local app = hs.application.frontmostApplication()
-	if not (app and app:name() == "Ghostty") then
-		return false
-	end
-
-	hs.eventtap.keyStroke({ "ctrl" }, "b", 0)
-	hs.eventtap.keyStroke({}, paneKey, 0)
-	return true
-end)
-cmdTmuxPaneNav:start()
-
 -- -- Keybindings for window management
 winmanHotkeys = {
 	resizeDown = "j",

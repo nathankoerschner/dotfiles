@@ -1,40 +1,8 @@
-# macOS shortcuts forwarded into tmux
+# Ghostty configuration.
 #
-# These bindings intentionally bypass Ghostty actions and send literal key
-# sequences into the terminal. `\x02` is Ctrl-b, tmux's prefix, so each line is
-# equivalent to pressing: tmux prefix, then the tmux binding key.
+# Intentionally empty: all keybindings use Ghostty's defaults (Cmd-d split,
+# Cmd-t new tab, Cmd-w close, Cmd-1..9 tab switching, etc.).
 #
-# Keep host-level shortcuts that control tmux here, and keep the actual tmux
-# behavior in tmux/dot-tmux.conf.
-
-# Panes.
-# Cmd-d       -> prefix %  -> split right
-# Cmd-Shift-d -> prefix "  -> split down
-# Cmd-Shift-Enter -> prefix z -> zoom/unzoom pane
-keybind = super+d=text:\x02%
-keybind = super+shift+d=text:\x02\"
-keybind = super+shift+enter=text:\x02z
-keybind = super+h=text:\x02h
-keybind = super+j=text:\x02j
-keybind = super+k=text:\x02k
-keybind = super+l=text:\x02l
-
-# Windows/sessions.
-# Cmd-t -> prefix c -> new window
-# Cmd-w -> prefix x -> kill pane/window prompt
-keybind = super+t=text:\x02c
-keybind = super+w=text:\x02x
-
-# Window switching.
-# Cmd-<number> -> prefix <number>. tmux is configured with base-index 1.
-# Use digit_N to override Ghostty's default Cmd-N tab switching on macOS.
-keybind = super+digit_1=text:\x021
-keybind = super+digit_2=text:\x022
-keybind = super+digit_3=text:\x023
-keybind = super+digit_4=text:\x024
-keybind = super+digit_5=text:\x025
-keybind = super+digit_6=text:\x026
-keybind = super+digit_7=text:\x027
-keybind = super+digit_8=text:\x028
-keybind = super+digit_9=text:\x029
-keybind = super+0=text:\x020
+# This file previously forwarded macOS shortcuts into tmux by sending literal
+# `\x02` (Ctrl-b) prefix sequences. See git history if that setup is ever needed
+# again.
