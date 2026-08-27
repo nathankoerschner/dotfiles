@@ -114,6 +114,7 @@ local appList = {
 	["o"] = "Obsidian",
 	["t"] = "Microsoft Teams",
 	["m"] = "Gmail",
+	["g"] = "Grok Bot",
 }
 local urlList = {
 	["a"] = "https://claude.ai/new",
