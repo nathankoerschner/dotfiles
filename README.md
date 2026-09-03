@@ -23,6 +23,19 @@ Intentionally not tracked in dotfiles:
 - `~/.pi/agent/sessions/`
 - repo-local `.pi/todos/`
 
+## Machine-local AI gateway
+
+AI tools use their standard OAuth/API authentication by default. To opt one
+machine into TrueFoundry, add only the gateway token to `~/.zshenv.local`:
+
+```sh
+export TFY_TOKEN="..."
+```
+
+On opted-in machines, the shell routes Claude Code, Pi, and Codex through
+TrueFoundry. Keep `~/.zshenv.local` untracked; machines without `TFY_TOKEN`
+continue using the standard providers configured by each tool.
+
 # Steps to follow to setup a new machine:
 
 Basic Setup

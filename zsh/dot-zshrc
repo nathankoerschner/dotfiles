@@ -305,6 +305,30 @@ gwm() {
 export PATH=$HOME/.opencode/bin:$PATH
 
 # Machine-local secrets and overrides. Kept outside this repo so tokens are
-# never committed; see ~/.zshenv.local. Claude Code reads ANTHROPIC_AUTH_TOKEN
-# from the environment, and codex resolves TFY_TOKEN via its provider env_key.
+# never committed; see ~/.zshenv.local.
 [[ -f ~/.zshenv.local ]] && source ~/.zshenv.local
+
+# Opt this machine into TrueFoundry by defining TFY_TOKEN in ~/.zshenv.local.
+# Machines without that local token keep each tool's standard OAuth/API auth.
+if [[ -n ${TFY_TOKEN:-} ]]; then
+  export ANTHROPIC_BASE_URL="https://tfy.promptlens.trilogy.com"
+  export ANTHROPIC_AUTH_TOKEN="$TFY_TOKEN"
+  export ANTHROPIC_MODEL="claude-fable-5-1[1m]"
+
+  pi() {
+    local arg has_model=false has_models=false
+    for arg in "$@"; do
+      [[ "$arg" == "--model" || "$arg" == --model=* ]] && has_model=true
+      [[ "$arg" == "--models" || "$arg" == --models=* ]] && has_models=true
+    done
+
+    local -a tfy_args
+    $has_model || tfy_args+=(--model truefoundry-openai/gpt-5.6-sol)
+    $has_models || tfy_args+=(--models truefoundry/claude-fable-5-1,truefoundry-openai/gpt-5.6-sol)
+    command pi "${tfy_args[@]}" "$@"
+  }
+
+  codex() {
+    command codex -c model_provider=tfy "$@"
+  }
+fi
