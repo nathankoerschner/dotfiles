@@ -36,6 +36,25 @@ On opted-in machines, the shell routes Claude Code, Pi, and Codex through
 TrueFoundry. Keep `~/.zshenv.local` untracked; machines without `TFY_TOKEN`
 continue using the standard providers configured by each tool.
 
+## TMUX Cheat Sheet
+
+`Prefix` means press `Ctrl+B`, release it, then press the shortcut key.
+
+| Shortcut | Action |
+|---|---|
+| `Prefix f` | Open the project sessionizer |
+| `Prefix L` | Switch to the last-used session |
+| `Prefix (` / `Prefix )` | Previous / next session |
+| `Prefix s` | Pick a session |
+| `Prefix c` | Create a window |
+| `Prefix n` / `Prefix p` | Next / previous window |
+| `Prefix 1`–`9` | Jump to a numbered window |
+| `Prefix %` / `Prefix "` | Split right / split down |
+| `Prefix h/j/k/l` | Move between panes |
+| `Prefix z` | Zoom or unzoom the current pane |
+| `Prefix x` | Close the current pane |
+| `Prefix i` | Copy the current pane ID |
+
 # Steps to follow to setup a new machine:
 
 Basic Setup
