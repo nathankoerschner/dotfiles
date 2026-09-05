@@ -308,6 +308,10 @@ export PATH=$HOME/.opencode/bin:$PATH
 # never committed; see ~/.zshenv.local.
 [[ -f ~/.zshenv.local ]] && source ~/.zshenv.local
 
+# Pi model defaults and rotation live only in ~/.pi/agent/settings.json.
+# Clear the legacy wrapper when re-sourcing this file in an existing shell.
+unfunction pi 2>/dev/null
+
 # Opt this machine into TrueFoundry by defining TFY_TOKEN in ~/.zshenv.local.
 # Machines without that local token keep each tool's standard OAuth/API auth.
 if [[ -n ${TFY_TOKEN:-} ]]; then
