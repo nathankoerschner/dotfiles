@@ -1,8 +1,11 @@
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+##########
+# oh-my-zsh
+##########
 
-# Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+plugins=(git)
+source $ZSH/oh-my-zsh.sh
 
 ##########
 # HISTORY
@@ -20,128 +23,60 @@ setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a d
 setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
 setopt HIST_IGNORE_SPACE         # Dont record an entry starting with a space.
 setopt HIST_SAVE_NO_DUPS         # Dont write duplicate entries in the history file.
-
 setopt inc_append_history
 setopt share_history
 
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+##########
+# KEYBINDINGS (vi mode)
+##########
 
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
-
-# Uncomment the following line to change how often to auto-update (in days).
-# zstyle ':omz:update' frequency 13
-
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
-source $ZSH/oh-my-zsh.sh
-# use Vim keys for navigating the autosuggest list
+bindkey -v
 bindkey -M vicmd "k" up-line-or-beginning-search
 bindkey -M vicmd "j" down-line-or-beginning-search
-# Use Ctrl-P (previous) and Ctrl-N (next) for navigating the autosuggest list
 bindkey '^P' up-line-or-beginning-search
 bindkey '^N' down-line-or-beginning-search
-# User configuration
 
-# export MANPATH="/usr/local/man:$MANPATH"
+# edit command line with $EDITOR from vi normal mode or Ctrl-X Ctrl-E
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
+bindkey -M vicmd 'b' vi-backward-word
+bindkey '^X^E' edit-command-line
+bindkey "ç" fzf-cd-widget # step around mac default alt + c
 
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
+##########
+# ENV / PATH
+##########
 
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
+export EDITOR=nvim
 
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# mise manages project-pinned tool versions (including Bun).
+# Keep this after Bun's PATH entry so mise's shims take precedence for `bun`,
+# while commands installed in ~/.bun/bin (like `omp`) remain available.
+eval "$(mise activate zsh)"
+
+##########
+# ALIASES
+##########
+
 alias v="nvim"
-# use \vim to use the old vim
-
 alias gs="git status"
 alias ga="git add"
 alias gc="git commit"
 alias gp="git push"
 
-
-alias dotfile="echo '~/.zshrc'"
-alias youtube-to-mp3="yt-dlp -x --audio-format mp3 --concat-playlist always --yes-playlist"
-
-# dotfile git directory
-alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
-
-bindkey -v # v for vi mode, e for emacs mode
-
-alias daasity_dbt='source /Users/nathankoerschner/all-client-dbt/daasity-dbt-env/bin/activate'
+##########
+# FUNCTIONS
+##########
 
 # Run a command and tint the tmux pane when it finishes until the pane is focused.
 ringpane() {
@@ -156,85 +91,7 @@ ringpane() {
   return $rc
 }
 
-# Vim
-export EDITOR=nvim
-
-export PATH="/Users/nathankoerschner/.local/bin/:$PATH"
-alias bigquery-query='bq query --use_legacy_sql=false'
-alias generate-iphone-8plus-sized-screenshot-from-iphone-se-screenshot='magick convert  -resize 1242x2209 -crop 1242x2208+0+0'
-export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"
-export PATH="/opt/homebrew/bin:$PATH" # for python
-export PATH="/usr/local/opt/sqlite/bin:$PATH"
-export PATH=$PATH:$HOME/go/bin
-
-
-
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-# edit command line with $EDITOR from vi normal mode or Ctrl-X Ctrl-E
-autoload -U edit-command-line
-zle -N edit-command-line
-bindkey -M vicmd v edit-command-line
-bindkey -M vicmd 'b' vi-backward-word
-bindkey '^X^E' edit-command-line
-# export FZF_DEFAULT_OPTS='--bind "ctrl-j:down,ctrl-k:up,alt-j:preview-down,alt-k:preview-up"'
-bindkey "ç" fzf-cd-widget # step around mac default alt + c
-
-
-
-# yazi
-function yy() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
-}
-
-# pyenv (disabled — using uv for Python management)
-# export PYENV_ROOT="$HOME/.pyenv"
-# command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-# eval "$(pyenv init -)"
-
-
-alias ,venv1="python3 -m venv venv"
-alias ,venv2="source venv/bin/activate"
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/google-cloud-sdk/path.zsh.inc"; fi
-
-export PATH=~/.local/.npm-global/bin:$PATH
-
-# Created by `pipx` on 2025-05-25 20:56:23
-export PATH="$PATH:$HOME/dotfiles/bin/dot-local/bin"
-export PATH="$HOME/.local/bin:$PATH"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# . "$HOME/.local/bin/env"  # removed — file no longer exists (uv moved to dotfiles)
-export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
-
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# mise manages project-pinned tool versions (including Bun).
-# Keep this after Bun's PATH entry so mise's shims take precedence for `bun`,
-# while commands installed in ~/.bun/bin (like `omp`) remain available.
-eval "$(mise activate zsh)"
-
-# OMP requires Bun >= 1.3.14, while some projects are pinned lower.
-# ~/.bun/bin/omp is a wrapper that runs OMP with Bun 1.3.14;
-# normal `bun` remains controlled by mise/project config.
-
-# Git Worktree commands
+# Git worktrees
 #
 # Create a new branch as a worktree in ../<repo>-<branch> and cd into it
 gw() {
@@ -300,9 +157,9 @@ gwm() {
   fi
 }
 
-
-# opencode
-export PATH=$HOME/.opencode/bin:$PATH
+##########
+# MACHINE-LOCAL / AI GATEWAY
+##########
 
 # Machine-local secrets and overrides. Kept outside this repo so tokens are
 # never committed; see ~/.zshenv.local.
@@ -310,6 +167,7 @@ export PATH=$HOME/.opencode/bin:$PATH
 
 # Opt this machine into TrueFoundry by defining TFY_TOKEN in ~/.zshenv.local.
 # Machines without that local token keep each tool's standard OAuth/API auth.
+# Pi's model config lives solely in ~/.pi/agent/settings.json.
 if [[ -n ${TFY_TOKEN:-} ]]; then
   export ANTHROPIC_BASE_URL="https://tfy.promptlens.trilogy.com"
   export ANTHROPIC_AUTH_TOKEN="$TFY_TOKEN"

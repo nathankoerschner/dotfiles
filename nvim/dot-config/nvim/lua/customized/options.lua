@@ -28,6 +28,10 @@ vim.opt.incsearch = true
 
 vim.opt.termguicolors = false
 
+vim.cmd.colorscheme("angr")
+vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+
 vim.opt.signcolumn = "yes"
 
 vim.opt.isfname:append("@-@")

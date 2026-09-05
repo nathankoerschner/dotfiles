@@ -1,15 +1,8 @@
 .DS_Store
 node_modules/
 
-# from emacs
-emacs/dot-emacs.d/auto-save-list/
-emacs/dot-emacs.d/elpa/
-*~
-
-# Nia API key should live outside this repo, but ignore any accidental local copy
-.config/nia/api_key
-
 # Machine-local secrets live in ~/.zshenv.local, outside this repo. Ignore any
 # accidental copy that lands here.
 .zshenv.local
 *.local.env
+.claude/

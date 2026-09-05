@@ -1,6 +1,6 @@
 # Dotfiles
 
-Various scripts avilable in the Bin folder.
+Small helper scripts live in `bin/dot-local/bin` and stow into `~/.local/bin`.
 
 Uses `stow` (and it's glorious `--dotfiles` option) to manage all dotfiles.
 
@@ -17,6 +17,10 @@ Pi extensions and non-secret settings are tracked in `pi/dot-pi`.
 Live paths resolve like this:
 - `~/.pi/agent/extensions/*.ts` -> `~/dotfiles/pi/dot-pi/agent/extensions/*.ts`
 - `~/.pi/agent/settings.json` -> `~/dotfiles/pi/dot-pi/agent/settings.json`
+
+Pi's default model and Ctrl+P rotation are configured only in `settings.json`
+(`defaultProvider`/`defaultModel`/`enabledModels`); nothing in the shell
+config overrides them.
 
 Intentionally not tracked in dotfiles:
 - `~/.pi/agent/auth.json`
@@ -83,8 +87,9 @@ Dev Env Setup
 - install ohmyzsh (get command from site)
 - brew install fzf
 - brew install ripgrep
-- stow bin 
+- stow bin
     - confirm tmux sessionizer works
+- brew install uv
 - brew install neovim
     - brew install lua
     - brew install luarocks (required for Mason to install luacheck)
@@ -97,7 +102,6 @@ Dev Env Setup
 - brew install gh
     - gh auth login
 - configure git
-- SnowSQL
 - Install Jump Desktop and configure it for connecting to relevant machines.
 - Install and sign in to Slack
 - Install Transmit for S3 file access

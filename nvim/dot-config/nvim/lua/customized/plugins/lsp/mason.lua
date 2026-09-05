@@ -1,7 +1,8 @@
 return {
-	"williamboman/mason.nvim",
+	"mason-org/mason.nvim",
+	version = "^1.0.0",
 	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
+		{ "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
 	config = function()
@@ -37,10 +38,10 @@ return {
 			ensure_installed = {
 				"prettier", -- prettier formatter
 				"stylua", -- lua formatter
-                "ruff", -- python formatter
+				"ruff", -- python linter
 				"eslint_d",
 				"sqlfluff",
-                "luacheck",
+				"luacheck",
 			},
 		})
 	end,
