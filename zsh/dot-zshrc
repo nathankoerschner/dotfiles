@@ -315,19 +315,6 @@ if [[ -n ${TFY_TOKEN:-} ]]; then
   export ANTHROPIC_AUTH_TOKEN="$TFY_TOKEN"
   export ANTHROPIC_MODEL="claude-fable-5-1[1m]"
 
-  pi() {
-    local arg has_model=false has_models=false
-    for arg in "$@"; do
-      [[ "$arg" == "--model" || "$arg" == --model=* ]] && has_model=true
-      [[ "$arg" == "--models" || "$arg" == --models=* ]] && has_models=true
-    done
-
-    local -a tfy_args
-    $has_model || tfy_args+=(--model truefoundry-openai/gpt-6-astra)
-    $has_models || tfy_args+=(--models truefoundry/claude-fable-5-1,truefoundry-openai/gpt-6-astra)
-    command pi "${tfy_args[@]}" "$@"
-  }
-
   codex() {
     command codex -c model_provider=tfy "$@"
   }
