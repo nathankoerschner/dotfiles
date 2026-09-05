@@ -323,8 +323,8 @@ if [[ -n ${TFY_TOKEN:-} ]]; then
     done
 
     local -a tfy_args
-    $has_model || tfy_args+=(--model truefoundry-openai/gpt-5.6-sol)
-    $has_models || tfy_args+=(--models truefoundry/claude-fable-5-1,truefoundry-openai/gpt-5.6-sol)
+    $has_model || tfy_args+=(--model truefoundry-openai/gpt-6-astra)
+    $has_models || tfy_args+=(--models truefoundry/claude-fable-5-1,truefoundry-openai/gpt-6-astra)
     command pi "${tfy_args[@]}" "$@"
   }
 
