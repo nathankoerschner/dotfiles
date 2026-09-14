@@ -625,55 +625,103 @@ local function descendants_include_editor(root_pid, children_by_ppid, command_by
 	return false
 end
 
-local tmux_agent_pane_is_active = false
-local tmux_agent_check_running = false
+-- nil means unknown: suppress synthetic Escape in terminals until a check
+-- succeeds, including after a timeout. Never turn a failed check into "safe".
+local tmux_agent_pane_is_active = nil
+local tmux_agent_check = nil
+local tmux_agent_checked_at = nil
+
+local function agent_pane_is_active(panes_output, ps_output)
+	local children_by_ppid = {}
+	local command_by_pid = {}
+	for pid, ppid, command in ps_output:gmatch("%s*(%d+)%s+(%d+)%s+([^\n]+)") do
+		command_by_pid[pid] = command
+		children_by_ppid[ppid] = children_by_ppid[ppid] or {}
+		table.insert(children_by_ppid[ppid], pid)
+	end
+
+	for attached, window_active, pane_active, pane_pid, command in panes_output:gmatch("(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+([^\n]+)") do
+		if tonumber(attached) > 0 and window_active == "1" and pane_active == "1" then
+			if command_is_agent(command) and not descendants_include_editor(pane_pid, children_by_ppid, command_by_pid) then
+				return true
+			end
+		end
+	end
+	return false
+end
 
 local function update_tmux_agent_pane_is_active()
-	if tmux_agent_check_running then
-		return
-	end
-
 	if not frontmost_app_is_terminal() then
-		tmux_agent_pane_is_active = false
+		tmux_agent_pane_is_active = nil
+		tmux_agent_checked_at = nil
+		return
+	end
+	if tmux_agent_check then
+		tmux_agent_check.publish()
 		return
 	end
 
-	tmux_agent_check_running = true
-	hs.task
-		.new("/bin/bash", function(_, stdout)
-			local panes_output, ps_output = (stdout or ""):match("^(.-)\n__PI_PS__\n(.*)$")
-			panes_output = panes_output or ""
-			ps_output = ps_output or ""
+	local check = {}
+	tmux_agent_check = check
+	local function fail()
+		if tmux_agent_check ~= check then
+			return
+		end
+		tmux_agent_check = nil
+		tmux_agent_pane_is_active = nil
+		tmux_agent_checked_at = nil
+		check.timeout:stop()
+		if check.task and check.task:isRunning() then
+			check.task:terminate()
+		end
+	end
+	check.timeout = hs.timer.doAfter(2, fail)
 
-			local children_by_ppid = {}
-			local command_by_pid = {}
-			for pid, ppid, command in ps_output:gmatch("%s*(%d+)%s+(%d+)%s+([^\n]+)") do
-				command_by_pid[pid] = command
-				children_by_ppid[ppid] = children_by_ppid[ppid] or {}
-				table.insert(children_by_ppid[ppid], pid)
-			end
-
-			local agent_active = false
-			for attached, window_active, pane_active, pane_pid, command in panes_output:gmatch("(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+([^\n]+)") do
-				if tonumber(attached) > 0 and window_active == "1" and pane_active == "1" then
-					if command_is_editor(command) then
-						agent_active = false
-						break
-					end
-
-					if command_is_agent(command) and not descendants_include_editor(pane_pid, children_by_ppid, command_by_pid) then
-						agent_active = true
-						break
-					end
+	-- Direct executables let the timeout terminate the actual process, not a
+	-- shell that leaves a blocked child behind. Streaming drains BOTH pipes:
+	-- an unread `ps` snapshot can fill the OS pipe buffer and never exit.
+	local function run(path, args, callback)
+		local chunks = {}
+		local tail = ""
+		local exited = false
+		local exit_code
+		check.task = hs.task.new(path, function(code, stdout)
+			exit_code = code
+			exited = true
+			-- Termination reads the remainder of the pipe. A previously read
+			-- stream chunk can be delivered later, but still precedes this tail.
+			tail = stdout or ""
+		end, function(_, stdout)
+			chunks[#chunks + 1] = stdout or ""
+			return true
+		end, args)
+		-- hs.task may deliver its final stream chunk AFTER termination. Consume
+		-- on the next poll, rather than parsing partial output in that callback.
+		check.publish = function()
+			if exited and tmux_agent_check == check then
+				if exit_code ~= 0 then
+					fail()
+				else
+					callback(table.concat(chunks) .. tail)
 				end
 			end
-			tmux_agent_pane_is_active = agent_active
-			tmux_agent_check_running = false
-		end, {
-			"-lc",
-			"/opt/homebrew/bin/tmux list-panes -a -F '#{session_attached} #{window_active} #{pane_active} #{pane_pid} #{pane_current_command}'; printf '\n__PI_PS__\n'; ps -Ao pid=,ppid=,comm=",
-		})
-		:start()
+		end
+		if not check.task or not check.task:start() then
+			fail()
+		end
+	end
+
+	run("/opt/homebrew/bin/tmux", {
+		"list-panes", "-a", "-F",
+		"#{session_attached} #{window_active} #{pane_active} #{pane_pid} #{pane_current_command}",
+	}, function(panes_output)
+		run("/bin/ps", { "-Ao", "pid=,ppid=,comm=" }, function(ps_output)
+			tmux_agent_pane_is_active = agent_pane_is_active(panes_output, ps_output)
+			tmux_agent_checked_at = hs.timer.absoluteTime()
+			check.timeout:stop()
+			tmux_agent_check = nil
+		end)
+	end)
 end
 
 update_tmux_agent_pane_is_active()
@@ -689,7 +737,9 @@ modifier_handler = function(evt)
 		send_escape = true
 	elseif prev_modifiers["ctrl"] and len(curr_modifiers) == 0 and send_escape then
 		send_escape = false
-		if not tmux_agent_pane_is_active then
+		local terminal = frontmost_app_is_terminal()
+		local fresh = tmux_agent_checked_at and hs.timer.absoluteTime() - tmux_agent_checked_at < 2e9
+		if not terminal or (fresh and tmux_agent_pane_is_active == false) then
 			hs.eventtap.keyStroke({}, "ESCAPE")
 		end
 	else
@@ -699,17 +749,32 @@ modifier_handler = function(evt)
 	return false
 end
 
--- Call the modifier_handler function anytime a modifier key is pressed or released
-modifier_tap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, modifier_handler)
-modifier_tap:start()
-
--- If any non-modifier key is pressed, we know we won't be sending an escape
-non_modifier_tap = hs.eventtap
-	.new({ hs.eventtap.event.types.keyDown }, function(evt)
+-- One tap observes both halves of the gesture. Separate taps can be disabled
+-- independently by macOS, leaving the release handler injecting Escape after
+-- Ctrl-b because the other tap never saw the b key.
+control_escape_tap = hs.eventtap.new({
+	hs.eventtap.event.types.flagsChanged,
+	hs.eventtap.event.types.keyDown,
+}, function(evt)
+	if evt:getType() == hs.eventtap.event.types.keyDown then
 		send_escape = false
 		return false
-	end)
-	:start()
+	end
+	return modifier_handler(evt)
+end):start()
+
+-- Clear gesture state before restarting so a release cannot complete an old
+-- Control press after macOS disables the tap or enters Secure Input.
+control_escape_watchdog = hs.timer.doEvery(0.5, function()
+	local secure = hs.eventtap.isSecureInputEnabled()
+	if secure or not control_escape_tap:isEnabled() then
+		send_escape = false
+		prev_modifiers = {}
+		if not secure then
+			control_escape_tap:start()
+		end
+	end
+end)
 
 hs.hotkey.bind({ "cmd", "alt", "ctrl" }, "h", function()
 	hs.reload()
