@@ -27,6 +27,41 @@ Intentionally not tracked in dotfiles:
 - `~/.pi/agent/sessions/`
 - repo-local `.pi/todos/`
 
+## Texas Sports Academy MCP (arcade.school)
+
+Pi and Codex register `arcade_school` using `mcp-remote@0.8.3`, bridging stdio
+locally to Streamable HTTP at `https://api.texassportsacademy.com/mcp`.
+Bun must be installed at `~/.bun/bin/bunx`. Config paths currently target
+`/Users/nathan`; adjust them when setting up a different home directory.
+
+The credential is **not tracked**. Provision it through an approved secure channel
+into `~/.config/mcp/arcade-school.headers` (directory mode `0700`, file mode
+`0600`) with a single line:
+
+```text
+Authorization: Bearer <private token>
+```
+
+The configs pass only the header-file path, never the token, as process arguments.
+Do not enable `mcp-remote --debug` or share the credential file or session exports
+containing credentials. The key has no automatic expiration; rotate/revoke it
+through the issuer if exposed. Missing credentials cause the bridge to fail closed.
+Restart Pi/Codex after provisioning or rotating the file. In Pi, check
+`/mcp arcade_school` and call `mcp_arcade_school_whoami` to verify identity.
+
+Access uses the production read-only database role and the full MCP toolset.
+Start with `whoami`, then `list_tables` and `describe_table` before querying.
+Raw device events are in `public.device_events`; `device_analytics` rollups
+are not accessible with this role. Private S3 screenshots/archives require
+separate access. Academic XP is in the `student_portal.strata_*` tables;
+`public.xp_events` is the separate family rewards system.
+
+Follow-up analysis: count distinct students each day who join the arcade but do
+not attend the daily call. Identify the arcade-join and call-attendance sources,
+student identity join, day/time zone, and reporting date range before calculating;
+a missing attendance record alone should not be treated as proof of absence until
+attendance coverage is verified.
+
 ## Machine-local AI gateway
 
 AI tools use their standard OAuth/API authentication by default. To opt one
