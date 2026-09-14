@@ -168,12 +168,12 @@ gwm() {
 # Opt this machine into TrueFoundry by defining TFY_TOKEN in ~/.zshenv.local.
 # Machines without that local token keep each tool's standard OAuth/API auth.
 # Pi's model config lives solely in ~/.pi/agent/settings.json.
+# Codex / ChatGPT desktop read TFY_API_KEY (env_key in ~/.codex/config.toml,
+# where model_provider = "tfy" is set). GUI apps get it via the
+# com.nathan.tfy-env LaunchAgent (see ~/dotfiles/macos), not from this file.
 if [[ -n ${TFY_TOKEN:-} ]]; then
+  export TFY_API_KEY="$TFY_TOKEN"
   export ANTHROPIC_BASE_URL="https://tfy.promptlens.trilogy.com"
   export ANTHROPIC_AUTH_TOKEN="$TFY_TOKEN"
   export ANTHROPIC_MODEL="claude-fable-5-1[1m]"
-
-  codex() {
-    command codex -c model_provider=tfy "$@"
-  }
 fi
