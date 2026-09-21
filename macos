@@ -88,6 +88,17 @@ defaults write com.apple.dock mru-spaces -bool false
 # disable apple's font smoothing, such that the OS doesn't modify the pixle outputs for text
 defaults -currentHost write -g AppleFontSmoothing -int 0
 
+
+### Power
+# Never sleep, even with the lid closed (on AC and battery). Everything keeps
+# running; only the built-in panel turns off when shut. Undo: disablesleep 0.
+# Hammerspoon's battery_guard.lua force-sleeps on low battery as a safety net.
+sudo pmset -a disablesleep 1
+
+# Let Hammerspoon's battery guard toggle sleep without a password prompt
+echo "$USER ALL=(root) NOPASSWD: /usr/bin/pmset" | sudo tee /etc/sudoers.d/pmset >/dev/null
+sudo chmod 0440 /etc/sudoers.d/pmset
+
 if [[ -z $STOW_FOLDERS ]]; then
     STOW_FOLDERS="bin,nvim,tmux,zsh,hammerspoon"
 fi

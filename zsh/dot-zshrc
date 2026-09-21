@@ -177,3 +177,6 @@ if [[ -n ${TFY_TOKEN:-} ]]; then
   export ANTHROPIC_AUTH_TOKEN="$TFY_TOKEN"
   export ANTHROPIC_MODEL="claude-fable-5-1[1m]"
 fi
+
+# bun completions
+[ -s "/Users/nathan/.bun/_bun" ] && source "/Users/nathan/.bun/_bun"

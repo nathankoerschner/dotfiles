@@ -116,6 +116,7 @@ Dev Env Setup
 - brew install hammerspoon
     - brew install m1ddc (used by Hammerspoon to set external monitor brightness)
     - enable accessibility & start on login
+    - the `hs` CLI is auto-installed by init.lua (hs.ipc.cliInstall); reload config with `hs -c 'hs.reload()'`
     - change caps lock to control in system prefs
 - brew Install Ghosty
 - brew install tmux

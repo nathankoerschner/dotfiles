@@ -3,6 +3,11 @@
 --
 --https://github.com/zzamboni/dot-hammerspoon/blob/master/init.org#caffeine-control-systemdisplay-sleep
 hs.window.animationDuration = 0
+
+-- Install the `hs` CLI (idempotent) so `hs -c 'hs.reload()'` works from the shell
+require("hs.ipc")
+hs.ipc.cliInstall("/opt/homebrew")
+
 super = { "alt", "cmd" }
 
 -- -- Keybindings for window management
@@ -35,6 +40,7 @@ winmanScreenProfiles = {
 	},
 }
 require("winman")
+require("battery_guard")
 
 -- Machine-local features should only run on this Mac, not every machine that
 -- uses these dotfiles.
@@ -101,13 +107,12 @@ end
 local module = {}
 local appList = {
 	["n"] = isSuperbuildersMac and "Nessie" or "Notes",
-	["l"] = "Calendar",
+	["l"] = "Linear",
 	["f"] = "Google Chrome",
 	["j"] = "Ghostty",
 	["s"] = "Slack",
 	["w"] = "WorkFlowy",
 	["d"] = "Discord",
-	["e"] = "Linear",
 	["r"] = "Reminders",
 	["1"] = "1Password",
 	["i"] = "Finder",
