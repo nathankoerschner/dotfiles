@@ -148,6 +148,11 @@ local function centerWindow(win, widthRatio, heightRatio)
 	win:setFrame(hs.geometry.rect(x, y, width, height))
 end
 
+-- ChatGPT desktop launcher
+hs.hotkey.bind({ "cmd", "shift" }, "c", function()
+	hs.application.launchOrFocus("ChatGPT")
+end)
+
 -- Books launcher with large custom window size
 hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
 	hs.application.launchOrFocus("Books")
