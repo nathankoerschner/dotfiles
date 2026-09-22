@@ -573,6 +573,65 @@ end
 
 hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 
+-- ─── Herdr: forward Ghostty tab/split shortcuts into herdr ─────────────────
+-- When the focused Ghostty window is running herdr (detected via the window
+-- title herdr writes; see ui.window_title in ~/.config/herdr/config.toml),
+-- translate Ghostty's tab/split shortcuts into herdr's prefix (ctrl+b) chords.
+-- Anywhere else the keys pass through untouched, so Ghostty keeps its defaults.
+local HERDR_PREFIX = { mods = { "ctrl" }, key = "b" }
+local herdrShortcuts = {
+	-- { mods, key, herdr key after prefix }
+	{ mods = { cmd = true }, key = "t", send = "c" }, -- new_tab
+	{ mods = { cmd = true }, key = "w", send = "x" }, -- close_pane
+	{ mods = { cmd = true }, key = "d", send = "v" }, -- split_vertical (side by side)
+	{ mods = { cmd = true, shift = true }, key = "d", send = "-" }, -- split_horizontal (stacked)
+}
+
+local function focusedWindowIsHerdr()
+	local app = hs.application.frontmostApplication()
+	if not app or app:name() ~= "Ghostty" then
+		return false
+	end
+	local win = app:focusedWindow()
+	local title = win and win:title() or ""
+	return title:match("^herdr") ~= nil
+end
+
+local function flagsMatch(flags, wanted)
+	for _, m in ipairs({ "cmd", "shift", "ctrl", "alt" }) do
+		if (flags[m] or false) ~= (wanted[m] or false) then
+			return false
+		end
+	end
+	return true
+end
+
+herdr_shortcut_tap = hs.eventtap
+	.new({ hs.eventtap.event.types.keyDown }, function(evt)
+		local flags = evt:getFlags()
+		if not flags["cmd"] then
+			return false
+		end
+		local key = hs.keycodes.map[evt:getKeyCode()]
+		for _, sc in ipairs(herdrShortcuts) do
+			if key == sc.key and flagsMatch(flags, sc.mods) then
+				if not focusedWindowIsHerdr() then
+					return false
+				end
+				local ev = hs.eventtap.event
+				return true, {
+					ev.newKeyEvent(HERDR_PREFIX.mods, HERDR_PREFIX.key, true),
+					ev.newKeyEvent(HERDR_PREFIX.mods, HERDR_PREFIX.key, false),
+					ev.newKeyEvent({}, sc.send, true),
+					ev.newKeyEvent({}, sc.send, false),
+				}
+			end
+		end
+		return false
+	end)
+	:start()
+-- ────────────────────────────────────────────────────────────────────────────
+
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
 len = function(t)
