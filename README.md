@@ -8,6 +8,8 @@ Uses `stow` (and it's glorious `--dotfiles` option) to manage all dotfiles.
 
 User skills live in `agents/dot-agents/skills/<skill>/SKILL.md`. Stowing the `agents` package symlinks them into `~/.agents/skills/<skill>/SKILL.md`, which is what pi (and other tools) load via `settings.json` (`"skills": ["~/.agents/skills"]`).
 
+`settings.json` also points at `~/arcade/.agents/skills` so the arcade repo's skills (`/skill:arcade-*`) are available from any cwd. This is the main checkout only, not worktrees; those skills assume you `cd` into a checkout before running repo commands.
+
 Codex system skills live alongside under `agents/dot-agents/.system/` and stow to `~/.agents/.system/`.
 
 ## Pi config
