@@ -586,6 +586,9 @@ local herdrShortcuts = {
 	{ mods = { cmd = true }, key = "d", send = "v" }, -- split_vertical (side by side)
 	{ mods = { cmd = true, shift = true }, key = "d", send = "-" }, -- split_horizontal (stacked)
 }
+-- Cmd+[ / Cmd+] step back/forward through focus history (~/.local/bin/herdr-nav,
+-- daemon runs via launchd: com.nathan.herdr-nav).
+local herdrNavKeys = { ["["] = "back", ["]"] = "forward" }
 
 local function focusedWindowIsHerdr()
 	local app = hs.application.frontmostApplication()
@@ -613,6 +616,11 @@ herdr_shortcut_tap = hs.eventtap
 			return false
 		end
 		local key = hs.keycodes.map[evt:getKeyCode()]
+		local navCmd = herdrNavKeys[key]
+		if navCmd and flagsMatch(flags, { cmd = true }) and focusedWindowIsHerdr() then
+			hs.task.new("/usr/bin/python3", nil, { os.getenv("HOME") .. "/.local/bin/herdr-nav", navCmd }):start()
+			return true
+		end
 		for _, sc in ipairs(herdrShortcuts) do
 			if key == sc.key and flagsMatch(flags, sc.mods) then
 				if not focusedWindowIsHerdr() then
