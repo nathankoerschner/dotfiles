@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+# herdr-space-picker — fuzzy-find a Herdr workspace by name and focus it.
+# Bound to prefix+f as a popup in ~/.config/herdr/config.toml: type, Enter.
+set -euo pipefail
+herdr=${HERDR_BIN_PATH:-herdr}
+
+pick=$("$herdr" workspace list \
+  | jq -r '.result.workspaces[] | select(.focused | not) | "\(.workspace_id)\t\(.label)"' \
+  | fzf --delimiter='\t' --with-nth=2 --no-info --prompt='space> ' --layout=reverse) || exit 0
+
+"$herdr" workspace focus "${pick%%$'\t'*}" >/dev/null
