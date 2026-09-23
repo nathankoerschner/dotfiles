@@ -32,8 +32,17 @@ Intentionally not tracked in dotfiles:
 ## Herdr config
 
 `herdr/dot-config/herdr/config.toml` stows to `~/.config/herdr/config.toml`.
-Only the config is tracked; Herdr's sockets, logs, and `session.json` stay local.
-Apply changes with `herdr server reload-config`.
+Only config, plugins, and agent integrations are tracked; Herdr's sockets, logs,
+`session.json`, and `plugins.json` stay local. Apply config changes with
+`herdr server reload-config`.
+
+- `herdr/plugins/`: `recent-agents` (sidebar Agents sorted newest state change
+  first) and `tab-bubbles` (● on a tab per agent that finished or needs input
+  while you weren't looking; visiting clears it).
+- Agent integrations (`herdr integration install <agent>` output) are stowed
+  from `pi/`, `claude/` (`hooks/` + `settings.json` hook), and `codex/`
+  (`herdr-agent-state.sh`, `hooks.json`).
+- After stowing on a new machine, run `herdr/setup.sh` to register the plugins.
 
 ## Texas Sports Academy MCP (arcade.school)
 
