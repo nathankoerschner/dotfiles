@@ -581,11 +581,14 @@ hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 local HERDR_PREFIX = { mods = { "ctrl" }, key = "b" }
 local herdrShortcuts = {
 	-- { mods, key, herdr key after prefix }
-	{ mods = { cmd = true }, key = "t", send = "c" }, -- new_tab
 	{ mods = { cmd = true }, key = "w", send = "x" }, -- close_pane
 	{ mods = { cmd = true }, key = "d", send = "v" }, -- split_vertical (side by side)
 	{ mods = { cmd = true, shift = true }, key = "d", send = "-" }, -- split_horizontal (stacked)
 }
+for i = 1, 9 do
+	table.insert(herdrShortcuts, { mods = { cmd = true }, key = tostring(i), send = tostring(i) }) -- switch_tab
+end
+
 -- Cmd+[ / Cmd+] step back/forward through focus history (~/.local/bin/herdr-nav,
 -- daemon runs via launchd: com.nathan.herdr-nav).
 local herdrNavKeys = { ["["] = "back", ["]"] = "forward" }
@@ -616,6 +619,11 @@ herdr_shortcut_tap = hs.eventtap
 			return false
 		end
 		local key = hs.keycodes.map[evt:getKeyCode()]
+		-- Cmd+T: new tab with a fresh pi session (~/.local/bin/herdr-new-pi-tab).
+		if key == "t" and flagsMatch(flags, { cmd = true }) and focusedWindowIsHerdr() then
+			hs.task.new("/usr/bin/python3", nil, { os.getenv("HOME") .. "/.local/bin/herdr-new-pi-tab" }):start()
+			return true
+		end
 		local navCmd = herdrNavKeys[key]
 		if navCmd and flagsMatch(flags, { cmd = true }) and focusedWindowIsHerdr() then
 			hs.task.new("/usr/bin/python3", nil, { os.getenv("HOME") .. "/.local/bin/herdr-nav", navCmd }):start()
