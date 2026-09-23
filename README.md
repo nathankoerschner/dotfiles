@@ -29,6 +29,12 @@ Intentionally not tracked in dotfiles:
 - `~/.pi/agent/sessions/`
 - repo-local `.pi/todos/`
 
+## Herdr config
+
+`herdr/dot-config/herdr/config.toml` stows to `~/.config/herdr/config.toml`.
+Only the config is tracked; Herdr's sockets, logs, and `session.json` stay local.
+Apply changes with `herdr server reload-config`.
+
 ## Texas Sports Academy MCP (arcade.school)
 
 Pi and Codex register `arcade_school` using `mcp-remote@0.8.3`, bridging stdio
