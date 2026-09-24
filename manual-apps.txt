@@ -1,0 +1,29 @@
+# Apps with no Homebrew cask. ./snapshot doesn't report these as drift.
+# Install by hand on a new machine (App Store, vendor site, or internal build).
+
+# App Store
+Apple Configurator.app
+Toca World.app
+
+# Vendor / internal downloads
+Grok Bot.app
+Nessie.app
+PlaycademyLauncher.app          # arcade.school launcher (prod)
+PlaycademyLauncher-staging.app  # arcade.school launcher (staging)
+Sports Academy.app
+TimeBack.app
+WorkSmart.app                   # Crossover time tracking
+Daily Call.app                  # Chrome web app
+TSA Daily Call.app              # Chrome web app
+
+# Created by other apps; never install directly
+Safari.app
+Claude Code URL Handler.app
+ZoomLauncher.app
+
+# Installed by a Brewfile cask via .pkg (brew can't map these back to the cask)
+Jump Desktop Connect.app        # jump-desktop-connect
+Microsoft Teams.app             # microsoft-teams
+NordVPN.app                     # nordvpn
+Tailscale.app                   # tailscale-app
+zoom.us.app                     # zoom

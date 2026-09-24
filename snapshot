@@ -1,0 +1,68 @@
+#!/usr/bin/env zsh
+# Capture this machine's state into machines/<host>/ so machines can be kept at
+# parity over git. Commit the result; `git diff` shows drift since last time.
+#
+#   ./snapshot            write machines/<host>/
+#   ./snapshot --commit   also commit + push just that directory
+#
+# Secrets are never captured. unmanaged.txt lists what's installed here but not
+# declared in the Brewfile: add it there (or to README "Manual installs"), or
+# uninstall it.
+set -euo pipefail
+cd "${0:A:h}"
+host=$(scutil --get LocalHostName 2>/dev/null || hostname -s)
+out=machines/$host
+mkdir -p $out
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+{
+  echo "host: $host"
+  echo "macos: $(sw_vers -productVersion) ($(sw_vers -buildVersion)) $(uname -m)"
+  echo "user: $USER"
+} > $out/system.txt
+
+# Homebrew + npm + uv, in Brewfile syntax (vscode extensions are Cursor-managed).
+# corepack ships with node; pi installs pi-mcp-adapter itself.
+brew bundle dump --file=- --no-vscode 2>/dev/null | grep -vE '^#|^npm "(corepack|pi-mcp-adapter)"' > $out/Brewfile.lock
+
+ls /Applications ~/Applications 2>/dev/null | grep '\.app$' | sort -u > $out/apps.txt
+{ command -v mise >/dev/null && mise ls --current 2>/dev/null; } > $out/mise.txt || true
+cp ~/.bun/install/global/package.json $out/bun-global.json 2>/dev/null || true
+ls ~/Library/LaunchAgents | sort > $out/launchagents.txt
+
+# Git checkouts directly under ~ (worktrees have a .git *file* and are skipped).
+for d in ~/*(/N); do
+  [[ -d $d/.git ]] || continue
+  url=$(git -C $d remote get-url origin 2>/dev/null) || continue
+  echo "${d:t} $url"
+done > $out/repos.txt
+
+# Drift report: installed here but not declared in the Brewfile.
+{
+  echo "# Installed on $host but not in Brewfile (formulae/casks/npm/uv):"
+  comm -23 <(sort $out/Brewfile.lock) <(grep -E '^(brew|cask|npm|uv|tap) ' Brewfile | sed 's/ *#.*//' | sort) || true
+  echo
+  echo "# Declared in Brewfile but not brew-installed here (bootstrap installs these; apps installed by hand show up here too):"
+  comm -13 <(sort $out/Brewfile.lock) <(grep -E '^(brew|cask|npm|uv|tap) ' Brewfile | sed 's/ *#.*//' | sort) || true
+  echo
+  echo "# Apps in /Applications not from a Brewfile cask or manual-apps.txt:"
+  casks=(${(f)"$(grep -E '^cask ' Brewfile | sed -E 's/cask "([^"]+)".*/\1/')"})
+  brew info --cask --json=v2 $casks 2>/dev/null \
+    | python3 -c 'import json,sys
+for c in json.load(sys.stdin)["casks"]:
+    for a in c.get("artifacts", []):
+        for app in a.get("app", []):
+            print(app if isinstance(app, str) else app.get("target", ""))' \
+    | sed 's#.*/##' | sort -u > /tmp/snapshot-cask-apps.$$
+  comm -23 $out/apps.txt /tmp/snapshot-cask-apps.$$ | grep -vxFf <(sed -E 's/ *#.*//; /^$/d' manual-apps.txt) || true
+  rm -f /tmp/snapshot-cask-apps.$$
+} > $out/unmanaged.txt
+
+echo "wrote $out/"
+cat $out/unmanaged.txt
+
+if [[ ${1:-} == --commit ]]; then
+  git add Brewfile $out
+  git commit -m "snapshot: $host" -- Brewfile $out && git push || echo "(nothing new to commit)"
+fi

@@ -99,33 +99,7 @@ sudo pmset -a disablesleep 1
 echo "$USER ALL=(root) NOPASSWD: /usr/bin/pmset" | sudo tee /etc/sudoers.d/pmset >/dev/null
 sudo chmod 0440 /etc/sudoers.d/pmset
 
-if [[ -z $STOW_FOLDERS ]]; then
-    STOW_FOLDERS="bin,nvim,tmux,zsh,hammerspoon"
-fi
-
-if [[ -z $DOTFILES ]]; then
-    DOTFILES=$HOME/.dotfiles
-fi
-
-# Ensure stow is installed
-if ! command -v stow &> /dev/null; then
-    echo "stow could not be found, please install it first"
-    exit 1
-fi
-
-STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
-
 killall Dock
 killall Finder
 
-read -p "
-
-
-
-
-Press any key to continue " -n1 -s # this is complicated to set via script: https://apple.stackexchange.com/questions/201816/how-do-i-change-mission-control-shortcuts-from-the-command-line
-echo ""
-echo "Execution Complete."
-echo ""
-echo "Please reboot your Mac to complete the changes."
-# prompt for reboot
+echo "macOS defaults applied. Reboot to finish."

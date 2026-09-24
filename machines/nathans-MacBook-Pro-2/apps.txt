@@ -1,0 +1,43 @@
+1Password.app
+Alfred 5.app
+Apple Configurator.app
+Aqua Voice.app
+ChatGPT.app
+Claude Code URL Handler.app
+CleanShot X.app
+cmux.app
+Cursor.app
+Daily Call.app
+Discord.app
+FluidVoice.app
+Ghostty.app
+Google Chrome.app
+Granola.app
+Grok Bot.app
+Hammerspoon.app
+Handy.app
+Jump Desktop Connect.app
+Jump Desktop.app
+Linear.app
+Microsoft Teams.app
+Nessie.app
+NordVPN.app
+Obsidian.app
+Perplexity.app
+PlaycademyLauncher-staging.app
+PlaycademyLauncher.app
+Roblox.app
+Safari.app
+Shadow PC.app
+Slack.app
+Sports Academy.app
+Spotify.app
+Tailscale.app
+TimeBack.app
+Toca World.app
+TSA Daily Call.app
+Wireshark.app
+WorkFlowy.app
+WorkSmart.app
+zoom.us.app
+ZoomLauncher.app

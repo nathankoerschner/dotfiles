@@ -1,0 +1,118 @@
+#!/usr/bin/env zsh
+# Bring a Mac to parity with this setup. Idempotent: safe to re-run any time.
+#
+#   zsh -c "$(curl -fsSL https://raw.githubusercontent.com/nathankoerschner/dotfiles/main/bootstrap)"
+#   ~/dotfiles/bootstrap [--macos]      # --macos also applies ./macos defaults (sudo)
+#
+# Files that would block a stow symlink are moved to ~/.dotfiles-backup/<ts>/.
+# Secrets are never fetched; the final checklist says what's still missing.
+set -uo pipefail
+
+DOTFILES=${DOTFILES:-$HOME/dotfiles}
+REPO=https://github.com/nathankoerschner/dotfiles.git
+STOW_PACKAGES=(agents alfred bin claude codex ghostty git hammerspoon herdr mise nvim pi tmux zsh)
+backup=$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)
+failed=()
+STOW=(stow --dotfiles --no-folding -d $DOTFILES -t $HOME)
+
+step() { print -P "\n%F{cyan}==> $*%f"; }
+warn() { print -P "%F{yellow}  ! $*%f"; failed+=("$*"); }
+have() { command -v $1 >/dev/null 2>&1; }
+
+step "Xcode Command Line Tools"
+if ! xcode-select -p >/dev/null 2>&1; then
+  xcode-select --install
+  echo "  Finish the Command Line Tools installer dialog, then re-run bootstrap."
+  exit 1
+fi
+
+step "Homebrew"
+have brew || [[ -x /opt/homebrew/bin/brew ]] ||
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+step "dotfiles repo -> $DOTFILES"
+[[ -d $DOTFILES/.git ]] || git clone $REPO $DOTFILES || { echo "clone failed"; exit 1; }
+cd $DOTFILES
+
+step "brew bundle (Brewfile)"
+# Apps already installed outside Homebrew make their cask fail; that's fine.
+brew bundle --no-upgrade --file=${BREWFILE:-$DOTFILES/Brewfile} || warn "brew bundle had failures (often: app already installed outside brew)"
+
+step "oh-my-zsh"
+[[ -d ~/.oh-my-zsh ]] ||
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" ||
+  warn "oh-my-zsh install failed"
+
+step "Standalone CLIs (vendor installers)"
+# Installers that edit ~/.zshrc run before stow, so their edits land on a file
+# that gets backed up rather than on the tracked one.
+[[ -x ~/.bun/bin/bun ]]   || curl -fsSL https://bun.sh/install | bash               || warn "bun"
+have herdr                || curl -fsSL https://herdr.dev/install.sh | sh            || warn "herdr"
+have claude               || curl -fsSL https://claude.ai/install.sh | bash          || warn "claude"
+have codex                || curl -fsSL https://chatgpt.com/codex/install.sh | sh    || warn "codex"
+have amp                  || curl -fsSL https://ampcode.com/install.sh | bash        || warn "amp"
+[[ -f ~/.bun/install/global/package.json ]] || ~/.bun/bin/bun add -g @oh-my-pi/pi-coding-agent || warn "omp"
+
+step "stow packages"
+for pkg in $STOW_PACKAGES; do
+  # Move aside any real file that would block a symlink, then stow.
+  $STOW -n $pkg 2>&1 |
+    sed -nE 's/.* over existing target (.+) since .*/\1/p; s/.*existing target is not owned by stow: (.+)$/\1/p' |
+    while read -r rel; do
+      mkdir -p "$backup/${rel:h}" && mv "$HOME/$rel" "$backup/$rel" && echo "  backed up ~/$rel"
+    done
+  $STOW $pkg && echo "  $pkg" || warn "stow $pkg"
+done
+[[ -d $backup ]] && echo "  pre-existing files moved to $backup"
+
+step "LaunchAgents"
+mkdir -p ~/Library/LaunchAgents
+for plist in $DOTFILES/macos-launchagents/*.plist; do
+  dest=~/Library/LaunchAgents/${plist:t}
+  [[ -L $dest ]] || { [[ -e $dest ]] && mkdir -p $backup && mv $dest $backup/; ln -s $plist $dest; }
+  launchctl bootstrap gui/$UID $dest 2>/dev/null || true   # already loaded is fine
+  echo "  ${plist:t}"
+done
+
+step "Tool setup"
+mise install -y >/dev/null && echo "  mise tools" || warn "mise install"
+if have herdr && [[ $(herdr status 2>/dev/null) == *'status: running'* ]]; then
+  zsh $DOTFILES/herdr/setup.sh || warn "herdr/setup.sh"
+else
+  warn "herdr server not running: open Ghostty (starts herdr), then run herdr/setup.sh"
+fi
+nvim --headless '+Lazy! restore' +qa >/dev/null 2>&1 && echo "  nvim plugins" || warn "nvim Lazy sync"
+
+if [[ ${1:-} == --macos ]]; then
+  step "macOS defaults"
+  $DOTFILES/macos || warn "macos defaults"
+fi
+
+step "Repos (from machines/*/repos.txt)"
+if gh auth status >/dev/null 2>&1; then
+  repo_lists=($DOTFILES/machines/*/repos.txt(N))
+  (( ${#repo_lists} )) && sort -u $repo_lists | while read -r name url; do
+    [[ -e ~/$name ]] || git clone -q $url ~/$name && echo "  $name" || warn "clone $name ($url)"
+  done
+else
+  warn "gh not authenticated: run 'gh auth login', then re-run bootstrap to clone repos"
+fi
+
+step "Secrets checklist (transfer these via 1Password; never commit them)"
+check() { [[ -e $1 ]] && echo "  ok      $1" || { echo "  MISSING $1  - $2"; failed+=("secret $1"); } }
+check ~/.zshenv.local                         "TFY_TOKEN, BRAVE_API_KEY (see README)"
+check ~/.gitconfig.local                      "[user] name/email"
+check ~/.config/mcp/arcade-school.headers     "Authorization: Bearer <token> (0600)"
+check ~/.config/mcp/tsa-courses.headers       "Authorization: Bearer <token> (0600)"
+check ~/.pi/agent/auth.json                   "run pi and /login, or copy"
+check ~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json "Linear MCP OAuth client (copy from another machine)"
+gh auth status >/dev/null 2>&1 && echo "  ok      gh auth" || echo "  MISSING gh auth  - gh auth login"
+
+step "Done"
+if (( ${#failed} )); then
+  print -P "%F{yellow}Needs attention:%f"; printf '  - %s\n' $failed
+else
+  echo "All steps succeeded."
+fi
+echo "Next: ./snapshot --commit to record this machine."

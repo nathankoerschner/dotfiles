@@ -1,0 +1,19 @@
+# Installed on nathans-MacBook-Pro-2 but not in Brewfile (formulae/casks/npm/uv):
+
+# Declared in Brewfile but not brew-installed here (bootstrap installs these; apps installed by hand show up here too):
+cask "jump-desktop-connect"
+cask "jump-desktop"
+cask "linear"
+cask "microsoft-teams"
+cask "nordvpn"
+cask "obsidian"
+cask "perplexity"
+cask "roblox"
+cask "shadow"
+cask "slack"
+cask "spotify"
+cask "tailscale-app"
+cask "workflowy"
+cask "zoom"
+
+# Apps in /Applications not from a Brewfile cask or manual-apps.txt:

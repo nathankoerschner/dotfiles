@@ -1,14 +1,119 @@
 # Dotfiles
 
+Everything needed to bring a Mac to parity with the main machine: configs
+(stowed with `stow --dotfiles`), a `Brewfile`, an idempotent `bootstrap`, and
+per-machine snapshots under `machines/` so drift shows up in git.
+
+Machines stay in sync over git only; nothing is shared over the network.
+
+## New machine
+
+Goal: get a ChatGPT agent running first, then let it do the rest.
+
+### 1. Get ChatGPT going (by hand, ~5 min)
+
+1. Sign in to the Mac with the Apple ID; connect Wi-Fi.
+2. Install [ChatGPT desktop](https://developers.openai.com/codex/app/) from a
+   browser, sign in with the normal ChatGPT account, and pick **Codex**.
+   Plain ChatGPT auth works until step 3; TrueFoundry isn't needed yet.
+3. Grant it computer-use access (Accessibility, Screen Recording) when it asks.
+
+### 2. Hand off to ChatGPT
+
+Paste this into a Codex chat:
+
+```text
+Set up this Mac to parity with my main machine using my dotfiles. Read
+https://github.com/nathankoerschner/dotfiles/blob/main/README.md first, then run
+the bootstrap:
+
+  zsh -c "$(curl -fsSL https://raw.githubusercontent.com/nathankoerschner/dotfiles/main/bootstrap)"
+
+It is idempotent: re-run it after anything that needed me (Command Line Tools
+dialog, sudo password, gh auth login, app sign-ins). Work through the
+"Needs attention" list it prints and the "After bootstrap" section of the
+README. Bring me in only for passwords, sign-ins, MFA, and macOS permission
+prompts. Never print, commit, or paste secrets into chat. Finish by running
+~/dotfiles/snapshot and reporting what is still different from the other
+machine's snapshot in ~/dotfiles/machines/.
+```
+
+### 3. What bootstrap does
+
+`~/dotfiles/bootstrap [--macos]`, safe to re-run:
+
+1. Xcode Command Line Tools, Homebrew, clones this repo to `~/dotfiles`.
+2. `brew bundle` (`Brewfile`: CLIs, apps, global npm/uv tools). Apps already
+   installed by hand make their cask fail; that's harmless.
+3. oh-my-zsh, then vendor-installed CLIs: bun, herdr, claude, codex, amp, omp.
+4. Stows every package into `~`. Any real file in the way moves to
+   `~/.dotfiles-backup/<timestamp>/`.
+5. Links and loads `macos-launchagents/*.plist`.
+6. `mise install`, `herdr/setup.sh` (needs the Herdr server running), nvim
+   plugins at the versions in `lazy-lock.json`.
+7. `--macos`: applies the `macos` defaults script (Dock, keyboard, Finder,
+   never-sleep power settings; uses sudo). Reboot afterward.
+8. Clones every repo in `machines/*/repos.txt` into `~` (after `gh auth login`).
+9. Prints a secrets checklist and anything that needs attention.
+
+### 4. Secrets (move by hand; never commit)
+
+Transfer these from the old machine via 1Password (or AirDrop), keeping file
+modes at `0600`:
+
+| File | Contents |
+|---|---|
+| `~/.zshenv.local` | `TFY_TOKEN`, `BRAVE_API_KEY` (see *Machine-local AI gateway*) |
+| `~/.gitconfig.local` | `[user]` name/email |
+| `~/.zprofile.local` | machine-local profile overrides |
+| `~/.config/mcp/arcade-school.headers`, `tsa-courses.headers` | `Authorization: Bearer <token>` |
+| `~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json` | Linear MCP OAuth client |
+| `~/.pi/agent/auth.json` | or just run `pi` and `/login` |
+
+After `~/.zshenv.local` exists, run `tfy-env` (or log out and back in) and
+restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
+
+### 5. After bootstrap (by hand)
+
+- `gh auth login`, then re-run bootstrap to clone repos.
+- Sign in: Chrome (turn on sync, set as default browser), 1Password, Slack,
+  Discord, Linear, Granola, Spotify, Tailscale, Jump Desktop.
+- Alfred: activate Powerpack, set the preferences folder to `~/.alfred`, turn
+  off the Spotlight shortcut.
+- Hammerspoon: grant Accessibility and enable launch at login. Change Caps Lock
+  to Control in System Settings > Keyboard.
+- Open Ghostty (starts Herdr); re-run bootstrap if it warned about Herdr.
+- Apps with no cask: see `manual-apps.txt`.
+- Mission Control shortcuts aren't scriptable; set them by hand.
+- Optional: `:MasonInstall sqlfmt` in nvim where SQL formatting is wanted.
+
+## Keeping machines at parity
+
+Run `~/dotfiles/snapshot --commit` after installing or removing things. It
+writes `machines/<host>/` (Brewfile dump, apps, repos, LaunchAgents, mise and
+bun globals) and commits it. `machines/<host>/unmanaged.txt` is the drift
+report:
+
+- *installed here but not in Brewfile*: add it to `Brewfile` (or
+  `manual-apps.txt`) so other machines get it, or uninstall it.
+- *declared but not brew-installed here*: run bootstrap, or ignore apps that
+  were installed by hand before this machine used the Brewfile.
+
+On the other machine, `git pull && ./bootstrap` picks up the change. Config
+files are symlinks into this repo, so config edits are already tracked:
+commit them, pull elsewhere.
+
+Paths in several configs assume the user is `nathan` (`/Users/nathan/...`).
+
 Small helper scripts live in `bin/dot-local/bin` and stow into `~/.local/bin`.
 
-Uses `stow` (and it's glorious `--dotfiles` option) to manage all dotfiles.
+Every top-level directory except `machines/` and `macos-launchagents/` is a stow package; `bootstrap` lists them in `STOW_PACKAGES`.
 
 ## Agent skills
 
 User skills live in `agents/dot-agents/skills/<skill>/SKILL.md`. Stowing the `agents` package symlinks them into `~/.agents/skills/<skill>/SKILL.md`, which is what pi (and other tools) load via `settings.json` (`"skills": ["~/.agents/skills"]`).
 
-`settings.json` also points at `~/arcade/.agents/skills` so the arcade repo's skills (`/skill:arcade-*`) are available from any cwd. This is the main checkout only, not worktrees; those skills assume you `cd` into a checkout before running repo commands.
+`settings.json` also points at `~/arcade.school/.agents/skills` so the arcade repo's skills (`/skill:arcade-*`) are available from any cwd. This is the main checkout only, not worktrees; those skills assume you `cd` into a checkout before running repo commands.
 
 Codex system skills live alongside under `agents/dot-agents/.system/` and stow to `~/.agents/.system/`.
 
@@ -110,54 +215,3 @@ continue using the standard providers configured by each tool.
 | `Prefix z` | Zoom or unzoom the current pane |
 | `Prefix x` | Close the current pane |
 | `Prefix i` | Copy the current pane ID |
-
-# Steps to follow to setup a new machine:
-
-Basic Setup
-- clone dotfiles 
-    - run macos script, restart
-- Install Brew
-- Install stow
-- download Chrome
-    - signin
-    - configure sync 
-    - add 1password
-    - set as default browser
-- download Alfred
-    - activate powerpack
-    - turn off spotlight search
-    - stow dotfile, set preferences location 
-Dev Env Setup
-- stow zshrc
-- stow pi
-- brew install hammerspoon
-    - brew install m1ddc (used by Hammerspoon to set external monitor brightness)
-    - enable accessibility & start on login
-    - the `hs` CLI is auto-installed by init.lua (hs.ipc.cliInstall); reload config with `hs -c 'hs.reload()'`
-    - change caps lock to control in system prefs
-- brew Install Ghosty
-- brew install tmux
-- install ohmyzsh (get command from site)
-- brew install fzf
-- brew install ripgrep
-- stow bin
-    - confirm tmux sessionizer works
-- brew install uv
-- brew install neovim
-    - brew install lua
-    - brew install luarocks (required for Mason to install luacheck)
-    - brew install node
-    - start nvim and watch everything install through lazy
-    - on machines where you want SQL formatting, run `:MasonInstall sqlfmt` (not in `ensure_installed` since it's not required on all systems)
-- brew install --cask cleanshot
-
-# Misc
-- brew install gh
-    - gh auth login
-- configure git
-- Install Jump Desktop and configure it for connecting to relevant machines.
-- Install and sign in to Slack
-- Install Transmit for S3 file access
-
-
-- Unmount installation discs and clear downloads
