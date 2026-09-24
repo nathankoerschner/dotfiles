@@ -87,6 +87,18 @@ restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 - Mission Control shortcuts aren't scriptable; set them by hand.
 - Optional: `:MasonInstall sqlfmt` in nvim where SQL formatting is wanted.
 
+## Remote Herdr
+
+On the remote Mac: enable Remote Login (`sudo systemsetup -setremotelogin on`),
+sign in to Tailscale, and keep sleep off (`bootstrap --macos`). From here,
+`ssh-copy-id nathan@<host>`, then either:
+
+- `ssh nathan@<host>` + `herdr`: runs entirely remote, like tmux.
+- `herdr machine add nathan@<host> --label <host>`: shows it in the sidebar
+  next to Local; drive it with `herdr --machine <host> ...`.
+
+Remote agents use that machine's repos and secrets.
+
 ## Keeping machines at parity
 
 Run `~/dotfiles/snapshot --commit` after installing or removing things. It
