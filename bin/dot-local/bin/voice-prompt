@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# voice-prompt: transcribe a recording locally and deliver it.
+#
+#   voice-prompt <file.wav>        transcribe + deliver (called by Hammerspoon)
+#   voice-prompt target            show where transcripts go
+#   voice-prompt target <agent>    also send to a Herdr agent (name or pane id)
+#   voice-prompt target off        inbox + clipboard only
+#
+# Every transcript is appended to ~/voice-inbox.md and copied to the clipboard.
+set -euo pipefail
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+
+MODEL="${VOICE_PROMPT_MODEL:-$HOME/.local/share/whisper/ggml-large-v3-turbo-q5_0.bin}"
+INBOX="${VOICE_PROMPT_INBOX:-$HOME/voice-inbox.md}"
+TARGET_FILE="$HOME/.config/voice-prompt/target"
+
+if [[ "${1:-}" == "target" ]]; then
+	mkdir -p "$(dirname "$TARGET_FILE")"
+	case "${2:-}" in
+	"") cat "$TARGET_FILE" 2>/dev/null || echo "off (inbox + clipboard only)" ;;
+	off) rm -f "$TARGET_FILE" && echo off ;;
+	*) echo "$2" >"$TARGET_FILE" && echo "$2" ;;
+	esac
+	exit 0
+fi
+
+wav="${1:?usage: voice-prompt <file.wav> | target [agent|off]}"
+out="${wav%.*}"
+whisper-cli -m "$MODEL" -f "$wav" -nt -np -otxt -of "$out" >/dev/null 2>&1
+text="$(tr '\n' ' ' <"$out.txt" | sed -E 's/^ +| +$//g; s/ +/ /g')"
+rm -f "$out.txt"
+
+if [[ -z "$text" || "$text" =~ ^\[.*\]$ ]]; then # empty or "[BLANK_AUDIO]"
+	echo "(no speech)"
+	exit 0
+fi
+
+printf -- '- %s — %s\n' "$(date '+%F %H:%M')" "$text" >>"$INBOX"
+printf '%s' "$text" | pbcopy
+
+target="$(cat "$TARGET_FILE" 2>/dev/null || true)"
+if [[ -n "$target" ]]; then
+	herdr agent prompt "$target" "$text" >/dev/null
+	echo "→ $target: $text"
+else
+	echo "$text"
+fi
