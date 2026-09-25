@@ -4,9 +4,9 @@ alphalearn-timeback https://github.com/trilogy-group/alphalearn-timeback.git
 arcade.school https://github.com/superbuilders/arcade.school.git
 audit-reasoning https://github.com/superbuilders/audit-reasoning.git
 dotfiles https://github.com/nathankoerschner/dotfiles.git
-pc-sandboxer https://github.com/nathansuperbuilders/macbook-runner.git
+pc-sandboxer https://github.com/nathankoerschner/macbook-runner.git
 playcademy-roblox-sandbox https://github.com/superbuilders/playcademy-roblox-sandbox.git
-roblox-playwright https://github.com/nathansuperbuilders/roblox-playwright.git
-roblox-roblosecurity-launching-poc https://github.com/nathansuperbuilders/roblox-roblosecurity-launching-poc.git
+roblox-playwright https://github.com/nathankoerschner/roblox-playwright.git
+roblox-roblosecurity-launching-poc https://github.com/nathankoerschner/roblox-roblosecurity-launching-poc.git
 timeback-ui https://github.com/superbuilders/timeback-ui.git
 tsa-homepage https://github.com/superbuilders/tsa-homepage.git
