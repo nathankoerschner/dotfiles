@@ -154,6 +154,17 @@ hs.hotkey.bind({ "cmd", "shift" }, "c", function()
 	hs.application.launchOrFocus("ChatGPT")
 end)
 
+-- ChatGPT desktop: focus and start a new chat
+hs.hotkey.bind({ "ctrl", "cmd" }, "c", function()
+	hs.application.launchOrFocus("ChatGPT")
+	hs.timer.doAfter(0.3, function()
+		local app = hs.application.find("ChatGPT")
+		if app then
+			hs.eventtap.keyStroke({ "cmd" }, "n", 0, app)
+		end
+	end)
+end)
+
 -- Books launcher with large custom window size
 hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
 	hs.application.launchOrFocus("Books")
