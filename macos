@@ -99,6 +99,10 @@ sudo pmset -a disablesleep 1
 echo "$USER ALL=(root) NOPASSWD: /usr/bin/pmset" | sudo tee /etc/sudoers.d/pmset >/dev/null
 sudo chmod 0440 /etc/sudoers.d/pmset
 
+# No idle screen saver: it locks the session after 20 min, which blocks
+# computer use on a headless/closed Mac (see headless-display LaunchAgent).
+defaults -currentHost write com.apple.screensaver idleTime -int 0
+
 killall Dock
 killall Finder
 
