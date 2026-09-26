@@ -115,7 +115,9 @@ On the other machine, `git pull && ./bootstrap` picks up the change. Config
 files are symlinks into this repo, so config edits are already tracked:
 commit them, pull elsewhere.
 
-Paths in several configs assume the user is `nathan` (`/Users/nathan/...`).
+Configs use `$HOME`, so they symlink on any user. Exception: `~/.codex/config.toml`
+is a per-host copy (Codex rewrites it with absolute paths). Per-host Ghostty
+settings go in untracked `~/.config/ghostty/local.conf`.
 
 Small helper scripts live in `bin/dot-local/bin` and stow into `~/.local/bin`.
 
@@ -176,8 +178,7 @@ Only config, plugins, and agent integrations are tracked; Herdr's sockets, logs,
 
 Pi and Codex register `arcade_school` using `mcp-remote@0.8.3`, bridging stdio
 locally to Streamable HTTP at `https://api.texassportsacademy.com/mcp`.
-Bun must be installed at `~/.bun/bin/bunx`. Config paths currently target
-`/Users/nathan`; adjust them when setting up a different home directory.
+Bun must be installed at `~/.bun/bin/bunx`.
 
 The credential is **not tracked**. Provision it through an approved secure channel
 into `~/.config/mcp/arcade-school.headers` (directory mode `0700`, file mode
