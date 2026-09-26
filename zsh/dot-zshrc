@@ -179,4 +179,4 @@ if [[ -n ${TFY_TOKEN:-} ]]; then
 fi
 
 # bun completions
-[ -s "/Users/nathan/.bun/_bun" ] && source "/Users/nathan/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"

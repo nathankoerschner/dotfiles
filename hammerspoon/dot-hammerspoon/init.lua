@@ -590,46 +590,29 @@ hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 -- translate Ghostty's tab/split shortcuts into herdr's prefix (ctrl+b) chords.
 -- Anywhere else the keys pass through untouched, so Ghostty keeps its defaults.
 local HERDR_PREFIX = { mods = { "ctrl" }, key = "b" }
+-- Every shortcut is just a prefix chord, so it works the same locally and
+-- through `herdr --remote` (ag): herdr runs any helper script on the server.
 local herdrShortcuts = {
-	-- { mods, key, herdr key after prefix }
-	{ mods = { cmd = true }, key = "w", send = "x" }, -- close_pane
-	{ mods = { cmd = true }, key = "d", send = "v" }, -- split_vertical (side by side)
-	{ mods = { cmd = true, shift = true }, key = "d", send = "-" }, -- split_horizontal (stacked)
+	-- { mods, key, keys sent after the prefix }
+	{ mods = { cmd = true }, key = "w", send = { {}, "x" } }, -- close_pane
+	{ mods = { cmd = true }, key = "d", send = { {}, "v" } }, -- split_vertical (side by side)
+	{ mods = { cmd = true, shift = true }, key = "d", send = { {}, "-" } }, -- split_horizontal (stacked)
+	{ mods = { cmd = true }, key = "t", send = { {}, "t" } }, -- new tab with pi (herdr config)
+	{ mods = { cmd = true }, key = "[", send = { { "alt" }, "left" } }, -- focus history back
+	{ mods = { cmd = true }, key = "]", send = { { "alt" }, "right" } }, -- focus history forward
 }
 for i = 1, 9 do
-	table.insert(herdrShortcuts, { mods = { cmd = true }, key = tostring(i), send = tostring(i) }) -- switch_tab
-end
-
--- Cmd+[ / Cmd+] step back/forward through focus history (~/.local/bin/herdr-nav,
--- daemon runs via launchd: com.nathan.herdr-nav).
-local herdrNavKeys = { ["["] = "back", ["]"] = "forward" }
-
-local function focusedHerdrTitle()
-	local app = hs.application.frontmostApplication()
-	if not app or app:name() ~= "Ghostty" then
-		return nil
-	end
-	local win = app:focusedWindow()
-	local title = win and win:title() or ""
-	return title:match("^herdr") and title or nil
+	table.insert(herdrShortcuts, { mods = { cmd = true }, key = tostring(i), send = { {}, tostring(i) } }) -- switch_tab
 end
 
 local function focusedWindowIsHerdr()
-	return focusedHerdrTitle() ~= nil
-end
-
--- Title is "herdr@<server hostname>: ...". Run helper scripts on that server:
--- locally, or over SSH (host alias = hostname) when attached with `herdr --remote`.
-local localHost = hs.execute("/bin/hostname -s"):gsub("%s+$", "")
-local function runHerdrScript(script, ...)
-	local host = (focusedHerdrTitle() or ""):match("^herdr@([^:]+):")
-	local args = { ... }
-	if not host or host == localHost then
-		hs.task.new("/usr/bin/python3", nil, { os.getenv("HOME") .. "/.local/bin/" .. script, table.unpack(args) }):start()
-	else
-		local cmd = "/usr/bin/python3 ~/.local/bin/" .. script .. " " .. table.concat(args, " ")
-		hs.task.new("/usr/bin/ssh", nil, { "-o", "BatchMode=yes", "-o", "ConnectTimeout=5", host, cmd }):start()
+	local app = hs.application.frontmostApplication()
+	if not app or app:name() ~= "Ghostty" then
+		return false
 	end
+	local win = app:focusedWindow()
+	local title = win and win:title() or ""
+	return title:match("^herdr") ~= nil
 end
 
 local function flagsMatch(flags, wanted)
@@ -648,27 +631,18 @@ herdr_shortcut_tap = hs.eventtap
 			return false
 		end
 		local key = hs.keycodes.map[evt:getKeyCode()]
-		-- Cmd+T: new tab with a fresh pi session (~/.local/bin/herdr-new-pi-tab).
-		if key == "t" and flagsMatch(flags, { cmd = true }) and focusedWindowIsHerdr() then
-			runHerdrScript("herdr-new-pi-tab")
-			return true
-		end
-		local navCmd = herdrNavKeys[key]
-		if navCmd and flagsMatch(flags, { cmd = true }) and focusedWindowIsHerdr() then
-			runHerdrScript("herdr-nav", navCmd)
-			return true
-		end
 		for _, sc in ipairs(herdrShortcuts) do
 			if key == sc.key and flagsMatch(flags, sc.mods) then
 				if not focusedWindowIsHerdr() then
 					return false
 				end
 				local ev = hs.eventtap.event
+				local mods, k = sc.send[1], sc.send[2]
 				return true, {
 					ev.newKeyEvent(HERDR_PREFIX.mods, HERDR_PREFIX.key, true),
 					ev.newKeyEvent(HERDR_PREFIX.mods, HERDR_PREFIX.key, false),
-					ev.newKeyEvent({}, sc.send, true),
-					ev.newKeyEvent({}, sc.send, false),
+					ev.newKeyEvent(mods, k, true),
+					ev.newKeyEvent(mods, k, false),
 				}
 			end
 		end

@@ -6,3 +6,6 @@
 # This file previously forwarded macOS shortcuts into tmux by sending literal
 # `\x02` (Ctrl-b) prefix sequences. See git history if that setup is ever needed
 # again.
+
+# Per-host settings (e.g. ag: `command = ~/.local/bin/herdr`), untracked.
+config-file = ?local.conf
