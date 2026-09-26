@@ -159,6 +159,40 @@ Send-only inbox: POST free text and ag opens a new Herdr tab running pi with tha
 - Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → routed → tab → pi_started → sent`, or `route_failed`/`failed`). Server output: `/tmp/prompt-inbox.log`.
 - Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.prompt-inbox`.
 
+## Jev (TypeSafe System One model)
+
+Guide for agents. Sources: [docs.typesafe.ai](https://docs.typesafe.ai/llms.txt) (source of truth; append `.md` to any page path) and the official skill, vendored at `agents/dot-agents/skills/typesafe-ai` (from [typesafe-ai/skills](https://github.com/typesafe-ai/skills)). Read the live docs before writing an integration; details below are from jev-1.13 (Sep 2026).
+
+**What it is.** A fast decision model, not a chat LLM. You send a `state` (text, JSON object, or array) plus named typed questions; it returns typed answers with calibrated probabilities. It does not generate text, call tools, or write code, so it can't power pi or any coding agent. Use it *inside* code wherever the answer has a known shape: route, gate, score, verify.
+
+**Split the work.** If the step creates text or plans, keep it on an LLM. If it picks from a list, scores on a rubric, or answers yes/no, use Jev. Keep exact rules, lookups, and execution in plain code.
+
+**API.**
+
+```bash
+curl -s https://api.typesafe.ai/v1/systemone \
+  -H "Authorization: Bearer $TYPESAFE_API_KEY" -H 'content-type: application/json' \
+  -d '{"model":"jev-latest","state":"Help! My payouts have been failing for 3 days.",
+       "questions":{
+         "team":{"type":"choice","instructions":"Which team should handle this?",
+                 "criteria":{"billing":"Payments, refunds","technical":"Bugs, outages","sales":"Pricing, upgrades"}},
+         "urgent":{"type":"noul","instructions":"Does this convey urgency?"},
+         "anger":{"type":"score","instructions":"How frustrated is the customer?","criteria":["Calm","Frustrated","Very angry"]}}}'
+```
+
+| Primitive | Use for | Answer |
+|---|---|---|
+| `choice` | one option from a set (≤255 options in `criteria` map) | `choice`, `probabilities`, `confidence` |
+| `noul` | whether a condition holds | `noul` = P(yes), 0–1 |
+| `score` | degree on ordered levels (2–10 in `criteria` array) | `score` (can fall between levels), `probabilities`, `confidence` |
+
+- Question ids are for your code only and are never sent to the model, so each question must be self-contained. Point at nested state with backticked paths like `` `ticket.messages[0].text` ``.
+- Ask all independent questions over the same state in **one request**. They run in parallel, and extra speculative ones are cheap. Only make a second call when an earlier answer is needed to build the next state.
+- Include a no-match option when nothing may fit. Gate actions on `confidence` or probability thresholds tuned on your own data; route the uncertain ones to a person or a reasoning LLM. A `noul` near 0.5 means "unsure", not "medium".
+- Models: `jev-latest` (currently `jev-1.13.0`); pin the versioned id if you tuned thresholds. 64k tokens per request (32k for state plus the longest question), text only, English is strongest. Priced per input token (about $0.042 per million); output is free. It returns `429` when rate-limited, so retry with backoff.
+- SDKs: Python (`TypeSafeClient` / `AsyncTypeSafeClient`) and JavaScript; see [SDKs](https://docs.typesafe.ai/sdk.md). Try prompts in the [Playground](https://console.typesafe.ai/playground).
+- Key: get one at [console.typesafe.ai](https://console.typesafe.ai), store it in 1Password, and export `TYPESAFE_API_KEY` from `~/.zshenv.local`. Never commit it, and keep it server-side.
+
 ## Herdr config
 
 `herdr/dot-config/herdr/config.toml` stows to `~/.config/herdr/config.toml`.
