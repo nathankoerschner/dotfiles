@@ -1,0 +1,156 @@
+#!/usr/bin/env bun
+// prompt-inbox: a send-only inbox for pi sessions on ag.
+//
+// POST free text to http://<ag tailscale ip>:7373/prompt (or use the test page at /).
+// Pipeline, one function per step, one JSON log line per step (~/.local/state/prompt-inbox/log.jsonl):
+//   receive → route (cheap model picks a Herdr workspace + tab name) → launch (new tab, start pi, send text)
+// Listens only on ag's Tailscale IP. Never focuses anything, so attached Herdr clients aren't disturbed.
+// Run by the com.nathan.prompt-inbox LaunchAgent.
+
+import { execFileSync } from "node:child_process";
+import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+
+const PORT = 7373;
+const HOME = homedir();
+const HERDR = `${HOME}/.local/bin/herdr`;
+const LOG_DIR = `${HOME}/.local/state/prompt-inbox`;
+const FALLBACK_WORKSPACE = "Inbox";
+const MODEL = "gemini-group/gemini-3.5-flash-lite";
+const TFY_URL = "https://tfy.promptlens.trilogy.com/chat/completions";
+
+mkdirSync(LOG_DIR, { recursive: true });
+
+function log(id: string, step: string, data: Record<string, unknown> = {}) {
+	const line = JSON.stringify({ ts: new Date().toISOString(), id, step, ...data });
+	appendFileSync(`${LOG_DIR}/log.jsonl`, line + "\n");
+	console.log(line);
+}
+
+function herdr(...args: string[]): any {
+	const out = execFileSync(HERDR, args, { encoding: "utf8", timeout: 60_000 });
+	return out.trim() ? JSON.parse(out).result : null;
+}
+
+// launchd doesn't source zsh files; read the token the same way tfy-env does.
+function tfyToken(): string {
+	if (process.env.TFY_TOKEN) return process.env.TFY_TOKEN;
+	const m = readFileSync(`${HOME}/.zshenv.local`, "utf8").match(/TFY_TOKEN=["']?([^"'\s]+)/);
+	if (!m) throw new Error("TFY_TOKEN not found in ~/.zshenv.local");
+	return m[1];
+}
+
+type Route = { workspace_id: string | null; new_workspace: string | null; tab_label: string };
+
+// Step 2: pick where the prompt goes. Existing workspace preferred; at most one new one.
+async function route(text: string): Promise<Route> {
+	// Unnamed workspaces ("~", numbers) have no topic, so they aren't candidates.
+	const spaces = herdr("workspace", "list")
+		.workspaces.filter((w: any) => /[a-z]/i.test(w.label))
+		.map((w: any) => ({
+		id: w.workspace_id,
+		label: w.label,
+		tabs: herdr("tab", "list", "--workspace", w.workspace_id).tabs.map((t: any) => t.label),
+	}));
+	const prompt = `You file incoming tasks into terminal workspaces. Each workspace is a topic; its tabs are past tasks.
+
+Workspaces:
+${JSON.stringify(spaces, null, 1)}
+
+Task:
+${text.slice(0, 4000)}
+
+Pick the workspace whose topic fits best. Only if none fits, propose a new workspace name (1-2 words, Title Case, a broad topic, not the task itself).
+Also name a tab for this task in 1-3 words, Title Case.
+Reply with only JSON: {"workspace_id": "<existing id or null>", "new_workspace": "<name or null>", "tab_label": "<name>"}`;
+
+	const res = await fetch(TFY_URL, {
+		method: "POST",
+		headers: { authorization: `Bearer ${tfyToken()}`, "content-type": "application/json" },
+		body: JSON.stringify({ model: MODEL, messages: [{ role: "user", content: prompt }] }),
+		signal: AbortSignal.timeout(20_000),
+	});
+	if (!res.ok) throw new Error(`model ${res.status}: ${await res.text()}`);
+	const content: string = (await res.json()).choices[0].message.content;
+	const r = JSON.parse(content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1));
+
+	const known = spaces.some((s: any) => s.id === r.workspace_id);
+	return {
+		workspace_id: known ? r.workspace_id : null,
+		new_workspace: known ? null : String(r.new_workspace || FALLBACK_WORKSPACE).slice(0, 30),
+		tab_label: String(r.tab_label || "Inbox Task").slice(0, 40),
+	};
+}
+
+// If the model proposes a name that already exists, reuse that workspace instead of duplicating it.
+function workspaceByLabel(label: string): string | null {
+	const w = herdr("workspace", "list").workspaces.find((w: any) => w.label.toLowerCase() === label.toLowerCase());
+	return w?.workspace_id ?? null;
+}
+
+// Step 3: new tab (no focus), start pi in it, send the text.
+function launch(id: string, text: string, r: Route) {
+	const existing = r.workspace_id ?? workspaceByLabel(r.new_workspace!);
+	let pane: string;
+	if (existing) {
+		const t = herdr("tab", "create", "--workspace", existing, "--cwd", HOME, "--label", r.tab_label, "--no-focus");
+		pane = t.root_pane.pane_id;
+	} else {
+		const w = herdr("workspace", "create", "--cwd", HOME, "--label", r.new_workspace!, "--no-focus");
+		pane = w.root_pane.pane_id;
+		herdr("tab", "rename", w.tab.tab_id, r.tab_label);
+	}
+	log(id, "tab", { pane });
+
+	const agent = `inbox-${id}`;
+	herdr("agent", "start", agent, "--kind", "pi", "--pane", pane, "--timeout", "60000");
+	log(id, "pi_started", { agent });
+
+	herdr("agent", "prompt", agent, text);
+	log(id, "sent");
+}
+
+async function handle(id: string, text: string) {
+	try {
+		// One retry: the model gateway returns the occasional transient 502.
+		const r = await route(text).catch(() => route(text)).catch((e) => {
+			log(id, "route_failed", { error: String(e) });
+			return { workspace_id: null, new_workspace: FALLBACK_WORKSPACE, tab_label: "Inbox Task" };
+		});
+		log(id, "routed", r);
+		launch(id, text, r);
+	} catch (e) {
+		log(id, "failed", { error: String(e) });
+	}
+}
+
+const PAGE = `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1">
+<title>prompt inbox</title>
+<style>body{font:16px system-ui;max-width:640px;margin:2rem auto;padding:0 1rem}textarea{width:100%;height:40vh;font:inherit}button{font:inherit;padding:.5rem 1.5rem;margin-top:.5rem}</style>
+<form method=post action=/prompt><textarea name=text autofocus placeholder="prompt…"></textarea><br><button>Send</button></form>`;
+
+const host = execFileSync("/usr/local/bin/tailscale", ["ip", "-4"], { encoding: "utf8" }).trim().split("\n")[0];
+
+Bun.serve({
+	hostname: host,
+	port: PORT,
+	async fetch(req) {
+		const url = new URL(req.url);
+		if (req.method === "GET" && url.pathname === "/") return new Response(PAGE, { headers: { "content-type": "text/html" } });
+		if (req.method !== "POST" || url.pathname !== "/prompt") return new Response("not found", { status: 404 });
+
+		const type = req.headers.get("content-type") ?? "";
+		// The test page posts a form field named "text"; anything else (curl -d, Shortcuts) is the raw body.
+		const body = await req.text();
+		const field = type.includes("form") ? new URLSearchParams(body).get("text") : null;
+		const text = (field ?? body).trim();
+		if (!text) return new Response("empty", { status: 400 });
+
+		const id = crypto.randomUUID().slice(0, 8);
+		log(id, "received", { chars: text.length, text });
+		void handle(id, text);
+		// Send-only: no result. The form just lands back on a blank page.
+		return type.includes("form") ? new Response(null, { status: 303, headers: { location: "/" } }) : new Response(null, { status: 202 });
+	},
+});
+console.log(`prompt-inbox listening on http://${host}:${PORT}`);

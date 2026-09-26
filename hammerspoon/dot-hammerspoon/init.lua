@@ -41,7 +41,6 @@ winmanScreenProfiles = {
 }
 require("winman")
 require("battery_guard")
-require("voice_prompt")
 
 -- Machine-local features should only run on this Mac, not every machine that
 -- uses these dotfiles.

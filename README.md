@@ -146,6 +146,17 @@ Intentionally not tracked in dotfiles:
 - `~/.pi/agent/sessions/`
 - repo-local `.pi/todos/`
 
+## Prompt inbox (ag)
+
+Send-only inbox: POST free text and ag opens a new Herdr tab running pi with that text as the first prompt.
+
+- Test page: http://ag:7373/ (or `http://100.107.192.32:7373/`). Tailscale only; it listens on ag's Tailscale IP.
+- API: `curl -X POST http://ag:7373/prompt -d 'your prompt'` → `202`, no body.
+- A fast model (TrueFoundry Gemini Flash Lite) picks an existing workspace or names one new one (falls back to `Inbox`) and names the tab. Nothing is focused, so attached clients aren't disturbed.
+- Code: `bin/dot-local/bin/prompt-inbox`; LaunchAgent: `com.nathan.prompt-inbox` (only runs on ag).
+- Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → routed → tab → pi_started → sent`, or `route_failed`/`failed`). Server output: `/tmp/prompt-inbox.log`.
+- Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.prompt-inbox`.
+
 ## Herdr config
 
 `herdr/dot-config/herdr/config.toml` stows to `~/.config/herdr/config.toml`.

@@ -23,7 +23,6 @@ brew "ripgrep"
 brew "stow"
 brew "tmux"
 brew "uv"
-brew "whisper.cpp"
 
 # --- Apps ---
 cask "chatgpt"           # first thing to sign in to; drives the rest of setup
