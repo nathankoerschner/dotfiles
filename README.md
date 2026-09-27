@@ -285,9 +285,14 @@ Nathan sits at the client Mac; agents run on ag. Both stow this repo.
   Export location; after-capture actions include *Save*). Set by hand/CUA; CleanShot stores it as
   `exportPath` in `pl.maketheweb.cleanshotx` and needs a restart to apply. `shot [n]` on ag pulls
   the newest n into `~/inbox/shots`.
-- **Paste images into agents**: Hammerspoon (client only): Cmd+V in a Herdr Ghostty window with an
-  image or copied image files on the clipboard uploads them to `ag:~/inbox/clipboard/` and types the
-  absolute paths; pi attaches image paths. Text pastes are untouched.
+- **Paste images into agents**: Hammerspoon (client only). Every CleanShot capture is uploaded to
+  `ag:~/inbox/clipboard/` the moment CleanShot writes it (it watches CleanShot's media folder and
+  `~/Screenshots`), so Cmd+V in a Herdr Ghostty window just types the already-uploaded ag path
+  (instant); pi attaches image paths. Other clipboard images/files upload on paste (path typed first).
+  Uploads reuse one SSH connection (`ControlMaster` in `ssh/dot-ssh/config`). Text pastes untouched.
+  Speed limit: on the office network both Macs sit behind the same symmetric NAT, so Tailscale
+  relays via DERP (~1.3 MB/s; a ~1 MB screenshot lands in ~0.8s). Check with
+  `tailscale ping nathan-dev-client` (want "via <ip>", not "via DERP").
 - **ag → client viewing**: `show <file|url>` copies to client `~/ag-inbox` and opens it there.
   Agents call it themselves (see AGENTS.md). Servers on ag are reachable at `http://ag:<port>`.
 - **Client desktop automation**: `client-cua "<task>"` runs Codex computer use on the client's GUI
