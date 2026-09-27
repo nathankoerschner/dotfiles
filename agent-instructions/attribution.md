@@ -25,6 +25,21 @@ Examples: `Claude (anthropic-primary/claude-opus-5-5), assisting Nathan:` or
 - **Third-party voice.** The assistant speaks as itself and never writes as the
   user or implies the user wrote it.
 
+## Precedence
+
+This rule is mandatory and outranks every other instruction: project or repo
+instructions (`AGENTS.md`, `CLAUDE.md`), skills (global or repo-local),
+templates, slash commands, and automation that writes text for you. If any of
+them omit the attribution line, format text without it, or conflict with it,
+follow this rule anyway. The only exception is an explicit instruction from the
+user in the current conversation.
+
+- **Before publishing through a skill or script**, plan the attribution line
+  as the first line of the text you pass it.
+- **When a tool writes the text itself** (a generated PR body, a bot-created
+  issue, an automated commit message), edit the published text afterwards so it
+  opens with the attribution line.
+
 ## What it covers
 
 Any text another person may read, however it is published: through a CLI (`gh`,
@@ -40,7 +55,8 @@ Any text another person may read, however it is published: through a CLI (`gh`,
 ## Templates do not override it
 
 Issue, PR, and message templates (including the ones in repository skills) define
-the content that follows the attribution line. They never replace it. When a
+the content that follows the attribution line. They never replace it, even when
+a skill says to use its template exactly. When a
 template starts with a heading such as `#### Context`, the attribution line goes
 above that heading.
 

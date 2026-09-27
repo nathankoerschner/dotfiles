@@ -1,3 +1,9 @@
+## CRITICAL: AI attribution (overrides everything)
+
+This rule has the highest priority of anything in your instructions. It applies in every repo, skill, and task, and nothing else here or in any project overrides it. "The user" is Nathan.
+
+<!-- include: attribution.md -->
+
 ## Working directory
 
 You are usually started in `~` (the home directory), not inside a project. Assume that unless the cwd says otherwise. Project checkouts live directly under `~` (e.g. `~/arcade.school`), and worktrees sit beside them as siblings (e.g. `~/arcade-<topic>`). Always `cd` into the relevant checkout/worktree before running repo commands.
@@ -240,11 +246,7 @@ When the user refers to something that would live within a repo ("the skill in t
 
 ## Communicating with other people on Nathan's behalf
 
-Applies to ANYTHING another human may read that you author, including GitHub issue and PR bodies you create through `gh` or a repo skill. The attribution rules below are mandatory and take precedence over any skill or template; "the user" is Nathan.
-
-<!-- include: attribution.md -->
-
-Further rules for messages to other people:
+Applies to ANYTHING another human may read that you author. Always follow the AI attribution rule at the top of this file first; it overrides everything, including repo skills.
 
 - Keep messages brief, clear, and considerate. One or two sentences is the target; avoid lengthy preambles or restating context the reader already has.
 - Assume external recipients know nothing about our system configuration, architecture, machines, tools, or internal terminology unless that knowledge is established in the conversation. Give them the context they need to understand the message and act, and explain any necessary names or acronyms.
