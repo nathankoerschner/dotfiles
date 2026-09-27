@@ -3,7 +3,9 @@
 //
 // POST free text to http://<ag tailscale ip>:7373/prompt (or use the test page at /).
 // Pipeline, one function per step, one JSON log line per step (~/.local/state/prompt-inbox/log.jsonl):
-//   receive → route (cheap model picks a Herdr workspace + tab name) → launch (new tab, start pi, send text)
+//   receive → label (cheap model names the tab) → launch (new tab in the Inbox workspace, start pi, send text)
+// Optional form field `id` (the phone's queue file name): a repeat id is acknowledged but not relaunched,
+// so the iOS offline queue can safely resend an item whose first response was lost.
 // Listens only on ag's Tailscale IP. Never focuses anything, so attached Herdr clients aren't disturbed.
 // Run by the com.nathan.prompt-inbox LaunchAgent.
 
@@ -15,7 +17,7 @@ const PORT = 7373;
 const HOME = homedir();
 const HERDR = `${HOME}/.local/bin/herdr`;
 const LOG_DIR = `${HOME}/.local/state/prompt-inbox`;
-const FALLBACK_WORKSPACE = "Inbox";
+const INBOX = "Inbox";
 const MODEL = "gemini-group/gemini-3.5-flash-lite";
 const TFY_URL = "https://tfy.promptlens.trilogy.com/chat/completions";
 
@@ -40,30 +42,10 @@ function tfyToken(): string {
 	return m[1];
 }
 
-type Route = { workspace_id: string | null; new_workspace: string | null; tab_label: string };
-
-// Step 2: pick where the prompt goes. Existing workspace preferred; at most one new one.
-async function route(text: string): Promise<Route> {
-	// Unnamed workspaces ("~", numbers) have no topic, so they aren't candidates.
-	const spaces = herdr("workspace", "list")
-		.workspaces.filter((w: any) => /[a-z]/i.test(w.label))
-		.map((w: any) => ({
-		id: w.workspace_id,
-		label: w.label,
-		tabs: herdr("tab", "list", "--workspace", w.workspace_id).tabs.map((t: any) => t.label),
-	}));
-	const prompt = `You file incoming tasks into terminal workspaces. Each workspace is a topic; its tabs are past tasks.
-
-Workspaces:
-${JSON.stringify(spaces, null, 1)}
-
-Task:
-${text.slice(0, 4000)}
-
-Pick the workspace whose topic fits best. Only if none fits, propose a new workspace name (1-2 words, Title Case, a broad topic, not the task itself).
-Also name a tab for this task in 1-3 words, Title Case.
-Reply with only JSON: {"workspace_id": "<existing id or null>", "new_workspace": "<name or null>", "tab_label": "<name>"}`;
-
+// Step 2: name the tab. Every capture lands in the Inbox workspace (GTD inbox);
+// Nathan files it into a topic workspace himself.
+async function tabLabel(text: string): Promise<string> {
+	const prompt = `Name this task in 1-3 words, Title Case. Reply with only the name.\n\nTask:\n${text.slice(0, 4000)}`;
 	const res = await fetch(TFY_URL, {
 		method: "POST",
 		headers: { authorization: `Bearer ${tfyToken()}`, "content-type": "application/json" },
@@ -71,36 +53,22 @@ Reply with only JSON: {"workspace_id": "<existing id or null>", "new_workspace":
 		signal: AbortSignal.timeout(20_000),
 	});
 	if (!res.ok) throw new Error(`model ${res.status}: ${await res.text()}`);
-	const content: string = (await res.json()).choices[0].message.content;
-	const r = JSON.parse(content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1));
-
-	const known = spaces.some((s: any) => s.id === r.workspace_id);
-	return {
-		workspace_id: known ? r.workspace_id : null,
-		new_workspace: known ? null : String(r.new_workspace || FALLBACK_WORKSPACE).slice(0, 30),
-		tab_label: String(r.tab_label || "Inbox Task").slice(0, 40),
-	};
+	const name = String((await res.json()).choices[0].message.content).replace(/["'`*\n]/g, " ").trim();
+	return name.slice(0, 40) || "Inbox Task";
 }
 
-// If the model proposes a name that already exists, reuse that workspace instead of duplicating it.
-function workspaceByLabel(label: string): string | null {
-	const w = herdr("workspace", "list").workspaces.find((w: any) => w.label.toLowerCase() === label.toLowerCase());
-	return w?.workspace_id ?? null;
-}
-
-// Step 3: new tab (no focus), start pi in it, send the text.
-function launch(id: string, text: string, r: Route) {
-	const existing = r.workspace_id ?? workspaceByLabel(r.new_workspace!);
+// Step 3: new tab in Inbox (created if missing, no focus), start pi in it, send the text.
+function launch(id: string, text: string, label: string) {
+	const inbox = herdr("workspace", "list").workspaces.find((w: any) => w.label.toLowerCase() === INBOX.toLowerCase());
 	let pane: string;
-	if (existing) {
-		const t = herdr("tab", "create", "--workspace", existing, "--cwd", HOME, "--label", r.tab_label, "--no-focus");
-		pane = t.root_pane.pane_id;
+	if (inbox) {
+		pane = herdr("tab", "create", "--workspace", inbox.workspace_id, "--cwd", HOME, "--label", label, "--no-focus").root_pane.pane_id;
 	} else {
-		const w = herdr("workspace", "create", "--cwd", HOME, "--label", r.new_workspace!, "--no-focus");
+		const w = herdr("workspace", "create", "--cwd", HOME, "--label", INBOX, "--no-focus");
 		pane = w.root_pane.pane_id;
-		herdr("tab", "rename", w.tab.tab_id, r.tab_label);
+		herdr("tab", "rename", w.tab.tab_id, label);
 	}
-	log(id, "tab", { pane });
+	log(id, "tab", { pane, label });
 
 	const agent = `inbox-${id}`;
 	herdr("agent", "start", agent, "--kind", "pi", "--pane", pane, "--timeout", "60000");
@@ -113,12 +81,11 @@ function launch(id: string, text: string, r: Route) {
 async function handle(id: string, text: string) {
 	try {
 		// One retry: the model gateway returns the occasional transient 502.
-		const r = await route(text).catch(() => route(text)).catch((e) => {
-			log(id, "route_failed", { error: String(e) });
-			return { workspace_id: null, new_workspace: FALLBACK_WORKSPACE, tab_label: "Inbox Task" };
+		const label = await tabLabel(text).catch(() => tabLabel(text)).catch((e) => {
+			log(id, "label_failed", { error: String(e) });
+			return "Inbox Task";
 		});
-		log(id, "routed", r);
-		launch(id, text, r);
+		launch(id, text, label);
 	} catch (e) {
 		log(id, "failed", { error: String(e) });
 	}
@@ -131,6 +98,14 @@ const PAGE = `<!doctype html><meta name=viewport content="width=device-width,ini
 
 const host = execFileSync("/usr/local/bin/tailscale", ["ip", "-4"], { encoding: "utf8" }).trim().split("\n")[0];
 
+// Client ids already accepted, rebuilt from the log so restarts don't forget them.
+const seen = new Set<string>();
+try {
+	for (const l of readFileSync(`${LOG_DIR}/log.jsonl`, "utf8").split("\n")) {
+		if (l.includes('"clientId"')) { const c = JSON.parse(l).clientId; if (c) seen.add(c); }
+	}
+} catch {}
+
 Bun.serve({
 	hostname: host,
 	port: PORT,
@@ -142,12 +117,18 @@ Bun.serve({
 		const type = req.headers.get("content-type") ?? "";
 		// The test page posts a form field named "text"; anything else (curl -d, Shortcuts) is the raw body.
 		const body = await req.text();
-		const field = type.includes("form") ? new URLSearchParams(body).get("text") : null;
-		const text = (field ?? body).trim();
+		const form = type.includes("form") ? new URLSearchParams(body) : null;
+		const text = (form ? form.get("text") ?? "" : body).trim();
+		const clientId = form?.get("id")?.trim() || null;
 		if (!text) return new Response("empty", { status: 400 });
 
+		if (clientId && seen.has(clientId)) {
+			log("dup", "duplicate", { clientId });
+			return new Response(null, { status: 202 });
+		}
+		if (clientId) seen.add(clientId);
 		const id = crypto.randomUUID().slice(0, 8);
-		log(id, "received", { chars: text.length, text });
+		log(id, "received", { chars: text.length, text, clientId });
 		void handle(id, text);
 		// Send-only: no result. The form just lands back on a blank page.
 		return type.includes("form") ? new Response(null, { status: 303, headers: { location: "/" } }) : new Response(null, { status: 202 });
