@@ -54,6 +54,9 @@ have codex                || curl -fsSL https://chatgpt.com/codex/install.sh | s
 have amp                  || curl -fsSL https://ampcode.com/install.sh | bash        || warn "amp"
 [[ -f ~/.bun/install/global/package.json ]] || ~/.bun/bin/bun add -g @oh-my-pi/pi-coding-agent || warn "omp"
 
+step "agent instructions"
+"$DOTFILES/agent-instructions/build" || warn "agent-instructions/build"
+
 step "stow packages"
 for pkg in $STOW_PACKAGES; do
   # Move aside any real file that would block a symlink, then stow.
