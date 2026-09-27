@@ -185,6 +185,17 @@ GTD tickler for Herdr. Say it in plain text to any pi agent ("do X Friday at 9",
 - Tool: `pi/dot-pi/agent/extensions/tickler.ts` (schedule / list / cancel). CLI: `bin/dot-local/bin/tickler add|list|cancel|fire`.
 - LaunchAgent `com.nathan.tickler` runs `tickler fire` every 60s, only on ag (the host). Items missed while asleep fire on wake and say they're late.
 - State: `~/.local/state/tickler/<id>.json`; log `log.jsonl` beside them (`added → fired`, or `failed` with the error). launchd output: `/tmp/tickler.log`.
+- **Presence trigger** ("resume this next time I'm on the client"): the agent schedules with `when: "online"` instead of a time (CLI `tickler add --when online …`). It opens as `🟢 <title>` on Nathan's next arrival at the client after it was queued, once. Uses `presence` below.
+
+## Presence ("Nathan is online")
+
+`presence` on ag answers "is Nathan actually at the client Mac right now?" Run `presence` (one line) or `presence status --json`.
+
+- **How:** LaunchAgent `com.nathan.presence` runs `presence poll` every 30s, only on ag. One SSH call to the client (`$PRESENCE_CLIENT`, default `nathan-dev-client`; ControlMaster keeps it ~0.2s) reads HID idle time (real keyboard/mouse/trackpad input), `IOConsoleLocked`, and the console user. Nothing runs on the client, so there's no client setup; a sleeping client just stops answering.
+- **Debounce:** **online** after ≥ 90s of continuous activity (input within the last minute, unlocked), so a brief wake doesn't count. **Offline** when locked, unreachable 3 polls in a row (asleep / off Tailscale), or no input for 15 min. Short idle stretches (reading) stay online. While a `client-cua` job runs on the client, its synthetic input is ignored (state held, arrival streak reset).
+- **Arrival:** on each offline → online transition it runs `tickler fire`, which launches the `when online` items queued before that arrival (plus the every-minute backstop). `tickler fire` takes a lock so the two runs can't double-fire.
+- State: `~/.local/state/presence/state.json` (`state`, `online_since`, `last_seen`, `idle_s`, …); transitions in `log.jsonl` beside it. launchd output: `/tmp/presence.log`. State older than 5 min reads as `unknown` (poller not running).
+- Not detected: Nathan on the phone only, or at a client not in `machines/README.md`. Jump Desktop input from ag into the client would count as presence.
 
 ## Jev (TypeSafe System One model)
 
