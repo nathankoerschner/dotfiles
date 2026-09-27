@@ -9,6 +9,10 @@ Host ag
     IdentitiesOnly yes
     ServerAliveInterval 15
     ServerAliveCountMax 3
+    # Reuse one connection (instant Cmd+V image paste, shot/show). Socket dir: ~/.ssh/sockets.
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 4h
 
 # Client Mac (where Nathan sits). ag uses this for shot/show/client-cua.
 Host nathan-dev-client
@@ -16,3 +20,6 @@ Host nathan-dev-client
     User nathan
     IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 4h

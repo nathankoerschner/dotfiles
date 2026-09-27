@@ -686,23 +686,33 @@ local function shq(s)
 	return "'" .. (s:gsub("'", "'\\''")) .. "'"
 end
 
+-- Type the (deterministic) remote paths immediately, upload in the background over one
+-- multiplexed ssh connection (ControlMaster in ssh config). The upload finishes long
+-- before you hit Enter; an alert appears only if it fails.
 local function pasteImagesToHerdr(files)
 	local stamp = os.date("%Y%m%d-%H%M%S")
-	local remote, cmd = {}, { "ssh " .. PASTE_HOST .. " mkdir -p " .. PASTE_DIR }
+	local remote, cmd = {}, { "mkdir -p ~/.ssh/sockets" }
 	for i, f in ipairs(files) do
 		local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, (f:match("%.(%w+)$") or "png"):lower())
 		table.insert(remote, PASTE_REMOTE_HOME .. "/" .. name)
-		table.insert(cmd, "scp -q " .. shq(f) .. " " .. PASTE_HOST .. ":" .. name)
+		table.insert(cmd, "ssh " .. PASTE_HOST .. " 'mkdir -p " .. PASTE_DIR .. " && cat > " .. name .. "' < " .. shq(f))
 	end
-	hs.alert.show("Uploading " .. #files .. " image(s) to ag…", 1)
+	hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
 	hs.task
 		.new("/bin/sh", function(code, _, err)
 			if code ~= 0 then
-				return hs.alert.show("Image upload to ag failed: " .. (err or ""))
+				hs.alert.show("Image upload to ag failed: " .. (err or ""), 5)
 			end
-			hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
 		end, { "-c", table.concat(cmd, " && ") })
 		:start()
+end
+
+-- Keep the ssh master warm so the first paste is fast too.
+if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
+	herdr_ssh_warm = hs.timer.doEvery(600, function()
+		hs.task.new("/bin/sh", nil, { "-c", "mkdir -p ~/.ssh/sockets && ssh -O check " .. PASTE_HOST .. " 2>/dev/null || ssh -fN " .. PASTE_HOST }):start()
+	end)
+	herdr_ssh_warm:fire()
 end
 
 if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
