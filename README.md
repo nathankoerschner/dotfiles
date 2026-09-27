@@ -112,7 +112,7 @@ report:
 - *declared but not brew-installed here*: run bootstrap, or ignore apps that
   were installed by hand before this machine used the Brewfile.
 
-On the other machine, `git pull && ./bootstrap` picks up the change. Config
+On every other machine (see `machines/README.md`), `git pull && ./bootstrap` picks up the change. Config
 files are symlinks into this repo, so config edits are already tracked:
 commit them, pull elsewhere.
 
@@ -122,7 +122,7 @@ settings go in untracked `~/.config/ghostty/local.conf`.
 
 Small helper scripts live in `bin/dot-local/bin` and stow into `~/.local/bin`.
 
-Every top-level directory except `machines/`, `macos-launchagents/` and `ios-shortcuts/` is a stow package; `bootstrap` lists them in `STOW_PACKAGES`.
+Every top-level directory except `machines/` (inventory + snapshots), `macos-launchagents/` and `ios-shortcuts/` is a stow package; `bootstrap` lists them in `STOW_PACKAGES`.
 
 ## Agent skills
 
@@ -304,10 +304,10 @@ continue using the standard providers configured by each tool.
 
 ## Client ↔ ag bridge
 
-Nathan sits at the client Mac; agents run on ag. Both stow this repo.
+Nathan sits at a client machine; agents run on a host (ag). Every machine stows this repo; roles and aliases are in `machines/README.md`.
 
-- **SSH**: `ssh/dot-ssh/config` defines `ag` and `nathan-dev-client` (Tailscale IPs). Both Macs
-  need an `~/.ssh/id_ed25519` authorized on the other (manual, per device), and Remote Login on.
+- **SSH**: `ssh/dot-ssh/config` defines an alias per machine (Tailscale IPs). Each machine needs an
+  `~/.ssh/id_ed25519` authorized on the machines it talks to (manual, per device), and Remote Login on.
   Machine-only hosts go in untracked `~/.ssh/config.local`.
 - **Screenshots → ag**: CleanShot X on the client saves to `~/Screenshots` (Settings → General →
   Export location; after-capture actions include *Save*). Set by hand/CUA; CleanShot stores it as
@@ -318,7 +318,7 @@ Nathan sits at the client Mac; agents run on ag. Both stow this repo.
   `~/Screenshots`), so Cmd+V in a Herdr Ghostty window just types the already-uploaded ag path
   (instant); pi attaches image paths. Other clipboard images/files upload on paste (path typed first).
   Uploads reuse one SSH connection (`ControlMaster` in `ssh/dot-ssh/config`). Text pastes untouched.
-  Speed limit: on the office network both Macs sit behind the same symmetric NAT, so Tailscale
+  Speed limit: on the office network the machines sit behind the same symmetric NAT, so Tailscale
   relays via DERP (~1.3 MB/s; a ~1 MB screenshot lands in ~0.8s). Check with
   `tailscale ping nathan-dev-client` (want "via <ip>", not "via DERP").
 - **ag → client viewing**: `show <file|dir|url>` copies to client `~/ag-inbox` and opens it there
