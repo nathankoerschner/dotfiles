@@ -187,8 +187,10 @@ Guide for agents. Sources: [docs.typesafe.ai](https://docs.typesafe.ai/llms.txt)
 **API.**
 
 ```bash
-curl -s https://api.typesafe.ai/v1/systemone \
-  -H "Authorization: Bearer $TYPESAFE_API_KEY" -H 'content-type: application/json' \
+# Through our TrueFoundry gateway (use this; no TypeSafe key needed). The path after
+# /proxy-api/jev-account/jev-endpoint/ is passed straight through to api.typesafe.ai.
+curl -s https://tfy.promptlens.trilogy.com/proxy-api/jev-account/jev-endpoint/v1/systemone \
+  -H "Authorization: Bearer $TFY_TOKEN" -H 'content-type: application/json' \
   -d '{"model":"jev-latest","state":"Help! My payouts have been failing for 3 days.",
        "questions":{
          "team":{"type":"choice","instructions":"Which team should handle this?",
@@ -208,7 +210,8 @@ curl -s https://api.typesafe.ai/v1/systemone \
 - Include a no-match option when nothing may fit. Gate actions on `confidence` or probability thresholds tuned on your own data; route the uncertain ones to a person or a reasoning LLM. A `noul` near 0.5 means "unsure", not "medium".
 - Models: `jev-latest` (currently `jev-1.13.0`); pin the versioned id if you tuned thresholds. 64k tokens per request (32k for state plus the longest question), text only, English is strongest. Priced per input token (about $0.042 per million); output is free. It returns `429` when rate-limited, so retry with backoff.
 - SDKs: Python (`TypeSafeClient` / `AsyncTypeSafeClient`) and JavaScript; see [SDKs](https://docs.typesafe.ai/sdk.md). Try prompts in the [Playground](https://console.typesafe.ai/playground).
-- Key: get one at [console.typesafe.ai](https://console.typesafe.ai), store it in 1Password, and export `TYPESAFE_API_KEY` from `~/.zshenv.local`. Never commit it, and keep it server-side.
+- Access: call Jev through TrueFoundry as above with `TFY_TOKEN` (from `~/.zshenv.local`), not `api.typesafe.ai` directly. It is a TrueFoundry "custom endpoint", so `/chat/completions` rejects it; use the `/proxy-api/` path. TypeSafe SDKs can point at that base URL.
+- In use here: `pi/dot-pi/agent/extensions/herdr-tab-name.ts` (keeps Herdr tab names accurate; see Herdr config).
 
 ## Moshi (iPhone terminal)
 
@@ -233,6 +236,8 @@ Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
   except Cmd+N/W/O/K/V/1–9, which it keeps for itself; use `Ctrl+B` + key for those.
 
 ## Herdr config
+
+Tab names stay accurate on their own (`pi/dot-pi/agent/extensions/herdr-tab-name.ts`). On every prompt, in the background: a default numeric tab gets named by a fast LLM; otherwise Jev scores whether the label still fits the last 3 prompts, and if P(accurate) < 0.6 the LLM renames it. Renaming a tab by hand pins it for that session. Decisions are logged to `~/.local/state/herdr-tab-name/log.jsonl` (label, `p_accurate`, keep/rename) for tuning the threshold. Open pi sessions need `/reload` to pick up changes.
 
 `herdr/dot-config/herdr/config.toml` stows to `~/.config/herdr/config.toml`.
 Only config, plugins, and agent integrations are tracked; Herdr's sockets, logs,
