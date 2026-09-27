@@ -238,6 +238,9 @@ Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
 - **Shortcuts**: the same Herdr shortcuts as the Mac, per
   [`herdr/SHORTCUTS.md`](herdr/SHORTCUTS.md). Moshi forwards Cmd keys to Herdr,
   except Cmd+N/W/O/K/V/1–9, which it keeps for itself; use `Ctrl+B` + key for those.
+- **Line breaks**: Shift+Tab inserts a newline in Pi (Moshi's Shift+Enter arrives
+  as plain Enter). Set in `pi/dot-pi/agent/keybindings.json`, so it applies on every
+  client; thinking-level cycling moved from Shift+Tab to Alt+T. Open Pi sessions need `/reload`.
 
 ## Herdr config
 
