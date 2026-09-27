@@ -166,6 +166,7 @@ Send-only inbox: POST free text and ag opens a new Herdr tab running pi with tha
 - Code: `bin/dot-local/bin/prompt-inbox`; LaunchAgent: `com.nathan.prompt-inbox` (only runs on ag).
 - Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → routed → tab → pi_started → sent`, or `route_failed`/`failed`). Server output: `/tmp/prompt-inbox.log`.
 - Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.prompt-inbox`.
+- iPhone Action Button capture: `ios-shortcuts/capture-to-ag.md`.
 
 ## Tickler (deferred tasks)
 
