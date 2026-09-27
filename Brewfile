@@ -19,6 +19,7 @@ brew "mise"
 brew "neovim"
 brew "node", link: false
 brew "node@24", link: true
+brew "pandoc"            # show: renders Markdown review pages for the phone
 brew "ripgrep"
 brew "stow"
 brew "tmux"

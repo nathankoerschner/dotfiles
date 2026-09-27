@@ -354,6 +354,13 @@ Nathan sits at a client machine; agents run on a host (ag). Every machine stows 
 - **ag → client viewing**: `show <file|dir|url>` copies to client `~/ag-inbox` and opens it there
   (HTML files bring their referenced local assets; a folder opens its `index.html`).
   Agents call it themselves (see AGENTS.md). Servers on ag are reachable at `http://ag:<port>`.
+- **Reviewing on the phone**: on ag, `show` also publishes HTML pages, folders, and Markdown
+  (rendered with pandoc) to `~/review/<name>/` and prints `phone: http://100.107.192.32:7374/r/<name>/`.
+  `file-inbox` serves them to the tailnet, adding a phone viewport and a **Comment** button to HTML.
+  A comment posts to `/r/<name>/comment` and is sent as a prompt to the pi session that ran `show`
+  (matched by `$PI_SESSION_FILE` in `~/review/<name>/.meta.json`, so it survives pane moves), with
+  the section heading he was reading. If that session is gone, it opens a new Inbox session.
+  Nothing is exposed beyond Tailscale. Old pages in `~/review` can be deleted anytime.
 - **Client desktop automation**: `client-cua "<task>"` runs Codex computer use on the client's GUI
   session (via `launchctl submit`; plain ssh can't see the screen).
 - **Phone → ag**: `file-inbox` (LaunchAgent `com.nathan.file-inbox`, port 7374, Tailscale only)
