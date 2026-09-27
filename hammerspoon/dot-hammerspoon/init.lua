@@ -695,30 +695,71 @@ end
 -- Type the (deterministic) remote paths immediately, upload in the background over one
 -- multiplexed ssh connection (ControlMaster in ssh config). The upload finishes long
 -- before you hit Enter; an alert appears only if it fails.
-local function pasteImagesToHerdr(images)
-	local stamp = os.date("%Y%m%d-%H%M%S")
-	local remote, cmd = {}, {}
-	for i, im in ipairs(images) do
-		local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, im.ext)
-		table.insert(remote, PASTE_REMOTE_HOME .. "/" .. name)
-		-- Raw TIFF is ~20MB for a full screen; PNG via sips is ~1MB in ~0.1s, and upload
-		-- speed is the bottleneck (Tailscale may be relayed), so compress here, off the key path.
-		local src = shq(im.src)
-		local prep = im.convert and ("sips -s format png " .. src .. " --out " .. src .. ".png >/dev/null && ") or ""
-		local up = im.convert and (src .. ".png") or src
-		-- Write to .part then rename, so an agent never reads a half-uploaded file.
-		table.insert(cmd, prep .. "ssh " .. PASTE_HOST .. " "
-			.. shq("mkdir -p " .. PASTE_DIR .. " && cat > " .. name .. ".part && mv " .. name .. ".part " .. name)
-			.. " < " .. up .. (im.tmp and (" && rm -f " .. src .. " " .. src .. ".png") or ""))
-	end
-	hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
+-- Pre-upload: every CleanShot capture is pushed to ag the moment it's written, so by
+-- the time you press Cmd+V the file is already there and the paste just types its path.
+-- CleanShot copies a file URL to its media folder PNG, which is matched against this map.
+local preuploaded = {} -- local path -> remote path
+local function uploadCmd(src, name, convert, tmp)
+	local q = shq(src)
+	local prep = convert and ("sips -s format png " .. q .. " --out " .. q .. ".png >/dev/null && ") or ""
+	local up = convert and (q .. ".png") or q
+	-- Write to .part then rename, so an agent never reads a half-uploaded file.
+	return prep .. "ssh " .. PASTE_HOST .. " "
+		.. shq("mkdir -p " .. PASTE_DIR .. " && cat > " .. name .. ".part && mv " .. name .. ".part " .. name)
+		.. " < " .. up .. (tmp and (" && rm -f " .. q .. " " .. q .. ".png") or "")
+end
+
+local function runUpload(cmd)
 	hs.task
 		.new("/bin/sh", function(code, _, err)
 			if code ~= 0 then
 				hs.alert.show("Image upload to ag failed: " .. (err or ""), 5)
 			end
-		end, { "-c", table.concat(cmd, " && ") })
+		end, { "-c", cmd })
 		:start()
+end
+
+-- Debounced: CleanShot writes, then may rewrite (annotations). Upload 0.3s after the last
+-- event, reusing the same remote name so the path you pasted stays valid.
+local preuploadTimers = {}
+local function preupload(path)
+	local ext = (path:match("%.(%w+)$") or ""):lower()
+	local base = path:match("[^/]+$")
+	if not IMAGE_EXT[ext] or base:sub(1, 1) == "." then
+		return
+	end
+	if not preuploaded[path] then
+		local name = string.format("%s/%s-%s.%s", PASTE_DIR, os.date("%Y%m%d-%H%M%S"), hs.host.uuid():sub(1, 6), ext)
+		preuploaded[path] = PASTE_REMOTE_HOME .. "/" .. name
+	end
+	local name = preuploaded[path]:sub(#PASTE_REMOTE_HOME + 2)
+	if preuploadTimers[path] then
+		preuploadTimers[path]:stop()
+	end
+	preuploadTimers[path] = hs.timer.doAfter(0.3, function()
+		preuploadTimers[path] = nil
+		if hs.fs.attributes(path) then
+			runUpload(uploadCmd(path, name))
+		end
+	end)
+end
+
+local function pasteImagesToHerdr(images)
+	local stamp = os.date("%Y%m%d-%H%M%S")
+	local remote, cmd = {}, {}
+	for i, im in ipairs(images) do
+		if preuploaded[im.src] then
+			table.insert(remote, preuploaded[im.src])
+		else
+			local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, im.ext)
+			table.insert(remote, PASTE_REMOTE_HOME .. "/" .. name)
+			table.insert(cmd, uploadCmd(im.src, name, im.convert, im.tmp))
+		end
+	end
+	hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
+	if #cmd > 0 then
+		runUpload(table.concat(cmd, " && "))
+	end
 end
 
 -- Keep the ssh master warm so the first paste is fast too.
@@ -727,6 +768,26 @@ if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
 		hs.task.new("/bin/sh", nil, { "-c", "mkdir -p ~/.ssh/sockets && ssh -O check " .. PASTE_HOST .. " 2>/dev/null || ssh -fN " .. PASTE_HOST }):start()
 	end)
 	herdr_ssh_warm:fire()
+
+	-- Watch CleanShot's capture folders (media history holds the copied PNG; ~/Screenshots
+	-- gets the saved one). Only files created after startup are uploaded.
+	local started = os.time()
+	herdr_capture_watchers = {}
+	for _, dir in ipairs({ os.getenv("HOME") .. "/Library/Application Support/CleanShot/media", os.getenv("HOME") .. "/Screenshots" }) do
+		local w = hs.pathwatcher.new(dir, function(paths, flags)
+			for i, p in ipairs(paths) do
+				local f = flags[i]
+				if (f.itemCreated or f.itemRenamed or f.itemModified) and f.itemIsFile then
+					local attrs = hs.fs.attributes(p)
+					if attrs and attrs.size > 0 and attrs.creation >= started then
+						preupload(p)
+					end
+				end
+			end
+		end)
+		w:start()
+		table.insert(herdr_capture_watchers, w)
+	end
 end
 
 if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
