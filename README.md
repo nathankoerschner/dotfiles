@@ -161,6 +161,14 @@ Send-only inbox: POST free text and ag opens a new Herdr tab running pi with tha
 - Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → routed → tab → pi_started → sent`, or `route_failed`/`failed`). Server output: `/tmp/prompt-inbox.log`.
 - Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.prompt-inbox`.
 
+## Tickler (deferred tasks)
+
+GTD tickler for Herdr. Say it in plain text to any pi agent ("do X Friday at 9", "send this back to me in two weeks"); the agent calls the `tickler` tool. At that time a new tab `⏰ <title>` opens in the same Herdr workspace (falls back to `Inbox`), running pi **forked from the conversation that deferred it**, with the task as its first prompt. Nothing is focused; a Herdr notification fires.
+
+- Tool: `pi/dot-pi/agent/extensions/tickler.ts` (schedule / list / cancel). CLI: `bin/dot-local/bin/tickler add|list|cancel|fire`.
+- LaunchAgent `com.nathan.tickler` runs `tickler fire` every 60s, only on ag (the host). Items missed while asleep fire on wake and say they're late.
+- State: `~/.local/state/tickler/<id>.json`; log `log.jsonl` beside them (`added → fired`, or `failed` with the error). launchd output: `/tmp/tickler.log`.
+
 ## Jev (TypeSafe System One model)
 
 Guide for agents. Sources: [docs.typesafe.ai](https://docs.typesafe.ai/llms.txt) (source of truth; append `.md` to any page path) and the official skill, vendored at `agents/dot-agents/skills/typesafe-ai` (from [typesafe-ai/skills](https://github.com/typesafe-ai/skills)). Read the live docs before writing an integration; details below are from jev-1.13 (Sep 2026).
