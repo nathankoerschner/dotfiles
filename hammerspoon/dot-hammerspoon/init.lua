@@ -865,6 +865,22 @@ if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
 end
 -- ────────────────────────────────────────────────────────────────────────────
 
+-- ─── Herdr: clickable links to tabs ─────────────────────────────────────────
+-- Agents print links like http://ag:7374/focus?tab=<id> (see `herdr-link`). Cmd+click in
+-- Ghostty opens the browser; file-inbox on ag focuses that Herdr tab, then redirects to
+-- hammerspoon://herdr-return, which closes that browser tab and brings Ghostty back.
+hs.urlevent.bind("herdr-return", function()
+	local front = hs.application.frontmostApplication()
+	if front and front:name() ~= "Ghostty" then
+		hs.eventtap.keyStroke({ "cmd" }, "w", 0, front)
+	end
+	local ghostty = hs.application.find("Ghostty")
+	if ghostty then
+		ghostty:activate()
+	end
+end)
+-- ────────────────────────────────────────────────────────────────────────────
+
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
 -- You'll also have to install Karabiner Elements and map caps_lock to left_control there
 len = function(t)

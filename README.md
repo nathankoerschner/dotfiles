@@ -346,3 +346,7 @@ Nathan sits at a client machine; agents run on a host (ag). Every machine stows 
 - **Phone → ag**: `file-inbox` (LaunchAgent `com.nathan.file-inbox`, port 7374, Tailscale only)
   saves uploads to `~/inbox/phone` and can prompt a recent pi session or open a new one. The iOS
   Shortcut is documented in `ios-shortcuts/send-to-ag.md`. Log: `/tmp/file-inbox.log`.
+- **Links to Herdr tabs**: `herdr-link <tab_id>` / `herdr-link --grep <regex>` prints
+  `http://ag:7374/focus?tab=<id>`. Cmd+click in Ghostty → file-inbox runs `herdr tab focus`, then
+  redirects to `hammerspoon://herdr-return` (client Hammerspoon closes the browser tab, refocuses
+  Ghostty). Plain http because Herdr strips OSC 8 and Ghostty only auto-links standard schemes.
