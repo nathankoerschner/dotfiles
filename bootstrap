@@ -110,6 +110,7 @@ check ~/.config/mcp/arcade-school.headers     "Authorization: Bearer <token> (06
 check ~/.config/mcp/tsa-courses.headers       "Authorization: Bearer <token> (0600)"
 check ~/.pi/agent/auth.json                   "run pi and /login, or copy"
 check ~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json "Linear MCP OAuth client (copy from another machine)"
+check ~/.alchemy/credentials/playcademy-arcade/cloudflare.json "Alchemy Cloudflare profile for arcade prod/dev DB access (copy ~/.alchemy/config.json + this file, 0600)"
 gh auth status >/dev/null 2>&1 && echo "  ok      gh auth" || echo "  MISSING gh auth  - gh auth login"
 
 step "Done"

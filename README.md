@@ -69,6 +69,7 @@ modes at `0600`:
 | `~/.config/mcp/arcade-school.headers`, `tsa-courses.headers` | `Authorization: Bearer <token>` |
 | `~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json` | Linear MCP OAuth client |
 | `~/.pi/agent/auth.json` | or just run `pi` and `/login` |
+| `~/.alchemy/config.json`, `~/.alchemy/credentials/playcademy-arcade/cloudflare.json` | Alchemy `playcademy-arcade` Cloudflare profile (API token); arcade's `bun scripts/db --stage production` needs it plus `cloudflared` |
 
 After `~/.zshenv.local` exists, run `tfy-env` (or log out and back in) and
 restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
