@@ -866,14 +866,23 @@ end
 -- ────────────────────────────────────────────────────────────────────────────
 
 -- ─── Herdr: clickable links to tabs ─────────────────────────────────────────
--- Agents print links like http://ag:7374/focus?tab=<id> (see `herdr-link`). Cmd+click in
--- Ghostty opens the browser; file-inbox on ag focuses that Herdr tab, then redirects to
--- hammerspoon://herdr-return, which closes that browser tab and brings Ghostty back.
-hs.urlevent.bind("herdr-return", function()
-	local front = hs.application.frontmostApplication()
-	if front and front:name() ~= "Ghostty" then
-		hs.eventtap.keyStroke({ "cmd" }, "w", 0, front)
+-- Agents print gemini://<host>/focus/<tab_id> (see `herdr-link`). Cmd+click in Ghostty →
+-- HerdrLink.app (macos-apps/HerdrLink, the gemini:// handler) → hammerspoon://herdr?tab=&host=
+-- → here: focus that tab over the warm ssh connection. No browser involved.
+hs.urlevent.bind("herdr", function(_, params)
+	local tab, host = params.tab or "", params.host or "ag"
+	if not tab:match("^[%w]+:[%w]+$") or not host:match("^[%w%.%-]+$") then
+		return hs.alert.show("herdr link: bad target")
 	end
+	local here = (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) == host
+	local focus = "$HOME/.local/bin/herdr tab focus " .. tab
+	hs.task
+		.new("/bin/sh", function(code, _, err)
+			if code ~= 0 then
+				hs.alert.show("herdr link failed: " .. (err or ""), 4)
+			end
+		end, { "-c", here and focus or ("ssh " .. host .. " '" .. focus .. "'") })
+		:start()
 	local ghostty = hs.application.find("Ghostty")
 	if ghostty then
 		ghostty:activate()
