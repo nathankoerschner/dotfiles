@@ -592,17 +592,43 @@ hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 local HERDR_PREFIX = { mods = { "ctrl" }, key = "b" }
 -- Every shortcut is just a prefix chord, so it works the same locally and
 -- through `herdr --remote` (ag): herdr runs any helper script on the server.
-local herdrShortcuts = {
-	-- { mods, key, keys sent after the prefix }
-	{ mods = { cmd = true }, key = "w", send = { {}, "x" } }, -- close_pane
-	{ mods = { cmd = true }, key = "d", send = { {}, "v" } }, -- split_vertical (side by side)
-	{ mods = { cmd = true, shift = true }, key = "d", send = { {}, "-" } }, -- split_horizontal (stacked)
-	{ mods = { cmd = true }, key = "t", send = { {}, "t" } }, -- new tab with pi (herdr config)
-	{ mods = { cmd = true }, key = "[", send = { {}, "[" } }, -- focus history back
-	{ mods = { cmd = true }, key = "]", send = { {}, "]" } }, -- focus history forward
-}
-for i = 1, 9 do
-	table.insert(herdrShortcuts, { mods = { cmd = true }, key = tostring(i), send = { {}, tostring(i) } }) -- switch_tab
+-- The table comes from the canonical spec, ~/.config/herdr/shortcuts.json
+-- (herdr/SHORTCUTS.md): each `key` (e.g. cmd+shift+d) sends prefix + `prefix`.
+local HERDR_KEY_NAMES = { minus = "-" }
+local herdrShortcuts = {}
+do
+	local spec = hs.json.read(os.getenv("HOME") .. "/.config/herdr/shortcuts.json")
+	for _, sc in ipairs(spec and spec.shortcuts or {}) do
+		local mods, key = {}, nil
+		for part in sc.key:gmatch("[^+]+") do
+			if part == "cmd" or part == "shift" or part == "ctrl" or part == "alt" then
+				mods[part] = true
+			else
+				key = part
+			end
+		end
+		local sent = HERDR_KEY_NAMES[sc.prefix] or sc.prefix
+		if key == "1..9" then
+			for i = 1, 9 do
+				table.insert(herdrShortcuts, { mods = mods, key = tostring(i), send = { {}, tostring(i) } })
+			end
+		else
+			table.insert(herdrShortcuts, { mods = mods, key = key, send = { {}, sent } })
+		end
+	end
+	-- For herdr-shortcuts-check: what this Mac actually loaded, spec-shaped.
+	herdrShortcuts_loaded = {}
+	for _, sc in ipairs(herdrShortcuts) do
+		local names = {}
+		for m in pairs(sc.mods) do
+			table.insert(names, m)
+		end
+		table.sort(names)
+		table.insert(herdrShortcuts_loaded, { mods = names, key = sc.key, send = sc.send[2] })
+	end
+	if #herdrShortcuts == 0 then
+		hs.alert.show("Herdr shortcuts: ~/.config/herdr/shortcuts.json missing")
+	end
 end
 
 local function focusedWindowIsHerdr()

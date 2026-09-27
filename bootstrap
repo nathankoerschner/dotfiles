@@ -88,6 +88,7 @@ bash $DOTFILES/agents/dot-agents/skills/discord-export/scripts/install.sh >/dev/
   && echo "  DiscordChatExporter" || warn "discord-export install.sh"
 if have herdr && [[ $(herdr status 2>/dev/null) == *'status: running'* ]]; then
   zsh $DOTFILES/herdr/setup.sh || warn "herdr/setup.sh"
+  $DOTFILES/bin/dot-local/bin/herdr-shortcuts-check || warn "herdr shortcuts drifted (herdr/SHORTCUTS.md)"
 else
   warn "herdr server not running: open Ghostty (starts herdr), then run herdr/setup.sh"
 fi

@@ -228,14 +228,9 @@ Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
 - **Pairing** (by hand, once per host): Moshi app → Settings → Hooks →
   select ag → Retry/Pair, or run `moshi-hook host setup` and scan the QR code.
   The host secret stays in the login Keychain (`app.getmoshi.hook`), not in this repo.
-- **New tab**: our Herdr new-tab action (a tab running Pi) is `ctrl+b t`
-  (`prefix+t` in `herdr/dot-config/herdr/config.toml`).
-  On the desktop, Hammerspoon sends that chord for Cmd+T. In Moshi,
-  Cmd+N/W/O/1-9 are reserved app shortcuts that never reach the terminal.
-  Add a custom shortcut instead: Settings → Shortcuts → Herdr → add →
-  Ctrl + custom key `bt` (sends Ctrl+B then t), labeled "New tab".
-  Bind it to a gesture or D-pad slot if you like. Tabs 1-9 are already on
-  the Herdr panel's tab row (Ctrl+B + number).
+- **Shortcuts**: the same Herdr shortcuts as the Mac, per
+  [`herdr/SHORTCUTS.md`](herdr/SHORTCUTS.md). Moshi forwards Cmd keys to Herdr,
+  except Cmd+N/W/O/K/V/1–9, which it keeps for itself; use `Ctrl+B` + key for those.
 
 ## Herdr config
 
@@ -251,6 +246,9 @@ Only config, plugins, and agent integrations are tracked; Herdr's sockets, logs,
   from `pi/`, `claude/` (`hooks/` + `settings.json` hook), and `codex/`
   (`herdr-agent-state.sh`, `hooks.json`).
 - After stowing on a new machine, run `herdr/setup.sh` to register the plugins.
+- Shortcuts: canonical list and per-device behavior in
+  [`herdr/SHORTCUTS.md`](herdr/SHORTCUTS.md) (spec `shortcuts.json`, verified by
+  `herdr-shortcuts-check`).
 
 ## Texas Sports Academy MCP (arcade.school)
 
