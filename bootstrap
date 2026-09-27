@@ -86,6 +86,11 @@ zsh $DOTFILES/macos-apps/HerdrLink/install.sh || warn "HerdrLink (needs Command 
 
 step "Tool setup"
 mise install -y >/dev/null && echo "  mise tools" || warn "mise install"
+# System Python + PyYAML for arcade.school's Minecraft retention test (MINECRAFT_TEST_PYTHON in zsh/).
+mtp="$HOME/.local/share/minecraft-test-python"
+{ [ -x "$mtp/.venv/bin/python" ] || uv venv -q --python /usr/bin/python3 "$mtp/.venv"; } \
+  && uv pip install -q --python "$mtp/.venv/bin/python" pyyaml && echo "  minecraft test python" \
+  || warn "minecraft test python"
 # Moshi (iPhone terminal) hook daemon + Pi hook; the LaunchAgent runs it.
 $DOTFILES/bin/dot-local/bin/moshi-hook-install >/dev/null && ~/.local/bin/moshi-hook install --target pi >/dev/null \
   && echo "  moshi-hook" || warn "moshi-hook-install"

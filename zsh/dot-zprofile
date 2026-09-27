@@ -4,3 +4,8 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 if [ -f "$HOME/.zprofile.local" ]; then
   source "$HOME/.zprofile.local"
 fi
+
+# arcade.school's Minecraft retention test needs macOS's system Python (its SQLite
+# honors secure_delete the way the servers' does) plus PyYAML; bootstrap builds this
+# venv with uv. The test reads MINECRAFT_TEST_PYTHON and falls back to /usr/bin/python3.
+export MINECRAFT_TEST_PYTHON="$HOME/.local/share/minecraft-test-python/.venv/bin/python"
