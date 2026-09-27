@@ -163,7 +163,8 @@ Send-only inbox: POST free text and ag opens a new Herdr tab running pi with tha
 
 - Test page: http://ag:7373/ (or `http://100.107.192.32:7373/`). Tailscale only; it listens on ag's Tailscale IP.
 - API: `curl -X POST http://ag:7373/prompt -d 'your prompt'` → `202`, no body. Form posts take `text` and an optional `id`; a repeated `id` within 24 hours is acknowledged without opening a second tab (so the phone's offline queue can resend safely).
-- Every capture opens a tab in the **Inbox** workspace (created if missing); a fast model (TrueFoundry Gemini Flash Lite) only names the tab. Filing into topic workspaces is done by hand. Nothing is focused, so attached clients aren't disturbed.
+- Every capture opens a tab in the **Inbox** workspace (created if missing); a fast model (TrueFoundry Gemini Flash Lite) only names the tab. Nothing is focused, so attached clients aren't disturbed.
+- Inbox is pinned first in the sidebar (`herdr/plugins/pin-inbox`), and sessions file themselves: on your first reply (the 2nd prompt a pi process sees), `pi/dot-pi/agent/extensions/herdr-inbox-file.ts` has a fast model pick an existing topic workspace from workspace and tab names, then moves the pane into a new tab there (focus follows if you're looking at it, otherwise a Herdr toast). If nothing fits, it stays in Inbox. Log: `~/.local/state/herdr-inbox-file/log.jsonl`.
 - Code: `bin/dot-local/bin/prompt-inbox`; LaunchAgent: `com.nathan.prompt-inbox` (only runs on ag).
 - Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → tab → pi_started → sent`, or `label_failed`/`duplicate`/`failed`). Server output: `/tmp/prompt-inbox.log`.
 - Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.prompt-inbox`.
@@ -246,8 +247,12 @@ Only config, plugins, and agent integrations are tracked; Herdr's sockets, logs,
 `herdr server reload-config`.
 
 - `herdr/plugins/`: `recent-agents` (sidebar Agents sorted newest state change
-  first) and `tab-bubbles` (● on a tab per agent that finished or needs input
-  while you weren't looking; visiting clears it).
+  first), `tab-bubbles` (● on a tab per agent that finished or needs input
+  while you weren't looking; visiting clears it), and `pin-inbox` (keeps the
+  Inbox workspace first).
+- Panes can move between workspaces (Inbox auto-filing), so `HERDR_TAB_ID` and
+  `HERDR_WORKSPACE_ID` can go stale; `HERDR_PANE_ID` stays valid (Herdr aliases
+  it). Resolve the live location with `herdr pane get "$HERDR_PANE_ID"`.
 - Agent integrations (`herdr integration install <agent>` output) are stowed
   from `pi/`, `claude/` (`hooks/` + `settings.json` hook), and `codex/`
   (`herdr-agent-state.sh`, `hooks.json`).
