@@ -662,7 +662,7 @@ local IMAGE_EXT = { png = true, jpg = true, jpeg = true, gif = true, webp = true
 
 -- Returns { {src=<local file>, ext=<remote ext>, convert=<bool>} ... } or nil. No image
 -- encoding happens here: copied files are used as-is, and a raw clipboard image is
--- written as its TIFF bytes (instant) and converted to PNG on ag after upload.
+-- written as its raw bytes (instant); PNG conversion happens after the path is typed.
 local function clipboardImages()
 	local out = {}
 	for _, u in ipairs(hs.pasteboard.readURL(nil, true) or {}) do
@@ -701,11 +701,15 @@ local function pasteImagesToHerdr(images)
 	for i, im in ipairs(images) do
 		local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, im.ext)
 		table.insert(remote, PASTE_REMOTE_HOME .. "/" .. name)
-		local store = im.convert
-				and ("cat > " .. name .. ".tiff && sips -s format png " .. name .. ".tiff --out " .. name .. " >/dev/null && rm " .. name .. ".tiff")
-			or ("cat > " .. name)
-		table.insert(cmd, "ssh " .. PASTE_HOST .. " " .. shq("mkdir -p " .. PASTE_DIR .. " && " .. store) .. " < " .. shq(im.src)
-			.. (im.tmp and (" && rm -f " .. shq(im.src)) or ""))
+		-- Raw TIFF is ~20MB for a full screen; PNG via sips is ~1MB in ~0.1s, and upload
+		-- speed is the bottleneck (Tailscale may be relayed), so compress here, off the key path.
+		local src = shq(im.src)
+		local prep = im.convert and ("sips -s format png " .. src .. " --out " .. src .. ".png >/dev/null && ") or ""
+		local up = im.convert and (src .. ".png") or src
+		-- Write to .part then rename, so an agent never reads a half-uploaded file.
+		table.insert(cmd, prep .. "ssh " .. PASTE_HOST .. " "
+			.. shq("mkdir -p " .. PASTE_DIR .. " && cat > " .. name .. ".part && mv " .. name .. ".part " .. name)
+			.. " < " .. up .. (im.tmp and (" && rm -f " .. src .. " " .. src .. ".png") or ""))
 	end
 	hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
 	hs.task
