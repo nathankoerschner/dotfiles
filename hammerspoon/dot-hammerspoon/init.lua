@@ -698,7 +698,8 @@ end
 -- Pre-upload: every CleanShot capture is pushed to ag the moment it's written, so by
 -- the time you press Cmd+V the file is already there and the paste just types its path.
 -- CleanShot copies a file URL to its media folder PNG, which is matched against this map.
-local preuploaded = {} -- local path -> remote path
+herdr_preuploaded = {} -- local path -> remote path
+local preuploaded = herdr_preuploaded
 local function uploadCmd(src, name, convert, tmp)
 	local q = shq(src)
 	local prep = convert and ("sips -s format png " .. q .. " --out " .. q .. ".png >/dev/null && ") or ""
@@ -709,9 +710,16 @@ local function uploadCmd(src, name, convert, tmp)
 		.. " < " .. up .. (tmp and (" && rm -f " .. q .. " " .. q .. ".png") or "")
 end
 
+herdr_upload_log = {} -- recent { started, finished, code } for debugging paste latency
 local function runUpload(cmd)
+	local entry = { started = hs.timer.secondsSinceEpoch() }
+	table.insert(herdr_upload_log, entry)
+	if #herdr_upload_log > 20 then
+		table.remove(herdr_upload_log, 1)
+	end
 	hs.task
 		.new("/bin/sh", function(code, _, err)
+			entry.finished, entry.code = hs.timer.secondsSinceEpoch(), code
 			if code ~= 0 then
 				hs.alert.show("Image upload to ag failed: " .. (err or ""), 5)
 			end
