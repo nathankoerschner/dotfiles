@@ -584,6 +584,9 @@ end
 
 hs.hotkey.bind({ "cmd", "shift" }, "space", showQuickReminderDialog)
 
+-- ag inbox quick capture (Cmd+Alt+Space): prompt + screenshot → new pi session on ag.
+ag_inbox = require("ag_inbox")
+
 -- ─── Herdr: forward Ghostty tab/split shortcuts into herdr ─────────────────
 -- When the focused Ghostty window is running herdr (detected via the window
 -- title herdr writes; see ui.window_title in ~/.config/herdr/config.toml),
