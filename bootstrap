@@ -80,6 +80,9 @@ mise install -y >/dev/null && echo "  mise tools" || warn "mise install"
 # Moshi (iPhone terminal) hook daemon + Pi hook; the LaunchAgent runs it.
 $DOTFILES/bin/dot-local/bin/moshi-hook-install >/dev/null && ~/.local/bin/moshi-hook install --target pi >/dev/null \
   && echo "  moshi-hook" || warn "moshi-hook-install"
+# DiscordChatExporter for the discord-export skill (pinned, checksum-verified).
+bash $DOTFILES/agents/dot-agents/skills/discord-export/scripts/install.sh >/dev/null \
+  && echo "  DiscordChatExporter" || warn "discord-export install.sh"
 if have herdr && [[ $(herdr status 2>/dev/null) == *'status: running'* ]]; then
   zsh $DOTFILES/herdr/setup.sh || warn "herdr/setup.sh"
 else
@@ -108,6 +111,7 @@ check ~/.zshenv.local                         "TFY_TOKEN, BRAVE_API_KEY (see REA
 check ~/.gitconfig.local                      "[user] name/email"
 check ~/.config/mcp/arcade-school.headers     "Authorization: Bearer <token> (0600)"
 check ~/.config/mcp/tsa-courses.headers       "Authorization: Bearer <token> (0600)"
+check ~/.secrets/discord_token                "Discord token for the discord-export skill (DCE); 0600, dir 0700"
 check ~/.pi/agent/auth.json                   "run pi and /login, or copy"
 check ~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json "Linear MCP OAuth client (copy from another machine)"
 check ~/.alchemy/credentials/playcademy-arcade/cloudflare.json "Alchemy Cloudflare profile for arcade prod/dev DB access (copy ~/.alchemy/config.json + this file, 0600)"
