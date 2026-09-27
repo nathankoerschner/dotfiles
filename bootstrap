@@ -10,7 +10,7 @@ set -uo pipefail
 
 DOTFILES=${DOTFILES:-$HOME/dotfiles}
 REPO=https://github.com/nathankoerschner/dotfiles.git
-STOW_PACKAGES=(agents alfred bin claude codex ghostty git hammerspoon herdr mise nvim pi ssh tmux zsh)
+STOW_PACKAGES=(ag-inbox agents alfred bin claude codex ghostty git hammerspoon herdr mise nvim pi ssh tmux zsh)
 backup=$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)
 failed=()
 STOW=(stow --dotfiles --no-folding -d $DOTFILES -t $HOME)
