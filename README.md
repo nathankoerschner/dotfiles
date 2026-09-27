@@ -193,6 +193,33 @@ curl -s https://api.typesafe.ai/v1/systemone \
 - SDKs: Python (`TypeSafeClient` / `AsyncTypeSafeClient`) and JavaScript; see [SDKs](https://docs.typesafe.ai/sdk.md). Try prompts in the [Playground](https://console.typesafe.ai/playground).
 - Key: get one at [console.typesafe.ai](https://console.typesafe.ai), store it in 1Password, and export `TYPESAFE_API_KEY` from `~/.zshenv.local`. Never commit it, and keep it server-side.
 
+## Moshi (iPhone terminal)
+
+Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
+
+- **Hook daemon**: `bootstrap` runs `moshi-hook-install`. It installs the
+  checksum-verified prebuilt `moshi-hook` into `~/.local/bin`, because the
+  Homebrew formula refuses to install when the Command Line Tools lag behind macOS.
+  The daemon runs from `macos-launchagents/com.nathan.moshi-hook.plist`
+  (`brew services` isn't used). Check it with `moshi-hook doctor`.
+- **Agent hooks**: bootstrap installs the Pi hook only
+  (`~/.pi/agent/extensions/moshi-hooks.ts`, generated, untracked).
+  `moshi-hook install --target claude,codex` replaces the stowed
+  `settings.json`/`hooks.json` symlinks with real files containing
+  host-specific paths. If you run it, move the Moshi entries into the
+  repo files and restore the symlinks.
+- **Pairing** (by hand, once per host): Moshi app → Settings → Hooks →
+  select ag → Retry/Pair, or run `moshi-hook host setup` and scan the QR code.
+  The host secret stays in the login Keychain (`app.getmoshi.hook`), not in this repo.
+- **New tab**: our Herdr new-tab action (a tab running Pi) is `ctrl+b t`
+  (`prefix+t` in `herdr/dot-config/herdr/config.toml`).
+  On the desktop, Hammerspoon sends that chord for Cmd+T. In Moshi,
+  Cmd+N/W/O/1-9 are reserved app shortcuts that never reach the terminal.
+  Add a custom shortcut instead: Settings → Shortcuts → Herdr → add →
+  Ctrl + custom key `bt` (sends Ctrl+B then t), labeled "New tab".
+  Bind it to a gesture or D-pad slot if you like. Tabs 1-9 are already on
+  the Herdr panel's tab row (Ctrl+B + number).
+
 ## Herdr config
 
 `herdr/dot-config/herdr/config.toml` stows to `~/.config/herdr/config.toml`.

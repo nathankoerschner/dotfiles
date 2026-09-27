@@ -77,6 +77,9 @@ done
 
 step "Tool setup"
 mise install -y >/dev/null && echo "  mise tools" || warn "mise install"
+# Moshi (iPhone terminal) hook daemon + Pi hook; the LaunchAgent runs it.
+$DOTFILES/bin/dot-local/bin/moshi-hook-install >/dev/null && ~/.local/bin/moshi-hook install --target pi >/dev/null \
+  && echo "  moshi-hook" || warn "moshi-hook-install"
 if have herdr && [[ $(herdr status 2>/dev/null) == *'status: running'* ]]; then
   zsh $DOTFILES/herdr/setup.sh || warn "herdr/setup.sh"
 else
