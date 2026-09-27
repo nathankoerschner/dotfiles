@@ -706,7 +706,7 @@ local function uploadCmd(src, name, convert, tmp)
 	local up = convert and (q .. ".png") or q
 	-- Write to .part then rename, so an agent never reads a half-uploaded file.
 	return prep .. "ssh " .. PASTE_HOST .. " "
-		.. shq("mkdir -p " .. PASTE_DIR .. " && cat > " .. name .. ".part && mv " .. name .. ".part " .. name)
+		.. shq("cat > " .. name .. ".part && mv " .. name .. ".part " .. name)
 		.. " < " .. up .. (tmp and (" && rm -f " .. q .. " " .. q .. ".png") or "")
 end
 
@@ -727,7 +727,7 @@ local function runUpload(cmd)
 		:start()
 end
 
--- Debounced: CleanShot writes, then may rewrite (annotations). Upload 0.3s after the last
+-- Debounced: CleanShot writes, then may rewrite (annotations). Upload 50ms after the last
 -- event, reusing the same remote name so the path you pasted stays valid.
 local preuploadTimers = {}
 local function preupload(path)
@@ -744,7 +744,7 @@ local function preupload(path)
 	if preuploadTimers[path] then
 		preuploadTimers[path]:stop()
 	end
-	preuploadTimers[path] = hs.timer.doAfter(0.3, function()
+	preuploadTimers[path] = hs.timer.doAfter(0.05, function()
 		preuploadTimers[path] = nil
 		if hs.fs.attributes(path) then
 			runUpload(uploadCmd(path, name))
@@ -773,7 +773,7 @@ end
 -- Keep the ssh master warm so the first paste is fast too.
 if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
 	herdr_ssh_warm = hs.timer.doEvery(600, function()
-		hs.task.new("/bin/sh", nil, { "-c", "mkdir -p ~/.ssh/sockets && ssh -O check " .. PASTE_HOST .. " 2>/dev/null || ssh -fN " .. PASTE_HOST }):start()
+		hs.task.new("/bin/sh", nil, { "-c", "mkdir -p ~/.ssh/sockets && { ssh -O check " .. PASTE_HOST .. " 2>/dev/null || ssh -fN " .. PASTE_HOST .. "; } && ssh " .. PASTE_HOST .. " mkdir -p " .. PASTE_DIR }):start()
 	end)
 	herdr_ssh_warm:fire()
 
