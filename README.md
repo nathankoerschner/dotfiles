@@ -174,7 +174,8 @@ The ag inbox (`ag-inbox`) is the top-level endpoint that starts a new session: P
 - Code: `bin/dot-local/bin/ag-inbox`; LaunchAgent: `com.nathan.ag-inbox` (only runs on ag).
 - Log: `~/.local/state/ag-inbox/log.jsonl`, one line per step (`received → screenshot → routed → tab → pi_started → sent`, or `route_failed`/`jev_failed`/`duplicate`/`failed`). Server output: `/tmp/ag-inbox.log`.
 - Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-inbox`.
-- iPhone Action Button capture (screenshot + prompt): `ios-shortcuts/capture-to-ag.md`. iPhone share sheet: `ios-shortcuts/share-to-ag.md`.
+- Voice: a multipart `audio` field (or a queued audio file sent as `text`) is saved to `~/inbox/capture/` and transcribed with Whisper via TrueFoundry (`whisper-1`, falling back to `openai-esw/whisper-1`); the transcript is the prompt (log step `transcribed`, or `stt_failed`, in which case the agent gets the file path).
+- iPhone Action Button capture (voice by default, typed on a second press; screenshot either way): `ios-shortcuts/capture-to-ag.md`. iPhone share sheet: `ios-shortcuts/share-to-ag.md`.
 
 ## Tickler (deferred tasks)
 
@@ -270,11 +271,33 @@ Only config, plugins, and agent integrations are tracked; Herdr's sockets, logs,
   [`herdr/SHORTCUTS.md`](herdr/SHORTCUTS.md) (spec `shortcuts.json`, verified by
   `herdr-shortcuts-check`).
 
+## Memory watch
+
+`bin/dot-local/bin/mem-watch` (LaunchAgent `com.nathan.mem-watch`, every 5 min, all
+machines) logs a memory sample to `~/Library/Logs/mem-watch.log` and notifies Nathan
+(at most hourly per alert) when macOS memory pressure is warn/critical, swap in use
+is >= 8 GB, or a single process holds >= 3 GB. Alerts from the host go to the
+client's notifications (over SSH) plus a Herdr toast. Run `mem-watch` for a status
+table of every machine. Thresholds: `MEMWATCH_SWAP_GB`, `MEMWATCH_PROC_GB`.
+
+## Shared MCP gateway (Pi)
+
+Pi's stdio MCP bridges (`linear`, `arcade_school`, `honeycomb`, `tsa_courses`) run
+**once per machine** instead of once per Pi session: `bin/dot-local/bin/mcp-gateway`
+(LaunchAgent `com.nathan.mcp-gateway`, KeepAlive, all machines) runs each server's
+`mcp-remote` behind its own pinned `mcp-proxy` (via `uvx`) on
+`127.0.0.1:7381`–`7384/mcp`, and `pi/dot-pi/agent/mcp.json` points at those URLs
+(`slack` stays direct HTTP). Per-session bridges cost ~100 MB each (96 sessions used
+~9.5 GB on ag). Server commands and ports live in the script; logs in
+`$TMPDIR/mcp-gateway/<server>.log`. Check with `mcp-gateway status`. After editing
+it, `launchctl kickstart -k gui/$UID/com.nathan.mcp-gateway`; open Pi sessions
+reconnect on their own.
+
 ## Texas Sports Academy MCP (arcade.school)
 
-Pi and Codex register `arcade_school` using `mcp-remote@0.8.3`, bridging stdio
-locally to Streamable HTTP at `https://api.texassportsacademy.com/mcp`.
-Bun must be installed at `~/.bun/bin/bunx`.
+Pi (via the shared MCP gateway above) and Codex register `arcade_school` using
+`mcp-remote@0.8.3`, bridging stdio locally to Streamable HTTP at
+`https://api.texassportsacademy.com/mcp`. Bun must be installed at `~/.bun/bin/bunx`.
 
 The credential is **not tracked**. Provision it through an approved secure channel
 into `~/.config/mcp/arcade-school.headers` (directory mode `0700`, file mode
