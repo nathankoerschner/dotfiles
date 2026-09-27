@@ -121,7 +121,7 @@ settings go in untracked `~/.config/ghostty/local.conf`.
 
 Small helper scripts live in `bin/dot-local/bin` and stow into `~/.local/bin`.
 
-Every top-level directory except `machines/` and `macos-launchagents/` is a stow package; `bootstrap` lists them in `STOW_PACKAGES`.
+Every top-level directory except `machines/`, `macos-launchagents/` and `ios-shortcuts/` is a stow package; `bootstrap` lists them in `STOW_PACKAGES`.
 
 ## Agent skills
 
@@ -273,3 +273,25 @@ continue using the standard providers configured by each tool.
 | `Prefix z` | Zoom or unzoom the current pane |
 | `Prefix x` | Close the current pane |
 | `Prefix i` | Copy the current pane ID |
+
+## Client ↔ ag bridge
+
+Nathan sits at the client Mac; agents run on ag. Both stow this repo.
+
+- **SSH**: `ssh/dot-ssh/config` defines `ag` and `nathan-dev-client` (Tailscale IPs). Both Macs
+  need an `~/.ssh/id_ed25519` authorized on the other (manual, per device), and Remote Login on.
+  Machine-only hosts go in untracked `~/.ssh/config.local`.
+- **Screenshots → ag**: CleanShot X on the client saves to `~/Screenshots` (Settings → General →
+  Export location; after-capture actions include *Save*). Set by hand/CUA; CleanShot stores it as
+  `exportPath` in `pl.maketheweb.cleanshotx` and needs a restart to apply. `shot [n]` on ag pulls
+  the newest n into `~/inbox/shots`.
+- **Paste images into agents**: Hammerspoon (client only): Cmd+V in a Herdr Ghostty window with an
+  image or copied image files on the clipboard uploads them to `ag:~/inbox/clipboard/` and types the
+  absolute paths; pi attaches image paths. Text pastes are untouched.
+- **ag → client viewing**: `show <file|url>` copies to client `~/ag-inbox` and opens it there.
+  Agents call it themselves (see AGENTS.md). Servers on ag are reachable at `http://ag:<port>`.
+- **Client desktop automation**: `client-cua "<task>"` runs Codex computer use on the client's GUI
+  session (via `launchctl submit`; plain ssh can't see the screen).
+- **Phone → ag**: `file-inbox` (LaunchAgent `com.nathan.file-inbox`, port 7374, Tailscale only)
+  saves uploads to `~/inbox/phone` and can prompt a recent pi session or open a new one. The iOS
+  Shortcut is documented in `ios-shortcuts/send-to-ag.md`. Log: `/tmp/file-inbox.log`.
