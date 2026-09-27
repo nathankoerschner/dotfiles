@@ -57,6 +57,9 @@ have amp                  || curl -fsSL https://ampcode.com/install.sh | bash   
 step "agent instructions"
 "$DOTFILES/agent-instructions/build" || warn "agent-instructions/build"
 
+step "git hooks"
+git -C $DOTFILES config core.hooksPath .githooks && echo "  core.hooksPath=.githooks"
+
 step "stow packages"
 for pkg in $STOW_PACKAGES; do
   # Move aside any real file that would block a symlink, then stow.

@@ -68,6 +68,7 @@ Nathan sits at a client machine (and sometimes his iPhone); you run on a host (c
 
 - **Showing Nathan things is automatic.** Whenever you produce or find something visual for him (image, chart, PDF, HTML page, report, or a running dev server/preview), open it on his screen yourself with `show <file>` (HTML pages bring their local img/css/js along; `show <dir>` opens its `index.html`) or `show http://ag:<port>`, then tell him what you opened. Don't make him ask, run a command, or copy a path. Bind dev servers so the client can reach them (e.g. `--host 0.0.0.0`) and use `http://ag:<port>`. If a flow needs literal `localhost` (OAuth callbacks, secure-context APIs), set up an SSH port forward from the client for that task.
 - **Screenshots from Nathan** usually arrive as pasted image paths under `~/inbox/clipboard/` (Hammerspoon uploads them on Cmd+V), or from the phone under `~/inbox/phone/`. Read those paths directly. A just-pasted path appears instantly but its upload can take a second or two over a relayed connection; if the file isn't there yet, wait for it (e.g. `for i in $(seq 20); do [ -f "$p" ] && break; sleep 0.5; done`) instead of saying it's missing. If he mentions a screenshot without pasting one, run `shot` (or `shot N`) to pull his newest CleanShot captures into `~/inbox/shots/`.
+- **Link to other sessions** with `herdr-link` (clickable `gemini://` links that jump his Herdr to a tab); see "Helper sessions and links" under Herdr.
 - **Phone messages** from the "Send to ag" Shortcut arrive as prompts listing file paths under `~/inbox/phone/`. Read the files before answering.
 
 ## Worktrees
@@ -107,112 +108,7 @@ Herdr is Nathan's GTD system: every open session (tab) is one item, workspaces a
 
 ## Herdr (terminal multiplexer)
 
-Assume you are running inside Herdr, in an existing pane of an existing workspace. Confirm with `test "$HERDR_ENV" = 1`; your location is `$HERDR_WORKSPACE_ID` / `$HERDR_TAB_ID` / `$HERDR_PANE_ID`. Herdr is not tmux: `$TMUX` is unset and tmux commands do not apply.
-
-Hard rules:
-- Never run bare `herdr` (launches the TUI; nested launches are blocked). Never run `herdr server stop`, `herdr session stop`, or `herdr update`.
-- Never probe a mutating command by omitting args — `herdr workspace create` with no flags *executes*. Use `<cmd> --help`.
-- Commands return JSON; IDs and state live under `.result`. Parse them, never guess from sidebar order. Errors are JSON on stderr, exit 1 (exit 2 = syntax).
-- `herdr --skill` prints the full, authoritative agent skill for the installed version; `herdr <group>` prints that group's command list. Consult them when something below doesn't match.
-
-### Mental model
-
-- **Workspace** (`w3`) → **tab** (`w3:t8`) → **pane** (`w3:p4`). Workspaces are organized by topic (Economy, Social, …), not per worktree. IDs are stable and never reused; a pane moved to another workspace gets a new ID (`.result.move_result.pane.pane_id`).
-- **Pane commands** control raw terminals (shells, servers, tests). **Agent commands** control a recognized coding agent occupying a pane, with lifecycle states `idle` / `working` / `blocked` / `done` / `unknown`. `idle` and `done` both mean ready for input; `blocked` = approval/question dialog showing; `unknown` = present but unclassified (does not mean finished).
-- Agent targets are a unique live agent name (`[a-z][a-z0-9_-]{0,31}`) or the pane ID hosting it — never a terminal ID or a bare kind like `pi`.
-- Prefer `--current` to target your own pane. Never rely on the UI-focused pane; it may belong to the user or another client.
-
-Spatial language refers to the Herdr layout:
-- "here" = the current pane (`herdr pane current --current`).
-- "above/below/left/right" = the neighboring pane in that direction in the current tab (`herdr pane neighbor --current --direction up|down|left|right`).
-- "tab" = a new tab in the current workspace, not a new workspace or session.
-- "workspace" = a Herdr workspace (a topic area), not a session.
-- "space" = the current Herdr workspace (`$HERDR_WORKSPACE_ID`), e.g. "all my agents in this space" = every agent in this workspace's tabs (excluding yourself).
-
-### Seeing what's in motion (tmux `capture-pane` equivalent)
-
-Reading works on any pane in any workspace, not just your own. Use it to orient when the user references work happening elsewhere ("the dev server", "the other agent", "what's failing over there").
-
-```bash
-herdr workspace list                                  # labels, IDs, agent_status, tab/pane counts
-herdr tab list --workspace <ws>                       # tabs + labels in a workspace
-herdr pane list [--workspace <ws>]                    # every pane: pane_id, tab_id, cwd, terminal_title,
-                                                      #   agent, agent_status, agent_session.value (Pi .jsonl path)
-herdr agent list                                      # only panes hosting recognized agents, with names/states
-herdr pane get <pane-id> | herdr agent get <target>   # one pane / one agent in detail
-herdr pane process-info --pane <pane-id>              # foreground process argv, pgid
-herdr pane layout --pane <pane-id>                    # geometry (use before deciding split direction)
-herdr pane read <pane-id> --source recent-unwrapped --lines 200   # scrollback + viewport
-herdr agent read <target> --source recent-unwrapped --lines 200   # same, via agent surface
-herdr pane wait-output <pane-id> --match <text> | --regex <re> [--timeout <ms>]   # block until it appears
-herdr agent wait <target> [--until idle|done|blocked] [--timeout <ms>]           # block on lifecycle state
-herdr agent explain <target>                          # why Herdr classified the agent's state as it did
-herdr api snapshot                                    # whole live session state as one JSON blob
-```
-
-Read sources: `visible` (rendered screen only), `recent` (with soft wraps), `recent-unwrapped` (wraps joined — default choice for logs/transcripts), `detection` (plain-text buffer Herdr uses for agent detection). Add `--format ansi` only when color is evidence. If a large read still doesn't show a completed agent response, ask that agent to write it to a temp Markdown file and reply with the path; read the file.
-
-Reading is safe anywhere. Only send input (`pane send-text`, `pane send-keys`, `pane run`, `agent prompt`, `agent send-keys`) to panes you created or the user explicitly pointed you at — other panes may be another agent mid-task. Never answer another agent's `blocked` dialog without asking the user.
-
-### Creating layout
-
-```bash
-herdr pane split --current --direction right|down --cwd "$PWD" [--ratio 0.5] --no-focus   # → .result.pane.pane_id
-herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label <name> --cwd <dir> --no-focus   # → .result.tab, .result.root_pane
-herdr workspace create --cwd <dir> --label <name> --no-focus                                # → .result.workspace/.tab/.root_pane (only when asked)
-herdr worktree open   --cwd ~/<repo> (--path <p> | --branch <b>) --no-focus   # only when Nathan asks
-herdr pane rename <pane-id> <name>   |  herdr tab rename <tab-id> <name>  |  herdr workspace rename <ws> <name>
-herdr pane zoom / resize / swap / move / focus / close    (see --help)
-herdr pane close <pane-id>  |  herdr tab close <tab-id>   # only things you created
-```
-
-Split direction: check `herdr pane layout --pane "$HERDR_PANE_ID"`; split wide panes `right`, narrow/tall ones `down`; avoid stacking same-direction splits into slivers. Always `--no-focus` so the user's focus stays put. `--trust-repository` on worktree commands only after the user has vetted the repo — not a retry flag.
-
-### Running commands in panes
-
-```bash
-herdr pane run <pane-id> "<cmd>"                      # sends text + Enter atomically
-herdr pane send-text <pane-id> "<text>"               # literal text, no Enter
-herdr pane send-keys <pane-id> enter|esc|ctrl+c|...   # logical keys, validated before write
-herdr pane wait-output <pane-id> --match "ready" --timeout 120000
-herdr pane read <pane-id> --source recent-unwrapped --lines 120
-```
-
-`wait-output` matches output that already exists too — including the echoed command line itself. So `pane run <id> 'cmd; echo DONE'` + `--match DONE` returns immediately. Use a sentinel that only appears on completion and anchor it: `pane run <id> 'cmd; echo PROBE_DONE'` then `wait-output <id> --regex '^PROBE_DONE$'`. Omit `--timeout` for indefinite.
-
-For dev processes (apps, servers, watchers):
-- Never create a new session or workspace unless explicitly asked. Work inside the current workspace.
-- Start each task in a new tab with a descriptive label, or split beside yourself for something short-lived.
-- Group related processes as panes within one tab rather than spreading across tabs.
-- Tell the user which tab and panes things are running in (label and IDs).
-
-### Starting and driving another agent
-
-Only when the user asks for delegation/parallel agents — not merely because a task could benefit from it.
-
-```bash
-herdr pane split --current --direction right --cwd "$PWD" --no-focus              # need a pane at a bare shell prompt
-herdr agent start <name> --kind pi|claude|codex|gemini|... --pane <pane-id> [--timeout 30000] [-- <agent-args>]
-herdr agent prompt <name> "<text>" --wait --timeout 120000    # submits; waits for first settled idle/done/blocked
-herdr agent wait <name> --until blocked --timeout 120000      # only for state-specific waits
-herdr agent read <name> --source recent-unwrapped --lines 120
-herdr agent send-keys <name> esc | ctrl+c | enter
-herdr agent get <name>  |  herdr agent explain <name>
-herdr agent rename <target> <name>|--clear  |  herdr agent focus <target>
-```
-
-- `agent start` needs an *existing* pane at an interactive prompt; it never creates layout. It returns once the agent is detected and ready (or `agent_not_ready` if blocked during startup — name still usable for read/send-keys).
-- `agent prompt` refuses with `agent_blocked` if a dialog is up; inspect via `agent read`, ask the user before answering it.
-- `--wait` returns `agent_prompt_stalled` if no `working`/`blocked` activity within ~5s, or `timeout`. Neither proves the prompt wasn't delivered — read the pane before resending.
-- Pane-level `send-text`/`run` on an agent pane is raw terminal control; use the agent surface unless raw control is intentional.
-
-### Other
-
-- `herdr notification show "<title>" [--body TEXT] [--sound done|request]` — surface a toast to the user (e.g. long job finished).
-- `herdr status` — client/server versions (check before relying on a new feature; a missing method is not a reason to restart/upgrade).
-- `herdr --machine <label> <cmd>` — run any of the above against a saved SSH machine; discover IDs there, don't reuse local ones. `herdr machine list` shows profiles only. Don't add/remove profiles unless asked.
-- `herdr session ...` — named persistent servers; leave alone unless asked.
-- `herdr api schema` — full socket API schema if a CLI flag is missing.
+<!-- include: herdr.md -->
 
 Never create a git commit without consulting the user first and receiving explicit approval.
 
@@ -270,16 +166,9 @@ When Nathan says to **"meat harness"** something, the fix lives in someone else'
 
 Always use `uv` (venvs, dependencies, Python versions): `uv init`, `uv add`, `uv run`. Never install packages globally or use raw pip/venv.
 
-## iPhone Mirroring text entry
+## Phone work (iPhone Mirroring)
 
-With `cua_repl`, `typeText`, ordinary `pressKey`, and direct `paste` can fail to reach the mirrored iPhone even when clicks and Mac shortcuts work. Check the phone screenshot before assuming text was entered. Tested fallback for non-secret text:
-
-1. Create a new temporary TextEdit document through `cua_repl`; leave existing documents alone. Put the desired text in its editable field with `setValue` or `typeText`, focus it, then `pressKey("super+a")` and `pressKey("super+c")` to copy on the Mac.
-2. In iPhone Mirroring, click the destination field near its insertion point, then `click([x, y], {mouseButton: "right"})` to open the iOS text-editing menu.
-3. Read the fresh screenshot and click the visible **Paste** item. iOS may update after the initial capture; verify the actual field value in a follow-up screenshot before proceeding. This worked in Spotlight and Moshi's connection form.
-4. Reuse only the temporary document for subsequent values and discard it afterward. Do not stage passwords, tokens, or private keys in TextEdit or another autosaving scratch document.
-
-If Mirroring reports **iPhone in Use**, ask Nathan to leave the physical phone locked; reconnect after it is available. Do not mistake that disconnection for a text-entry failure. Keep requested onboarding pauses so Nathan can read each screen.
+For anything on Nathan's iPhone (install/configure apps, pairing, reading a setting, iOS Shortcuts), drive **iPhone Mirroring on the client Mac** with `client-cua`; don't hand phone steps back to Nathan. Before doing phone work, read `~/dotfiles-seen-setup/docs/iphone-mirroring.md` (client: `~/dotfiles/docs/iphone-mirroring.md`): locked-phone requirement, secret handling, and the tested text-entry workaround.
 
 ## Scope discipline
 
@@ -305,4 +194,4 @@ Once you have fully accomplished your purpose (e.g. the feature is shipped/merge
 
 This is the single global agent instructions file, `pi/dot-pi/agent/AGENTS.md` in the dotfiles checkout. Pi (`~/.pi/agent/AGENTS.md`), Claude Code (`~/.claude/CLAUDE.md`) and Codex (`~/.codex/AGENTS.md`) all symlink to it.
 
-It is generated. Edit the source in `agent-instructions/` (`AGENTS.template.md` plus included docs such as `attribution.md`), then run `agent-instructions/build`. Never edit the generated file or a copy of it.
+It is generated. Edit the source in `agent-instructions/` (`AGENTS.template.md` plus included docs such as `attribution.md` and `herdr.md`, the Herdr notes), then run `agent-instructions/build`. Never edit the generated file or a copy of it: a rebuild overwrites it (a pre-commit hook in `.githooks/` rejects commits where it's stale).
