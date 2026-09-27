@@ -66,6 +66,7 @@ modes at `0600`:
 | `~/.zshenv.local` | `TFY_TOKEN`, `BRAVE_API_KEY` (see *Machine-local AI gateway*) |
 | `~/.gitconfig.local` | `[user]` name/email |
 | `~/.zprofile.local` | machine-local profile overrides |
+| `~/.profile.local` | machine-local POSIX login-shell additions (optional; the tracked `~/.profile` puts Homebrew first for `sh -lc`, e.g. the arcade pre-push hook) |
 | `~/.config/mcp/arcade-school.headers`, `tsa-courses.headers` | `Authorization: Bearer <token>` |
 | `~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json` | Linear MCP OAuth client |
 | `~/.pi/agent/auth.json` | or just run `pi` and `/login` |

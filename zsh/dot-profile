@@ -1,0 +1,12 @@
+# POSIX login shells (`sh -l`, `bash -l`): tools such as the arcade repo's task
+# runner spawn `sh -lc`, which skips zsh's files and lets macOS path_helper put
+# /usr/local/bin first. Put Homebrew first so its node/bun win over any stale
+# system install.
+if [ -x /opt/homebrew/bin/brew ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Machine-local additions (not committed).
+if [ -f "$HOME/.profile.local" ]; then
+  . "$HOME/.profile.local"
+fi
