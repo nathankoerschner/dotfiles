@@ -55,7 +55,7 @@ have amp                  || curl -fsSL https://ampcode.com/install.sh | bash   
 [[ -f ~/.bun/install/global/package.json ]] || ~/.bun/bin/bun add -g @oh-my-pi/pi-coding-agent || warn "omp"
 
 step "agent instructions"
-"$DOTFILES/agent-instructions/build" || warn "agent-instructions/build"
+"$DOTFILES/agents.md/build" || warn "agents.md/build"
 
 step "git hooks"
 git -C $DOTFILES config core.hooksPath .githooks && echo "  core.hooksPath=.githooks"

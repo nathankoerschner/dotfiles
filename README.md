@@ -136,9 +136,9 @@ Codex system skills live alongside under `agents/dot-agents/.system/` and stow t
 
 ## Global agent instructions
 
-Pi, Claude Code, and Codex all load one file, `pi/dot-pi/agent/AGENTS.md` (the `claude` and `codex` packages symlink to it). That file is generated: edit the sources in `agent-instructions/` and run `agent-instructions/build`. `AGENTS.template.md` holds the body; a line `<!-- include: NAME.md -->` pulls in `agent-instructions/NAME.md` with its headings nested. `bootstrap` rebuilds it.
+Pi, Claude Code, and Codex all load one file, `pi/dot-pi/agent/AGENTS.md` (the `claude` and `codex` packages symlink to it). That file is generated: edit the sources in `agents.md/` and run `agents.md/build`. Each top-level section is its own file in `agents.md/sections/`, concatenated in filename order (`010-…`, `020-…`; renumber to reorder); a line `<!-- include: NAME.md -->` pulls in a longer doc from `agents.md/includes/` with its headings nested. `bootstrap` rebuilds it, and a pre-commit hook rejects a stale build.
 
-[`agent-instructions/attribution.md`](agent-instructions/attribution.md) is the single source of truth for how AI assistants label what they write for other people. Other repos (e.g. arcade.school's README) link to it rather than keeping a copy.
+[`agents.md/includes/attribution.md`](agents.md/includes/attribution.md) is the single source of truth for how AI assistants label what they write for other people. Other repos (e.g. arcade.school's README) link to it rather than keeping a copy.
 
 ## Pi config
 

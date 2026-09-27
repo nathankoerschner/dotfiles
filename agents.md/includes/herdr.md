@@ -1,4 +1,4 @@
-<!-- Herdr notes: everything agents need for working inside Herdr. Included into the global agent instructions under "Herdr (terminal multiplexer)"; edit here, then run agent-instructions/build. -->
+<!-- Herdr notes: everything agents need for working inside Herdr. Included into the global agent instructions under "Herdr (terminal multiplexer)"; edit here, then run agents.md/build. -->
 
 Assume you are running inside Herdr, in an existing pane of an existing workspace. Confirm with `test "$HERDR_ENV" = 1`; your location is `$HERDR_WORKSPACE_ID` / `$HERDR_TAB_ID` / `$HERDR_PANE_ID`. Herdr is not tmux: `$TMUX` is unset and tmux commands do not apply.
 
