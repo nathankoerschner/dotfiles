@@ -752,6 +752,20 @@ local function preupload(path)
 	end)
 end
 
+-- Insert text as one terminal paste (keyStrokes sends one event per character, which
+-- is slow through remote Herdr). Swap the clipboard, send Cmd+V, restore it.
+local pastingText = false
+local function pasteText(text)
+	local saved = hs.pasteboard.readAllData()
+	hs.pasteboard.setContents(text)
+	pastingText = true
+	hs.eventtap.keyStroke({ "cmd" }, "v", 0)
+	hs.timer.doAfter(0.3, function()
+		pastingText = false
+		hs.pasteboard.writeAllData(saved)
+	end)
+end
+
 local function pasteImagesToHerdr(images)
 	local stamp = os.date("%Y%m%d-%H%M%S")
 	local remote, cmd = {}, {}
@@ -764,10 +778,17 @@ local function pasteImagesToHerdr(images)
 			table.insert(cmd, uploadCmd(im.src, name, im.convert, im.tmp))
 		end
 	end
-	hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
+	pasteText(table.concat(remote, " ") .. " ")
 	if #cmd > 0 then
 		runUpload(table.concat(cmd, " && "))
 	end
+end
+herdr_paste_images = function() -- debug/test entry point: same as Cmd+V in herdr
+	local images = clipboardImages()
+	if images then
+		pasteImagesToHerdr(images)
+	end
+	return images ~= nil
 end
 
 -- Keep the ssh master warm so the first paste is fast too.
@@ -801,7 +822,7 @@ end
 if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
 	herdr_image_paste_tap = hs.eventtap
 		.new({ hs.eventtap.event.types.keyDown }, function(evt)
-			if hs.keycodes.map[evt:getKeyCode()] ~= "v" or not flagsMatch(evt:getFlags(), { cmd = true }) then
+			if pastingText or hs.keycodes.map[evt:getKeyCode()] ~= "v" or not flagsMatch(evt:getFlags(), { cmd = true }) then
 				return false
 			end
 			if not focusedWindowIsHerdr() then
