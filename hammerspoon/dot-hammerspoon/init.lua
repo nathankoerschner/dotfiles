@@ -660,23 +660,29 @@ local PASTE_DIR = "inbox/clipboard"
 local PASTE_REMOTE_HOME = "/Users/natkoersch" -- ag's home; pi wants absolute paths
 local IMAGE_EXT = { png = true, jpg = true, jpeg = true, gif = true, webp = true, heic = true }
 
-local function clipboardImageFiles()
-	-- Copied files (e.g. CleanShot "Copy", Finder Cmd+C) come through as file URLs.
-	local files = {}
+-- Returns { {src=<local file>, ext=<remote ext>, convert=<bool>} ... } or nil. No image
+-- encoding happens here: copied files are used as-is, and a raw clipboard image is
+-- written as its TIFF bytes (instant) and converted to PNG on ag after upload.
+local function clipboardImages()
+	local out = {}
 	for _, u in ipairs(hs.pasteboard.readURL(nil, true) or {}) do
 		local path = u.filePath
-		if path and IMAGE_EXT[(path:match("%.(%w+)$") or ""):lower()] then
-			table.insert(files, path)
+		local ext = path and (path:match("%.(%w+)$") or ""):lower()
+		if ext and IMAGE_EXT[ext] then
+			table.insert(out, { src = path, ext = ext })
 		end
 	end
-	if #files > 0 then
-		return files
+	if #out > 0 then
+		return out
 	end
-	local img = hs.pasteboard.readImage()
-	if img then
-		local tmp = os.tmpname() .. ".png"
-		if img:saveToFile(tmp) then
-			return { tmp }
+	for _, uti in ipairs({ "public.png", "public.tiff" }) do
+		local data = hs.pasteboard.readDataForUTI(uti)
+		if data and #data > 0 then
+			local tmp = os.tmpname()
+			local f = io.open(tmp, "wb")
+			f:write(data)
+			f:close()
+			return { { src = tmp, ext = "png", convert = uti == "public.tiff", tmp = true } }
 		end
 	end
 	return nil
@@ -689,13 +695,17 @@ end
 -- Type the (deterministic) remote paths immediately, upload in the background over one
 -- multiplexed ssh connection (ControlMaster in ssh config). The upload finishes long
 -- before you hit Enter; an alert appears only if it fails.
-local function pasteImagesToHerdr(files)
+local function pasteImagesToHerdr(images)
 	local stamp = os.date("%Y%m%d-%H%M%S")
-	local remote, cmd = {}, { "mkdir -p ~/.ssh/sockets" }
-	for i, f in ipairs(files) do
-		local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, (f:match("%.(%w+)$") or "png"):lower())
+	local remote, cmd = {}, {}
+	for i, im in ipairs(images) do
+		local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, im.ext)
 		table.insert(remote, PASTE_REMOTE_HOME .. "/" .. name)
-		table.insert(cmd, "ssh " .. PASTE_HOST .. " 'mkdir -p " .. PASTE_DIR .. " && cat > " .. name .. "' < " .. shq(f))
+		local store = im.convert
+				and ("cat > " .. name .. ".tiff && sips -s format png " .. name .. ".tiff --out " .. name .. " >/dev/null && rm " .. name .. ".tiff")
+			or ("cat > " .. name)
+		table.insert(cmd, "ssh " .. PASTE_HOST .. " " .. shq("mkdir -p " .. PASTE_DIR .. " && " .. store) .. " < " .. shq(im.src)
+			.. (im.tmp and (" && rm -f " .. shq(im.src)) or ""))
 	end
 	hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
 	hs.task
@@ -724,11 +734,11 @@ if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
 			if not focusedWindowIsHerdr() then
 				return false
 			end
-			local files = clipboardImageFiles()
-			if not files then
+			local images = clipboardImages()
+			if not images then
 				return false
 			end
-			pasteImagesToHerdr(files)
+			pasteImagesToHerdr(images)
 			return true
 		end)
 		:start()
