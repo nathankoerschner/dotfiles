@@ -598,8 +598,8 @@ local herdrShortcuts = {
 	{ mods = { cmd = true }, key = "d", send = { {}, "v" } }, -- split_vertical (side by side)
 	{ mods = { cmd = true, shift = true }, key = "d", send = { {}, "-" } }, -- split_horizontal (stacked)
 	{ mods = { cmd = true }, key = "t", send = { {}, "t" } }, -- new tab with pi (herdr config)
-	{ mods = { cmd = true }, key = "[", send = { { "alt" }, "left" } }, -- focus history back
-	{ mods = { cmd = true }, key = "]", send = { { "alt" }, "right" } }, -- focus history forward
+	{ mods = { cmd = true }, key = "[", send = { {}, "[" } }, -- focus history back
+	{ mods = { cmd = true }, key = "]", send = { {}, "]" } }, -- focus history forward
 }
 for i = 1, 9 do
 	table.insert(herdrShortcuts, { mods = { cmd = true }, key = tostring(i), send = { {}, tostring(i) } }) -- switch_tab
