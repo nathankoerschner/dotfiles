@@ -157,17 +157,19 @@ Intentionally not tracked in dotfiles:
 - `~/.pi/agent/sessions/`
 - repo-local `.pi/todos/`
 
-## Prompt inbox (ag)
+## ag inbox
 
-Send-only inbox: POST free text and ag opens a new Herdr tab running pi with that text as the first prompt.
+The ag inbox (`ag-inbox`) is the top-level endpoint that starts a new session: POST a prompt and ag opens a new Herdr tab running pi with it as the first prompt. Every capture path goes through it: the Mac quick capture, the iPhone Action Button, and file-inbox's "New session".
 
 - Test page: http://ag:7373/ (or `http://100.107.192.32:7373/`). Tailscale only; it listens on ag's Tailscale IP.
 - API: `curl -X POST http://ag:7373/prompt -d 'your prompt'` → `202`, no body. Form posts take `text` and an optional `id`; a repeated `id` within 24 hours is acknowledged without opening a second tab (so the phone's offline queue can resend safely).
+- Screenshots: a multipart form can add `screenshot` (image file) plus `app`/`window` (frontmost app and window title). It's saved to `~/inbox/capture/`, and Jev (via TrueFoundry) judges from the prompt and window context whether the agent needs it (attached when P ≥ 0.5, or if Jev fails). `attach=always` skips Jev. Attached means the prompt ends with the file path for pi to read.
+- **Mac quick capture: Cmd+Alt+Space** (Hammerspoon, `hammerspoon/dot-hammerspoon/ag_inbox.lua`; Cmd+Shift+Space stays the Reminders capture). Snapshots the screen with the focused window, then opens a small prompt form: Enter sends, Shift+Enter is a newline, Esc cancels. Click the thumbnail to annotate in CleanShot; its Cmd+S saves over the file and the form shows the annotated version, which is always attached. The form is a webview built once at load and only shown/hidden, so it opens in ~0.1 s. Upload runs in the background with `curl`; on failure an alert shows and the prompt is copied to the clipboard. Needs Screen Recording permission for Hammerspoon (without it, captures are text-only).
 - Every capture opens a tab in the **Inbox** workspace (created if missing); a fast model (TrueFoundry Gemini Flash Lite) only names the tab. Nothing is focused, so attached clients aren't disturbed.
 - Inbox is pinned first in the sidebar (`herdr/plugins/pin-inbox`), and sessions file themselves: on your first reply (the 2nd prompt a pi process sees), `pi/dot-pi/agent/extensions/herdr-inbox-file.ts` has a fast model pick an existing topic workspace from workspace and tab names, then moves the pane into a new tab there (focus follows if you're looking at it, otherwise a Herdr toast). If nothing fits, it stays in Inbox. Log: `~/.local/state/herdr-inbox-file/log.jsonl`.
-- Code: `bin/dot-local/bin/prompt-inbox`; LaunchAgent: `com.nathan.prompt-inbox` (only runs on ag).
-- Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → tab → pi_started → sent`, or `label_failed`/`duplicate`/`failed`). Server output: `/tmp/prompt-inbox.log`.
-- Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.prompt-inbox`.
+- Code: `bin/dot-local/bin/ag-inbox`; LaunchAgent: `com.nathan.ag-inbox` (only runs on ag).
+- Log: `~/.local/state/ag-inbox/log.jsonl`, one line per step (`received → screenshot → tab → pi_started → sent`, or `label_failed`/`jev_failed`/`duplicate`/`failed`). Server output: `/tmp/ag-inbox.log`.
+- Restart after edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-inbox`.
 - iPhone Action Button capture: `ios-shortcuts/capture-to-ag.md`.
 
 ## Tickler (deferred tasks)
