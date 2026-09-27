@@ -162,7 +162,7 @@ Intentionally not tracked in dotfiles:
 Send-only inbox: POST free text and ag opens a new Herdr tab running pi with that text as the first prompt.
 
 - Test page: http://ag:7373/ (or `http://100.107.192.32:7373/`). Tailscale only; it listens on ag's Tailscale IP.
-- API: `curl -X POST http://ag:7373/prompt -d 'your prompt'` → `202`, no body. Form posts take `text` and an optional `id`; a repeated `id` is acknowledged without opening a second tab (so the phone's offline queue can resend safely).
+- API: `curl -X POST http://ag:7373/prompt -d 'your prompt'` → `202`, no body. Form posts take `text` and an optional `id`; a repeated `id` within 24 hours is acknowledged without opening a second tab (so the phone's offline queue can resend safely).
 - Every capture opens a tab in the **Inbox** workspace (created if missing); a fast model (TrueFoundry Gemini Flash Lite) only names the tab. Filing into topic workspaces is done by hand. Nothing is focused, so attached clients aren't disturbed.
 - Code: `bin/dot-local/bin/prompt-inbox`; LaunchAgent: `com.nathan.prompt-inbox` (only runs on ag).
 - Log: `~/.local/state/prompt-inbox/log.jsonl`, one line per step (`received → tab → pi_started → sent`, or `label_failed`/`duplicate`/`failed`). Server output: `/tmp/prompt-inbox.log`.
