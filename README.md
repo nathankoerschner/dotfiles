@@ -320,7 +320,8 @@ Nathan sits at the client Mac; agents run on ag. Both stow this repo.
   Speed limit: on the office network both Macs sit behind the same symmetric NAT, so Tailscale
   relays via DERP (~1.3 MB/s; a ~1 MB screenshot lands in ~0.8s). Check with
   `tailscale ping nathan-dev-client` (want "via <ip>", not "via DERP").
-- **ag → client viewing**: `show <file|url>` copies to client `~/ag-inbox` and opens it there.
+- **ag → client viewing**: `show <file|dir|url>` copies to client `~/ag-inbox` and opens it there
+  (HTML files bring their referenced local assets; a folder opens its `index.html`).
   Agents call it themselves (see AGENTS.md). Servers on ag are reachable at `http://ag:<port>`.
 - **Client desktop automation**: `client-cua "<task>"` runs Codex computer use on the client's GUI
   session (via `launchctl submit`; plain ssh can't see the screen).
