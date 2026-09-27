@@ -1,0 +1,18 @@
+# Shared SSH config (stowed from dotfiles). Machine-specific hosts go in ~/.ssh/config.local.
+Include ~/.ssh/config.local
+
+# ag: primary dev Mac (agents, repos, Herdr). Tailscale IP.
+Host ag
+    HostName 100.107.192.32
+    User natkoersch
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+    ServerAliveInterval 15
+    ServerAliveCountMax 3
+
+# Client Mac (where Nathan sits). ag uses this for shot/show/client-cua.
+Host nathan-dev-client
+    HostName 100.68.116.104
+    User nathan
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
