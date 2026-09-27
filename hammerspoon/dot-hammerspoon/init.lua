@@ -649,6 +649,80 @@ herdr_shortcut_tap = hs.eventtap
 		return false
 	end)
 	:start()
+
+-- ─── Herdr: paste images into remote (ag) agents ────────────────────────────
+-- Herdr runs on ag, so an image on this Mac's clipboard can't reach pi there.
+-- Cmd+V in a Herdr window with an image (or copied image files) on the clipboard:
+-- upload it to ag:~/inbox/clipboard/ and type the remote path instead. Pi reads
+-- image paths as attachments. Plain text pastes are untouched. Skipped on ag itself.
+local PASTE_HOST = "ag"
+local PASTE_DIR = "inbox/clipboard"
+local PASTE_REMOTE_HOME = "/Users/natkoersch" -- ag's home; pi wants absolute paths
+local IMAGE_EXT = { png = true, jpg = true, jpeg = true, gif = true, webp = true, heic = true }
+
+local function clipboardImageFiles()
+	-- Copied files (e.g. CleanShot "Copy", Finder Cmd+C) come through as file URLs.
+	local files = {}
+	for _, u in ipairs(hs.pasteboard.readURL(nil, true) or {}) do
+		local path = u.filePath
+		if path and IMAGE_EXT[(path:match("%.(%w+)$") or ""):lower()] then
+			table.insert(files, path)
+		end
+	end
+	if #files > 0 then
+		return files
+	end
+	local img = hs.pasteboard.readImage()
+	if img then
+		local tmp = os.tmpname() .. ".png"
+		if img:saveToFile(tmp) then
+			return { tmp }
+		end
+	end
+	return nil
+end
+
+local function shq(s)
+	return "'" .. (s:gsub("'", "'\\''")) .. "'"
+end
+
+local function pasteImagesToHerdr(files)
+	local stamp = os.date("%Y%m%d-%H%M%S")
+	local remote, cmd = {}, { "ssh " .. PASTE_HOST .. " mkdir -p " .. PASTE_DIR }
+	for i, f in ipairs(files) do
+		local name = string.format("%s/%s-%d.%s", PASTE_DIR, stamp, i, (f:match("%.(%w+)$") or "png"):lower())
+		table.insert(remote, PASTE_REMOTE_HOME .. "/" .. name)
+		table.insert(cmd, "scp -q " .. shq(f) .. " " .. PASTE_HOST .. ":" .. name)
+	end
+	hs.alert.show("Uploading " .. #files .. " image(s) to ag…", 1)
+	hs.task
+		.new("/bin/sh", function(code, _, err)
+			if code ~= 0 then
+				return hs.alert.show("Image upload to ag failed: " .. (err or ""))
+			end
+			hs.eventtap.keyStrokes(table.concat(remote, " ") .. " ")
+		end, { "-c", table.concat(cmd, " && ") })
+		:start()
+end
+
+if (hs.execute("scutil --get LocalHostName"):gsub("%s", "")) ~= PASTE_HOST then
+	herdr_image_paste_tap = hs.eventtap
+		.new({ hs.eventtap.event.types.keyDown }, function(evt)
+			if hs.keycodes.map[evt:getKeyCode()] ~= "v" or not flagsMatch(evt:getFlags(), { cmd = true }) then
+				return false
+			end
+			if not focusedWindowIsHerdr() then
+				return false
+			end
+			local files = clipboardImageFiles()
+			if not files then
+				return false
+			end
+			pasteImagesToHerdr(files)
+			return true
+		end)
+		:start()
+end
 -- ────────────────────────────────────────────────────────────────────────────
 
 -- Inspired by https://github.com/jasoncodes/dotfiles/blob/master/hammerspoon/control_escape.lua
