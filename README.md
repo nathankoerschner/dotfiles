@@ -329,6 +329,9 @@ Nathan sits at a client machine; agents run on a host (ag). Every machine stows 
   Export location; after-capture actions include *Save*). Set by hand/CUA; CleanShot stores it as
   `exportPath` in `pl.maketheweb.cleanshotx` and needs a restart to apply. `shot [n]` on ag pulls
   the newest n into `~/inbox/shots`.
+- **Perplexity voice off**: on the client, Perplexity Settings → Keyboard Shortcuts → *Start voice* is
+  **Disabled** (default was *Hold Fn*, which fired on Ctrl/Fn), and General → Voice → Activation is
+  Disabled. Stored as `voiceTriggerMode = disabled` in `ai.perplexity.macv3`. Set by hand/CUA.
 - **Paste images into agents**: Hammerspoon (client only). Every CleanShot capture is uploaded to
   `ag:~/inbox/clipboard/` the moment CleanShot writes it (it watches CleanShot's media folder and
   `~/Screenshots`), so Cmd+V in a Herdr Ghostty window just types the already-uploaded ag path
