@@ -176,6 +176,15 @@ Intentionally not tracked in dotfiles:
 - Phone: Back Tap triple tap → shortcut **Private ag** (`ios-shortcuts/private-ag.md`).
 - Code: `bin/dot-local/bin/ag-private`; LaunchAgent `com.nathan.ag-private` (only runs on ag). Server output: `/tmp/ag-private.log`. Restart: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-private`.
 
+## Nessie (agent-trace sync)
+
+Directive: every agent trace paid for by the company (Joe Lamont) must sync to Nessie; only Nathan's personal OpenRouter usage must not. Nessie (`cask "nessie-app"`, nessielabs.com) runs on every machine, signed in as `nathaniel.koerschner@superbuilders.school`.
+
+- **Integrations on ag:** Pi (`~/.pi`), Claude Code (`~/.claude`), Codex (`~/.codex`); local only, set in the app's onboarding. Web accounts (Claude.ai, ChatGPT, Perplexity) are connected on the client (nathan-dev-client), which also has Pi and Cursor; don't connect them twice. Check: `/Applications/Nessie.app/Contents/MacOS/nessie-cli status` and `nessie-cli transcript list --type pi`.
+- **Sign-in on a new machine:** open Nessie and sign in, or copy `access_token.txt`, `refresh_token.txt`, `user_info.json`, `deployment-selection.json` from `~/Library/Application Support/Nessie/` on a signed-in machine (dir 0700, files 0600; never print them). Don't copy `device.json` or `notes.sqlite`: each machine registers as its own device. Then finish onboarding in the app and connect the local integrations.
+- **Kept running** by LaunchAgent `com.nathan.nessie` (opens it at login and every 5 min if it isn't running).
+- **OpenRouter stays out.** Nessie can't filter by provider; it syncs everything under its base paths. So OpenRouter never writes there: `ag-private` keeps chats in `~/private-chat`; pi on OpenRouter runs only through `pi-private` (sessions in `~/private-chat/pi-sessions`); the `nessie-openrouter-guard` pi extension reverts any `openrouter` model picked in a session under `~/.pi` to Opus 5.5 on TrueFoundry. The 113 older pi sessions (May–July 2026) that used OpenRouter were moved from `~/.pi/agent/sessions` to `~/private-chat/pi-sessions/` before Nessie first scanned (list: `.moved-from-pi-sessions.txt` there). If one slips in, delete it in the Nessie app ("exclude from future syncs").
+
 ## ag inbox
 
 The ag inbox (`ag-inbox`) is the top-level endpoint that starts a new session: POST a prompt and ag opens a new Herdr tab running pi with it as the first prompt. Every capture path goes through it: the Mac quick capture, the iPhone Action Button, and file-inbox's "New session".

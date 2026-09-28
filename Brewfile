@@ -44,6 +44,7 @@ cask "jump-desktop"
 cask "jump-desktop-connect"
 cask "linear"
 cask "microsoft-teams"
+cask "nessie-app"        # agent-trace sync (README "Nessie")
 cask "nordvpn"
 cask "obsidian"
 cask "perplexity"
