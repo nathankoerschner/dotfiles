@@ -83,6 +83,7 @@ done
 
 step "macOS helper apps"
 zsh $DOTFILES/macos-apps/HerdrLink/install.sh || warn "HerdrLink (needs Command Line Tools)"
+zsh $DOTFILES/macos-apps/ChromeTabReaper/install.sh || warn "ChromeTabReaper"
 
 step "Tool setup"
 mise install -y >/dev/null && echo "  mise tools" || warn "mise install"

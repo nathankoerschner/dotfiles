@@ -410,10 +410,18 @@ drops to a shell. Manual: `pi-hibernate sweep [-n] [--all]`, `pi-hibernate pane 
 and in-flight process state don't survive; the conversation does.
 
 **Chrome on ag** (agents leave tabs open): Memory Saver is ON at **Maximum**
-(chrome://settings/performance, GUI-only; set 2026-09-28). Inactive tabs are unloaded
-and reload when clicked. A script that auto-closes tabs isn't possible yet: Apple
-Events from Herdr/pi (launched over SSH) and from LaunchAgents hang without a visible
-Automation prompt, because no osascript/sh/sshd-keygen-wrapper → Google Chrome grant exists.
+(chrome://settings/performance, GUI-only; set 2026-09-28), so inactive tabs are unloaded.
+`bin/dot-local/bin/chrome-tab-reaper` (LaunchAgent `com.nathan.chrome-tab-reaper`, every
+30 min, only on ag) closes tabs that haven't been the active tab of their window for 12 h
+(`CHROME_TAB_REAPER_HOURS`); never a window's active or last tab. `chrome-tab-reaper
+status` shows ages, `chrome-tab-reaper log` lists closed URLs. Apple Events from
+LaunchAgents hang without a grant, so sweeps run through `~/Applications/ChromeTabReaper.app`
+(built by `macos-apps/ChromeTabReaper/install.sh` in bootstrap). **After a fresh build,
+grant it:** run `chrome-tab-reaper sweep` and click Allow on "ChromeTabReaper wants access
+to control Google Chrome" (System Settings → Privacy & Security → Automation). The
+prompt lives in UserNotificationCenter, which CUA can't touch; Hammerspoon can press it
+via `hs.axuielement`. ag also allows `sshd-keygen-wrapper` → Google Chrome, so scripts
+run from Herdr/pi (started over SSH) can drive Chrome with osascript.
 
 ## Shared MCP gateway (Pi)
 
