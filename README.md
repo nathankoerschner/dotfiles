@@ -81,6 +81,22 @@ Vault-only service keys (no local file; agents read them on demand with
 |---|---|
 | `PostHog Personal API Key (Nathan Koerschner)` | PostHog REST API for project Playcademy (168029): feature flags (`arcade_*`) read/write, e.g. `GET https://us.posthog.com/api/projects/168029/feature_flags/?search=arcade_` |
 
+1Password service-account tokens (login Keychain on ag, account `natkoersch`;
+read only by the wrappers, never printed or put in files/args):
+
+| Keychain service | Wrapper | Service account → vault (read_items + write_items only) | Recovery copy |
+|---|---|---|---|
+| `ag 1Password service account` | `op-ag` | `ag arcade.school agents canonical` → `arcade.school` (`jjbrfvemdg4y3prkikxur6thbq`) | Trilogy → Employee → `ag arcade.school service account` |
+| `ag machine-shared service account` | `op-shared` | `ag machine-shared agents` → Nathan's personal `machine-shared` (`qxomga2s2ppd3agns74jhfz7yi`) | Nathan's personal account → Personal → `ag machine-shared service account` |
+
+`op-shared` is a symlink to `op-ag`; the script picks the Keychain item by the
+name it was invoked as. To restore a token on a new ag, pipe it from the
+recovery item into `security -i` running in the GUI session (an
+`add-generic-password -U -a natkoersch -s "<service>" -w ...` line on stdin),
+never as a command-line argument. Nathan's personal 1Password account holds
+everything else (banking, investments, identity, recovery codes); agents must
+not use it.
+
 After `~/.zshenv.local` exists, run `tfy-env` (or log out and back in) and
 restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 
