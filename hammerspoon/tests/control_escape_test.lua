@@ -5,8 +5,8 @@ local source = file:read("*a")
 file:close()
 source = assert(source:match("(%-%- Inspired by https://github.com/jasoncodes/.-)\nhs.hotkey.bind"))
 
-local function setup()
-	local s = { tasks = {}, timers = {}, app = "Ghostty", now = 1e9, escapes = 0 }
+local function setup(hostname)
+	local s = { tasks = {}, timers = {}, app = "Ghostty", now = 1e9, escapes = 0, hostname = hostname }
 	local env = setmetatable({}, { __index = _G })
 	local function timer(delay, callback)
 		local t = { delay = delay, callback = callback, stopped = false }
@@ -15,6 +15,7 @@ local function setup()
 		return t
 	end
 	env.hs = {
+		execute = function() return s.hostname or "nathans-MacBook-Pro-2\n" end,
 		application = { frontmostApplication = function() return { name = function() return s.app end } end },
 		timer = { doAfter = timer, doEvery = timer, absoluteTime = function() return s.now end },
 		eventtap = {
@@ -49,7 +50,7 @@ local function setup()
 	}
 	assert(load(source, "control_escape", "t", env))()
 	s.env = env
-	function s:poll() self.env.tmux_agent_pane_timer.callback() end
+	function s:poll() self.env.agent_pane_timer.callback() end
 	function s:event(kind, flags)
 		assert(self.env.control_escape_tap.callback({
 			getType = function() return kind end,
@@ -57,11 +58,8 @@ local function setup()
 		}) == false, "physical events must not be swallowed")
 	end
 	function s:tap() self:event(1, { ctrl = true }); self:event(1, {}) end
-	function s:snapshot(panes, processes, late)
-		self.tasks[#self.tasks]:finish(panes)
-		self:poll()
-		assert(self.tasks[#self.tasks].path == "/bin/ps")
-		self.tasks[#self.tasks]:finish(processes, 0, late)
+	function s:answer(stdout, code, late)
+		self.tasks[#self.tasks]:finish(stdout, code, late)
 		self:poll()
 	end
 	return s
@@ -71,57 +69,54 @@ local tests = {
 	["unknown terminal state suppresses Escape"] = function()
 		local s = setup(); s:tap(); assert(s.escapes == 0)
 	end,
+	["client asks ag over ssh; ag runs the helper locally"] = function()
+		local s = setup(); local t = s.tasks[1]
+		assert(t.path == "/usr/bin/ssh" and t.args[#t.args - 1] == "ag")
+		t = setup("ag\n").tasks[1]
+		assert(t.path == "/bin/sh" and t.args[2]:match("herdr%-focus%-agent$"))
+	end,
 	["shell tap works, Ctrl-b and multi-modifier chords never inject Escape"] = function()
-		local s = setup(); s:snapshot("1 1 1 10 zsh\n", "10 1 /bin/zsh\n")
+		local s = setup(); s:answer("shell\n")
 		s:tap(); assert(s.escapes == 1)
 		s:event(1, { ctrl = true }); s:event(2, { ctrl = true }); s:event(1, {})
 		assert(s.escapes == 1)
 		s:event(1, { ctrl = true, cmd = true }); s:event(1, { ctrl = true }); s:event(1, {})
 		assert(s.escapes == 1)
 	end,
-	["agent suppresses Escape; editor descendant restores it"] = function()
-		local s = setup(); s:snapshot("1 1 1 10 node\n", "10 1 /bin/zsh\n20 10 /bin/node\n")
+	["agent suppresses Escape; shell/editor restores it"] = function()
+		local s = setup(); s:answer("agent\n")
 		s:tap(); assert(s.escapes == 0)
-		s:poll(); s:snapshot("1 1 1 10 node\n", "10 1 /bin/zsh\n20 10 /bin/node\n30 20 /bin/nvim\n")
-		s:tap(); assert(s.escapes == 1)
+		s:poll(); s:answer("shell\n"); s:tap(); assert(s.escapes == 1)
 	end,
-	["large output and delayed stream chunks preserve byte order"] = function()
-		local s = setup()
-		-- Background-read bytes precede the termination callback's remainder,
-		-- even when their stream callback is delivered after termination.
-		s.tasks[1]:finish("de\n", 0, "1 1 1 10 no"); s:poll()
-		local ps = s.tasks[2]
-		assert(ps.stream(ps, string.rep("99 1 /bin/irrelevant\n", 10000), "ignored stderr"))
-		ps:finish("10 1 /bin/zsh\n20 10 /bin/node\n")
-		s:poll(); s:tap(); assert(s.escapes == 0)
-		s:poll(); s.tasks[#s.tasks]:finish("1 1 1 10 node\n"); s:poll()
-		s.tasks[#s.tasks]:finish("vim\n", 0, "10 1 /bin/zsh\n20 10 /bin/node\n30 20 /bin/n")
-		s:poll(); s:tap(); assert(s.escapes == 1)
+	["delayed stream chunk after exit is still parsed"] = function()
+		local s = setup(); s:answer("", 0, "shell\n"); s:tap(); assert(s.escapes == 1)
 	end,
-	["timeout kills direct child and retries; stale callback is ignored"] = function()
-		local s = setup(); s.tasks[1]:finish("1 1 1 10 node\n"); s:poll()
-		local ps = s.tasks[2]
-		s.timers[1].callback(); assert(ps.terminated)
+	["timeout kills child and retries; stale callback is ignored"] = function()
+		local s = setup(); local t = s.tasks[1]
+		s.timers[1].callback(); assert(t.terminated)
 		s:tap(); assert(s.escapes == 0)
-		s:poll(); assert(#s.tasks == 3)
-		ps:finish("30 10 /bin/nvim\n"); s:poll(); s:tap(); assert(s.escapes == 0)
-		s:snapshot("1 1 1 10 zsh\n", "10 1 /bin/zsh\n"); s:tap(); assert(s.escapes == 1)
+		s:poll(); assert(#s.tasks == 2)
+		t:finish("shell\n"); s:poll(); s:tap(); assert(s.escapes == 0)
+		s:answer("shell\n"); s:tap(); assert(s.escapes == 1)
 	end,
-	["failed exit, construction and start all permit retry"] = function()
-		for _, failure in ipairs({ "exit", "new_fail", "start_fail" }) do
-			local s = setup(); s.tasks[1]:finish("1 1 1 10 node\n")
+	["failed exit, garbage, construction and start all permit retry"] = function()
+		for _, failure in ipairs({ "exit", "garbage", "new_fail", "start_fail" }) do
+			local s = setup()
 			if failure == "exit" then
-				s:poll(); s.tasks[2]:finish("", 1); s:poll()
+				s:answer("shell\n", 255)
+			elseif failure == "garbage" then
+				s:answer("ssh: connect refused\n")
 			else
+				s.tasks[1]:finish("", 1); s:poll()
 				s[failure] = true; s:poll(); s[failure] = false
 			end
 			s:tap(); assert(s.escapes == 0)
-			s:poll(); s:snapshot("1 1 1 10 zsh\n", "10 1 /bin/zsh\n")
+			s:poll(); s:answer("shell\n")
 			s:tap(); assert(s.escapes == 1)
 		end
 	end,
 	["stale result suppresses Escape but other apps still receive it"] = function()
-		local s = setup(); s:snapshot("1 1 1 10 zsh\n", "10 1 /bin/zsh\n")
+		local s = setup(); s:answer("shell\n")
 		s.now = s.now + 3e9; s:tap(); assert(s.escapes == 0)
 		s.app = "Notes"; s:tap(); assert(s.escapes == 1)
 	end,
@@ -136,10 +131,6 @@ local tests = {
 			s:event(1, {}); assert(s.escapes == 0)
 			s:tap(); assert(s.escapes == 1)
 		end
-	end,
-	["editor in another attached session does not override an agent"] = function()
-		local s = setup(); s:snapshot("1 1 1 9 nvim\n1 1 1 10 node\n", "10 1 /bin/node\n")
-		s:tap(); assert(s.escapes == 0)
 	end,
 }
 local count = 0

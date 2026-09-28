@@ -515,87 +515,42 @@ local function frontmost_app_is_terminal()
 	return app ~= nil and terminal_app_names[app:name()] == true
 end
 
-local function command_basename(command)
-	return tostring(command or ""):match("([^/]+)$") or ""
-end
-
-local function command_is_agent(command)
-	-- Pi and Codex run as Node CLIs, so tmux often reports their pane command as
-	-- "node". Treat those as agentic unless an editor child process is active.
-	command = command_basename(command)
-	return command == "node" or command == "pi" or command == "codex" or command == "claude"
-end
-
-local function command_is_editor(command)
-	command = command_basename(command)
-	return command == "vim" or command == "nvim" or command == "vi"
-end
-
-local function descendants_include_editor(root_pid, children_by_ppid, command_by_pid)
-	local stack = { tostring(root_pid) }
-	local seen = {}
-
-	while #stack > 0 do
-		local pid = table.remove(stack)
-		if not seen[pid] then
-			seen[pid] = true
-			if pid ~= tostring(root_pid) and command_is_editor(command_by_pid[pid]) then
-				return true
-			end
-			for _, child_pid in ipairs(children_by_ppid[pid] or {}) do
-				table.insert(stack, child_pid)
-			end
-		end
-	end
-
-	return false
-end
+-- Terminals run Herdr on ag (the client attaches with `ag`), so ask the host
+-- whether the focused Herdr pane is an agent at its prompt: Escape there would
+-- interrupt it. `herdr-focus-agent` prints "agent" or "shell" (plain shell, or
+-- an editor like nvim in the foreground). On ag itself, run it locally.
+local herdr_host = "ag"
+local focus_agent_script = "$HOME/.local/bin/herdr-focus-agent"
+local focus_agent_cmd = (hs.execute("scutil --get LocalHostName") or ""):gsub("%s", "") == herdr_host
+		and { "/bin/sh", { "-c", focus_agent_script } }
+	or { "/usr/bin/ssh", { "-o", "BatchMode=yes", "-o", "ConnectTimeout=2", herdr_host, focus_agent_script } }
 
 -- nil means unknown: suppress synthetic Escape in terminals until a check
 -- succeeds, including after a timeout. Never turn a failed check into "safe".
-local tmux_agent_pane_is_active = nil
-local tmux_agent_check = nil
-local tmux_agent_checked_at = nil
+local agent_pane_is_active = nil
+local agent_check = nil
+local agent_checked_at = nil
 
-local function agent_pane_is_active(panes_output, ps_output)
-	local children_by_ppid = {}
-	local command_by_pid = {}
-	for pid, ppid, command in ps_output:gmatch("%s*(%d+)%s+(%d+)%s+([^\n]+)") do
-		command_by_pid[pid] = command
-		children_by_ppid[ppid] = children_by_ppid[ppid] or {}
-		table.insert(children_by_ppid[ppid], pid)
-	end
-
-	for attached, window_active, pane_active, pane_pid, command in panes_output:gmatch("(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+([^\n]+)") do
-		if tonumber(attached) > 0 and window_active == "1" and pane_active == "1" then
-			if command_is_agent(command) and not descendants_include_editor(pane_pid, children_by_ppid, command_by_pid) then
-				return true
-			end
-		end
-	end
-	return false
-end
-
-local function update_tmux_agent_pane_is_active()
+local function update_agent_pane_is_active()
 	if not frontmost_app_is_terminal() then
-		tmux_agent_pane_is_active = nil
-		tmux_agent_checked_at = nil
+		agent_pane_is_active = nil
+		agent_checked_at = nil
 		return
 	end
-	if tmux_agent_check then
-		tmux_agent_check.publish()
+	if agent_check then
+		agent_check.publish()
 		return
 	end
 
 	local check = {}
-	tmux_agent_check = check
+	agent_check = check
 	local function fail()
-		if tmux_agent_check ~= check then
+		if agent_check ~= check then
 			return
 		end
-		tmux_agent_check = nil
-		tmux_agent_pane_is_active = nil
-		tmux_agent_checked_at = nil
+		agent_check = nil
+		agent_pane_is_active = nil
+		agent_checked_at = nil
 		check.timeout:stop()
 		if check.task and check.task:isRunning() then
 			check.task:terminate()
@@ -603,55 +558,41 @@ local function update_tmux_agent_pane_is_active()
 	end
 	check.timeout = hs.timer.doAfter(2, fail)
 
-	-- Direct executables let the timeout terminate the actual process, not a
-	-- shell that leaves a blocked child behind. Streaming drains BOTH pipes:
-	-- an unread `ps` snapshot can fill the OS pipe buffer and never exit.
-	local function run(path, args, callback)
-		local chunks = {}
-		local tail = ""
-		local exited = false
-		local exit_code
-		check.task = hs.task.new(path, function(code, stdout)
-			exit_code = code
-			exited = true
-			-- Termination reads the remainder of the pipe. A previously read
-			-- stream chunk can be delivered later, but still precedes this tail.
-			tail = stdout or ""
-		end, function(_, stdout)
-			chunks[#chunks + 1] = stdout or ""
-			return true
-		end, args)
-		-- hs.task may deliver its final stream chunk AFTER termination. Consume
-		-- on the next poll, rather than parsing partial output in that callback.
-		check.publish = function()
-			if exited and tmux_agent_check == check then
-				if exit_code ~= 0 then
-					fail()
-				else
-					callback(table.concat(chunks) .. tail)
-				end
-			end
+	-- Direct executable so the timeout terminates the actual process. Streaming
+	-- drains stdout; the final chunk may arrive after termination, so parse on
+	-- the next poll rather than in the exit callback.
+	local chunks = {}
+	local tail = ""
+	local exited = false
+	local exit_code
+	check.task = hs.task.new(focus_agent_cmd[1], function(code, stdout)
+		exit_code = code
+		exited = true
+		tail = stdout or ""
+	end, function(_, stdout)
+		chunks[#chunks + 1] = stdout or ""
+		return true
+	end, focus_agent_cmd[2])
+	check.publish = function()
+		if not exited or agent_check ~= check then
+			return
 		end
-		if not check.task or not check.task:start() then
-			fail()
+		local result = (table.concat(chunks) .. tail):match("^%s*(%a+)")
+		if exit_code ~= 0 or (result ~= "agent" and result ~= "shell") then
+			return fail()
 		end
+		agent_pane_is_active = result == "agent"
+		agent_checked_at = hs.timer.absoluteTime()
+		check.timeout:stop()
+		agent_check = nil
 	end
-
-	run("/opt/homebrew/bin/tmux", {
-		"list-panes", "-a", "-F",
-		"#{session_attached} #{window_active} #{pane_active} #{pane_pid} #{pane_current_command}",
-	}, function(panes_output)
-		run("/bin/ps", { "-Ao", "pid=,ppid=,comm=" }, function(ps_output)
-			tmux_agent_pane_is_active = agent_pane_is_active(panes_output, ps_output)
-			tmux_agent_checked_at = hs.timer.absoluteTime()
-			check.timeout:stop()
-			tmux_agent_check = nil
-		end)
-	end)
+	if not check.task or not check.task:start() then
+		fail()
+	end
 end
 
-update_tmux_agent_pane_is_active()
-tmux_agent_pane_timer = hs.timer.doEvery(0.5, update_tmux_agent_pane_is_active)
+update_agent_pane_is_active()
+agent_pane_timer = hs.timer.doEvery(0.5, update_agent_pane_is_active)
 
 modifier_handler = function(evt)
 	-- evt:getFlags() holds the modifiers that are currently held down
@@ -664,8 +605,8 @@ modifier_handler = function(evt)
 	elseif prev_modifiers["ctrl"] and len(curr_modifiers) == 0 and send_escape then
 		send_escape = false
 		local terminal = frontmost_app_is_terminal()
-		local fresh = tmux_agent_checked_at and hs.timer.absoluteTime() - tmux_agent_checked_at < 2e9
-		if not terminal or (fresh and tmux_agent_pane_is_active == false) then
+		local fresh = agent_checked_at and hs.timer.absoluteTime() - agent_checked_at < 2e9
+		if not terminal or (fresh and agent_pane_is_active == false) then
 			hs.eventtap.keyStroke({}, "ESCAPE")
 		end
 	else
