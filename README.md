@@ -214,6 +214,7 @@ Intentionally not tracked in dotfiles:
 - **Cards:** one per Herdr tab hosting an agent: title, workspace, state and how long it's been in it, model, cost, thumbnails of any images/videos in the latest prompt or answer, and a **live activity line** while it works: a spinner with the tool and command it's running (amber after 3 minutes, which usually means something hung), bouncing dots while it's thinking, amber "waiting on you" when a dialog is up, red "stopped" after an interrupt or error. The preview is the latest prompt while working, else the answer's last paragraph.
 - **🔥 Hotpath (top priority):** shift+click a card, long-press on the phone, or `f`. Hotpath cards are red and pin to the top of every column. Whenever a hotpath agent isn't working (done, idle or blocked) its card runs a **siren**: a bright segment orbiting its rim (a conic-gradient spun by a registered `@property` angle and masked to the border, after the arcade's `animate-laser-orbit`; reduced motion gets a steady red rim). When it becomes ready with something new, the fast lane fires: `ag-text` (with a link straight to the card) plus a Herdr toast; the open page also beeps. At most one ping per card per minute; opening the card marks it seen (the siren keeps running until the agent works again or you drop the hotpath).
 - **▾ Details** (per card, or "Details" for all): latest prompt, the current turn's thinking, latest answer, the last 6 tools with ✓/✗/running and durations, and stats (cost, context, prompts, tool calls, thinking level, cwd, age).
+- **Deep links:** `http://ag:7376/<pi session id>` (what `herdr-link` and `session-link` print) opens the board with that session: the live card's drawer, or for a hibernated pane its transcript with **Wake in Herdr** (focusing wakes it), or for a closed session its transcript with **Resume** (a new Inbox tab running `pi --session <file>`). Opening any card puts its link in the address bar; 🔗 copies it.
 - **Drawer** (click a card): Transcript (prompts, answers, collapsible thinking and tool calls with arguments and results, and **images and videos** inline: screenshots embedded in the session, e.g. pasted images and `read`-tool images, plus image/video files mentioned by path; click a thumbnail for a full-size viewer), Live screen (the agent's terminal, refreshed every second, with keys for dialogs: Esc, Enter, arrows, Tab, y/n, 1–3; opens by default when the agent is blocked), Interrupt, Hotpath, Open in Herdr, Mark unread, list, 🗄 Archive. Click the title to rename the tab.
 - **Prompt editor:** CodeMirror 6 with **vim** bindings (toggle per device; no line wrapping, so j/k move by real lines; starts in NORMAL; `jk` or Esc leaves insert mode; ⌘↩, `:w` or `:q` sends; the editor clears at once and gets your text back if sending fails). **🎙 Voice** (button or Alt+V) records in the browser and transcribes with Whisper on TrueFoundry (same route as the ag inbox) into the cursor. **📎** or paste/drop attaches files: saved to `~/inbox/clipboard/` and their paths go into the prompt. Vimium grabs Esc and blurs text fields; the editor treats a blur with no click behind it as that Esc (refocuses, goes to NORMAL). Vimium also takes j/k, so add a Vimium exclusion for the board URLs to use the board's own keys.
 - **Disrupting an agent:** ⏹ (or `x` twice) interrupts (Esc twice; this Pi setup asks for a second Esc). Replying while it works = **Steer**: queued, delivered after its current step. **Interrupt & send** stops it, waits until it's ready, clears whatever Pi put back in its editor (Ctrl+U), then sends your message instead.
@@ -354,8 +355,10 @@ Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
 - **Pairing** (by hand, once per host): Moshi app → Settings → Hooks →
   select ag → Retry/Pair, or run `moshi-hook host setup` and scan the QR code.
   The host secret stays in the login Keychain (`app.getmoshi.hook`), not in this repo.
-- **Session deep links**: `session-link` prints `http://<ag>:7374/m/<pi session id>`.
-  `file-inbox` resolves the session's current pane (it survives the Inbox auto-filer)
+- **Session deep links**: `session-link` prints the session's ag board link for the phone,
+  `https://ag.tail44736d.ts.net:7377/<pi session id>` (full name + https so iMessage linkifies it).
+  The board's drawer has a **📱 Moshi** button on touch devices: `http://<ag>:7374/m/<pi session id>`,
+  where `file-inbox` resolves the session's current pane (it survives the Inbox auto-filer)
   and 302s to `moshi://herdr?workspace=…&tab=…&pane=…`, which resumes Moshi's
   already-open ag card on that pane (Moshi can't open a new connection from a link).
   The http hop exists because iMessage doesn't linkify `moshi://`.
@@ -560,7 +563,10 @@ Nathan sits at a client machine; agents run on a host (ag). Every machine stows 
 - **Phone → ag**: `file-inbox` (LaunchAgent `com.nathan.file-inbox`, port 7374, Tailscale only)
   saves uploads to `~/inbox/phone` and can prompt a recent pi session or open a new one. The iOS
   Shortcut is documented in `ios-shortcuts/send-to-ag.md`. Log: `/tmp/file-inbox.log`.
-- **Links to Herdr tabs**: `herdr-link <tab_id>` / `herdr-link --grep <regex>` prints
-  `http://ag:7374/focus?tab=<id>`. Cmd+click in Ghostty → file-inbox runs `herdr tab focus`, then
-  redirects to `hammerspoon://herdr-return` (client Hammerspoon closes the browser tab, refocuses
-  Ghostty). Plain http because Herdr strips OSC 8 and Ghostty only auto-links standard schemes.
+- **Links to sessions**: `herdr-link <tab_id>` / `herdr-link --grep <regex>` / `herdr-link --session [file|id]`
+  prints `http://ag:7376/<pi session id>`, a deep link into the ag board (see "ag board"): the live card's
+  drawer, or a hibernated/closed session's transcript with Wake / Resume. Session ids are stable; tab ids
+  change when tabs move. `--url` prints only the URL; `--gemini` prints the old direct-jump link
+  `gemini://<host>/focus/<tab>` (HerdrLink.app → Hammerspoon → `herdr tab focus`; no browser), also the
+  fallback for tabs without a pi session. `http://ag:7374/focus?tab=<id>` (file-inbox) still works too.
+  Plain http because Herdr strips OSC 8 and Ghostty only auto-links standard schemes.
