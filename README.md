@@ -210,10 +210,11 @@ The ag inbox (`ag-inbox`) is the top-level endpoint that starts a new session: P
 
 GTD tickler for Herdr. Say it in plain text to any pi agent ("do X Friday at 9", "send this back to me in two weeks"); the agent calls the `tickler` tool. At that time a new tab `⏰ <title>` opens in the same Herdr workspace (falls back to `Inbox`), running pi **forked from the conversation that deferred it**, with the task as its first prompt. Nothing is focused; a Herdr notification fires.
 
-- Tool: `pi/dot-pi/agent/extensions/tickler.ts` (schedule / list / cancel). CLI: `bin/dot-local/bin/tickler add|list|cancel|fire`.
+- Tool: `pi/dot-pi/agent/extensions/tickler.ts` (schedule / list / cancel). CLI: `bin/dot-local/bin/tickler add|list|cancel|trigger|fire`.
 - LaunchAgent `com.nathan.tickler` runs `tickler fire` every 60s, only on ag (the host). Items missed while asleep fire on wake and say they're late.
 - State: `~/.local/state/tickler/<id>.json`; log `log.jsonl` beside them (`added → fired`, or `failed` with the error). launchd output: `/tmp/tickler.log`.
 - **Presence trigger** ("resume this next time I'm on the client"): the agent schedules with `when: "online"` instead of a time (CLI `tickler add --when online …`). It opens as `🟢 <title>` on Nathan's next arrival at the client after it was queued, once. Uses `presence` below.
+- **Wake-ups** (an agent waiting on something slow: a machine coming back, CI, a deploy): `when: "check"` with a shell `check` (CLI `tickler add --when check --check '<cmd>' …`) is run by the every-minute LaunchAgent with no model (20s cap) and fires once it exits 0; `when: "event"` fires only via the webhook `POST http://ag:7373/tickler/<id>` (served by `ag-inbox`; optional body = note) or `tickler trigger <id>`. Both resume the deferring pi session **in place** (`herdr agent prompt` to the pane whose session matches, if idle/done), else open a forked `🔔 <title>` tab. After `--expires` (default 7 days) they fire anyway and say the condition never came true.
 
 ## Presence ("Nathan is online")
 
