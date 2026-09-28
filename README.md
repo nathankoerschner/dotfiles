@@ -95,7 +95,8 @@ recovery item into `security -i` running in the GUI session (an
 `add-generic-password -U -a natkoersch -s "<service>" -w ...` line on stdin),
 never as a command-line argument. Nathan's personal 1Password account holds
 everything else (banking, investments, identity, recovery codes); agents must
-not use it.
+not use it, and it is not signed in on ag (app or Chrome extension); sign it in
+only on client machines.
 
 After `~/.zshenv.local` exists, run `tfy-env` (or log out and back in) and
 restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
