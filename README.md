@@ -52,7 +52,8 @@ machine's snapshot in ~/dotfiles/machines/.
 6. `mise install`, `herdr/setup.sh` (needs the Herdr server running), nvim
    plugins at the versions in `lazy-lock.json`.
 7. `--macos`: applies the `macos` defaults script (Dock, keyboard, Finder,
-   never-sleep power settings; uses sudo). Reboot afterward.
+   power settings by role: the host never sleeps, clients sleep normally;
+   uses sudo). Reboot afterward.
 8. Clones every repo in `machines/*/repos.txt` into `~` (after `gh auth login`).
 9. Prints a secrets checklist and anything that needs attention.
 
@@ -102,7 +103,8 @@ off, a reboot or relogin leaves the machine off the tailnet and `ag`/`ssh` time
 out in both directions. Enabled on nathan-dev-client 2026-09-28.
 
 On the remote Mac: enable Remote Login (`sudo systemsetup -setremotelogin on`),
-sign in to Tailscale, and keep sleep off (`bootstrap --macos`). From here,
+sign in to Tailscale, and list it as a host in `machines/README.md` so
+`bootstrap --macos` keeps sleep off (clients sleep normally). From here,
 `ssh-copy-id nathan@<host>`, then either:
 
 - `ssh nathan@<host>` + `herdr`: runs entirely remote, like tmux.

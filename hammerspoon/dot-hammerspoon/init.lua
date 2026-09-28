@@ -40,7 +40,10 @@ winmanScreenProfiles = {
 	},
 }
 require("winman")
-require("battery_guard")
+-- Host only: clients sleep normally (see the Power section of ../macos).
+if os.execute(os.getenv("HOME") .. "/.local/bin/machine-role host") then
+	require("battery_guard")
+end
 
 -- Machine-local features should only run on this Mac, not every machine that
 -- uses these dotfiles.
