@@ -397,6 +397,12 @@ drops to a shell. Manual: `pi-hibernate sweep [-n] [--all]`, `pi-hibernate pane 
 `PI_HIBERNATE_PRESSURE_IDLE_MIN`. Log: `~/.local/state/pi-hibernate/log`. Scrollback
 and in-flight process state don't survive; the conversation does.
 
+**Chrome on ag** (agents leave tabs open): Memory Saver is ON at **Maximum**
+(chrome://settings/performance, GUI-only; set 2026-09-28). Inactive tabs are unloaded
+and reload when clicked. A script that auto-closes tabs isn't possible yet: Apple
+Events from Herdr/pi (launched over SSH) and from LaunchAgents hang without a visible
+Automation prompt, because no osascript/sh/sshd-keygen-wrapper → Google Chrome grant exists.
+
 ## Shared MCP gateway (Pi)
 
 Pi's stdio MCP bridges (`linear`, `arcade_school`, `honeycomb`, `tsa_courses`) run
