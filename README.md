@@ -74,6 +74,13 @@ modes at `0600`:
 | `~/.secrets/discord_token` | Discord token for the `discord-export` skill (DiscordChatExporter reads it as `DISCORD_TOKEN`); dir `0700` |
 | `~/.alchemy/config.json`, `~/.alchemy/credentials/playcademy-arcade/cloudflare.json` | Alchemy `playcademy-arcade` Cloudflare profile (API token); arcade's `bun scripts/db --stage production` needs it plus `cloudflared` |
 
+Vault-only service keys (no local file; agents read them on demand with
+`op-ag read`, piped straight into the calling process, never printed):
+
+| Vault item (arcade.school vault) | Used for |
+|---|---|
+| `PostHog Personal API Key (Nathan Koerschner)` | PostHog REST API for project Playcademy (168029): feature flags (`arcade_*`) read/write, e.g. `GET https://us.posthog.com/api/projects/168029/feature_flags/?search=arcade_` |
+
 After `~/.zshenv.local` exists, run `tfy-env` (or log out and back in) and
 restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 
