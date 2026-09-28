@@ -88,7 +88,7 @@ read only by the wrappers, never printed or put in files/args):
 |---|---|---|---|
 | `ag 1Password service account` | `op-ag` | `ag arcade.school agents canonical` → `arcade.school` (`jjbrfvemdg4y3prkikxur6thbq`) | Trilogy → Employee → `ag arcade.school service account` |
 | `ag machine-shared service account` | `op-shared` | `ag machine-shared agents` → Nathan's personal `machine-shared` (`qxomga2s2ppd3agns74jhfz7yi`) | Nathan's personal account → Personal → `ag machine-shared service account` |
-| `ag-shared 1Password service account` | `op-work` | `ag-shared agents` → Trilogy `ag-shared` (`c3qkbcqktsxmi6hnpzpltdbose`): non-super-secret work items (Ramp card, infra API tokens) | Trilogy → Employee → `ag-shared 1Password service account` |
+| `ag-shared 1Password service account` | `op-work` | `ag-shared agents` → Trilogy `ag-vault` (formerly `ag-shared`; `c3qkbcqktsxmi6hnpzpltdbose`; Keychain item keeps its old name): non-super-secret work items (Ramp card, infra API tokens) | Trilogy → Employee → `ag-shared 1Password service account` |
 
 `op-shared` and `op-work` are symlinks to `op-ag`; the script picks the Keychain item by the
 name it was invoked as. It fails fast instead of hanging: it first probes
