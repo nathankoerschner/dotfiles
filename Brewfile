@@ -12,6 +12,8 @@ brew "docker-compose"
 brew "ffmpeg"
 brew "fzf"
 brew "gh"
+brew "hcloud"            # Ag infra (infra/hetzner, ag-infra)
+brew "opentofu"
 brew "lua"
 brew "luarocks"          # Mason needs it for luacheck
 brew "m1ddc"             # Hammerspoon external-monitor brightness
