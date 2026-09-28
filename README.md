@@ -507,8 +507,16 @@ Nathan sits at a client machine; agents run on a host (ag). Every machine stows 
   (matched by `$PI_SESSION_FILE` in `~/review/<name>/.meta.json`, so it survives pane moves), with
   the section heading he was reading. If that session is gone, it opens a new Inbox session.
   Nothing is exposed beyond Tailscale. Old pages in `~/review` can be deleted anytime.
-- **Client desktop automation**: `client-cua "<task>"` runs Codex computer use on the client's GUI
-  session (via `launchctl submit`; plain ssh can't see the screen).
+- **Client desktop automation**: `client-cua --why "<reason>" "<task>"` runs Codex computer use on the
+  client's GUI session (via `launchctl submit`; plain ssh can't see the screen). It's an antipattern,
+  so it's gated: `client-cua-gate` asks Jev (TrueFoundry, `TFY_TOKEN`) whether the thing exists only
+  on the client (a dialog/permission prompt showing there, iPhone Mirroring, a client-only setting).
+  Otherwise, or if Jev is unreachable, it blocks (exit 3) and POSTs an access session to the ag inbox
+  (`/prompt?new=1`, never a follow-on) to get the missing access onto ag; deduped per task (6h) and
+  per blocked session (1h). Pi's `client-cua-guard.ts` extension runs the gate before bash calls that
+  invoke `client-cua`, set `CLIENT_CUA_HOST`, or SSH to the client with osascript/Hammerspoon
+  UI/cliclick, and passes a one-time `CLIENT_CUA_GATE_TOKEN` so it isn't judged twice.
+  Log: `~/.local/state/client-cua-gate/log.jsonl`.
 - **Phone → ag**: `file-inbox` (LaunchAgent `com.nathan.file-inbox`, port 7374, Tailscale only)
   saves uploads to `~/inbox/phone` and can prompt a recent pi session or open a new one. The iOS
   Shortcut is documented in `ios-shortcuts/send-to-ag.md`. Log: `/tmp/file-inbox.log`.
