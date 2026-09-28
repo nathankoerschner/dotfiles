@@ -202,6 +202,18 @@ Intentionally not tracked in dotfiles:
 - Phone: Back Tap triple tap → shortcut **Private ag** (`ios-shortcuts/private-ag.md`).
 - Code: `bin/dot-local/bin/ag-private`; LaunchAgent `com.nathan.ag-private` (only runs on ag). Server output: `/tmp/ag-private.log`. Restart: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-private`.
 
+## ag board (agent Kanban)
+
+`ag-board` is a Kanban dashboard over every agent session in Herdr: `http://ag:7376/` (Tailscale only; works on the phone). Herdr stays the runtime; the board is a view on it plus a little metadata Herdr doesn't keep.
+
+- **Cards:** one per Herdr tab hosting an agent, showing title, workspace, state and how long it's been in it, model, and a preview (the latest prompt while working; the answer's last paragraph once it's ready). Click a card for the transcript, a reply box (⌘↩ sends via `herdr agent prompt`), Open in Herdr (`herdr tab focus`), Mark unread, a list picker, and Close tab.
+- **Views:** State (Needs you / Working / Parked / Resolved), Lists (your own lists, edited under "Lists…"; drag cards between them), Workspaces. Filter with `/`; "🔴 only" shows just red cards.
+- **Needs you** = blocked, or ready with an answer newer than when you last saw it. Seen = opened on the board, replied from it, jumped to in Herdr, or the tab focused in Herdr. **Resolved** = the answer ends with a `DONE` line.
+- **Red (top priority):** shift+click a card (long-press on the phone). Red cards pin to the top of every column. A red card that needs you **throbs**, and the moment it starts, the fast lane fires: `ag-text` (with a link straight to the card) plus a Herdr toast; the open page also beeps. At most one ping per card per minute; opening the card stops the throb.
+- **State:** `~/.local/state/ag-board/state.json` (red, list, seen time, status timing, lists). Cards for closed tabs are dropped. On the very first run every existing session starts as seen.
+- **How it works:** polls `herdr api snapshot` every 1.5 s, reads each Pi session file incrementally (only appended bytes; tool results are skipped), and pushes the board to open pages over SSE.
+- Code: `bin/dot-local/bin/ag-board`; page: `ag-board/dot-local/share/ag-board/index.html` (re-read per request, so page edits need only a refresh); LaunchAgent `com.nathan.ag-board` (only runs on ag). Log: `/tmp/ag-board.log`. Restart after server edits: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-board`.
+
 ## Nessie (agent-trace sync)
 
 Directive: every agent trace paid for by the company (Joe Lamont) must sync to Nessie; only Nathan's personal OpenRouter usage must not. Nessie (`cask "nessie-app"`, nessielabs.com) runs on every machine, signed in as `nathaniel.koerschner@superbuilders.school`.
