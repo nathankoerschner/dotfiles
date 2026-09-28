@@ -122,7 +122,7 @@ fi
 
 step "Secrets checklist (transfer these via 1Password; never commit them)"
 check() { [[ -e $1 ]] && echo "  ok      $1" || { echo "  MISSING $1  - $2"; failed+=("secret $1"); } }
-check ~/.zshenv.local                         "TFY_TOKEN, BRAVE_API_KEY (see README)"
+check ~/.zshenv.local                         "TFY_TOKEN, BRAVE_API_KEY, OPENROUTER_API_KEY (see README)"
 check ~/.gitconfig.local                      "[user] name/email"
 check ~/.config/mcp/arcade-school.headers     "Authorization: Bearer <token> (0600)"
 check ~/.config/mcp/tsa-courses.headers       "Authorization: Bearer <token> (0600)"

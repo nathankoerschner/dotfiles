@@ -157,6 +157,16 @@ Intentionally not tracked in dotfiles:
 - `~/.pi/agent/sessions/`
 - repo-local `.pi/todos/`
 
+## Private chat (OpenRouter)
+
+`ag-private` is a private chat page for personal questions: `http://ag:7375/` (or `http://100.107.192.32:7375/`), Tailscale only. Unlike everything else on ag, its inference goes straight to OpenRouter on Nathan's **personal** account, never TrueFoundry, Jev, or the ag inbox.
+
+- Key: `OPENROUTER_API_KEY` in `~/.zshenv.local` (personal OpenRouter account, paid with Nathan's personal card). pi's `openrouter` provider in `models.json` reads the same variable. Without it the page answers "OPENROUTER_API_KEY isn't set on ag yet."
+- Every request sends `provider: {data_collection: "deny", zdr: true}` (no provider training or retention). In the OpenRouter account settings, keep prompt logging off.
+- Chats are stored only on ag in `~/private-chat/<id>.json` (dir 0700, files 0600); nothing about their content is logged. Model picker: Claude Opus 5.5 (default), GPT-6 Sol, Claude Fable 5.1, Gemini 3.8 Flash (`MODELS` in the script).
+- Phone: Back Tap triple tap → shortcut **Private ag** (`ios-shortcuts/private-ag.md`).
+- Code: `bin/dot-local/bin/ag-private`; LaunchAgent `com.nathan.ag-private` (only runs on ag). Server output: `/tmp/ag-private.log`. Restart: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-private`.
+
 ## ag inbox
 
 The ag inbox (`ag-inbox`) is the top-level endpoint that starts a new session: POST a prompt and ag opens a new Herdr tab running pi with it as the first prompt. Every capture path goes through it: the Mac quick capture, the iPhone Action Button, and file-inbox's "New session".
