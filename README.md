@@ -317,6 +317,22 @@ is >= 8 GB, or a single process holds >= 3 GB. Alerts from the host go to the
 client's notifications (over SSH) plus a Herdr toast. Run `mem-watch` for a status
 table of every machine. Thresholds: `MEMWATCH_SWAP_GB`, `MEMWATCH_PROC_GB`.
 
+## Pi session hibernation
+
+Idle pi sessions cost ~100-200 MB each, and dozens stay open as GTD items. Like
+Chrome's tab discarding, `bin/dot-local/bin/pi-hibernate` (LaunchAgent
+`com.nathan.pi-hibernate`, KeepAlive, only on ag) stops idle ones and wakes them on
+demand: every 10 min it hibernates pi panes whose Herdr state is `idle` (`done` keeps
+its badge), that aren't focused or in the Inbox workspace, whose session file is
+unchanged for 2 h (30 min under macOS memory pressure), and whose pi has no child
+processes besides MCP helpers. The pane then shows a sleep screen; focusing the pane
+(the daemon watches Herdr focus events) or pressing any key runs
+`pi --session <file>`, restoring the full conversation. Ctrl+C on the sleep screen
+drops to a shell. Manual: `pi-hibernate sweep [-n] [--all]`, `pi-hibernate pane <id>`,
+`pi-hibernate status`. Thresholds: `PI_HIBERNATE_IDLE_MIN`,
+`PI_HIBERNATE_PRESSURE_IDLE_MIN`. Log: `~/.local/state/pi-hibernate/log`. Scrollback
+and in-flight process state don't survive; the conversation does.
+
 ## Shared MCP gateway (Pi)
 
 Pi's stdio MCP bridges (`linear`, `arcade_school`, `honeycomb`, `tsa_courses`) run
