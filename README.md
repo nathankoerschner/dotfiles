@@ -260,6 +260,13 @@ Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
   and 302s to `moshi://herdr?workspace=…&tab=…&pane=…`, which resumes Moshi's
   already-open ag card on that pane (Moshi can't open a new connection from a link).
   The http hop exists because iMessage doesn't linkify `moshi://`.
+- **Phone texts when agents finish**: `pi/dot-pi/agent/extensions/ag-notify.ts` texts
+  `✅ Done` or `⚠️ Attention needed` + tab name, a one-line "what happened / what to do"
+  headline (fast LLM), and the `session-link`, when a turn ends while Nathan is away
+  (`presence`) or after a turn of 2+ minutes. `AG_NOTIFY=always|off` overrides per session.
+  Sent by `ag-text`: Telegram bot "ag" if Keychain items `ag telegram bot` (token) and
+  `ag telegram chat` (chat id) exist, else iMessage from the client Mac (needs it awake).
+  Log: `~/.local/state/ag-notify/log.jsonl`.
 - **Shortcuts**: the same Herdr shortcuts as the Mac, per
   [`herdr/SHORTCUTS.md`](herdr/SHORTCUTS.md). Moshi forwards Cmd keys to Herdr,
   except Cmd+N/W/O/K/V/1–9, which it keeps for itself; use `Ctrl+B` + key for those.

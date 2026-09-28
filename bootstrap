@@ -130,6 +130,9 @@ check ~/.secrets/discord_token                "Discord token for the discord-exp
 check ~/.pi/agent/auth.json                   "run pi and /login, or copy"
 check ~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json "Linear MCP OAuth client (copy from another machine)"
 check ~/.alchemy/credentials/playcademy-arcade/cloudflare.json "Alchemy Cloudflare profile for arcade prod/dev DB access (copy ~/.alchemy/config.json + this file, 0600)"
+if [[ $(hostname -s) == ag ]]; then
+  security find-generic-password -a natkoersch -s "ag telegram bot" >/dev/null 2>&1 && echo "  ok      ag telegram bot" || echo "  MISSING Keychain 'ag telegram bot' + 'ag telegram chat'  - Telegram bot for ag-text (optional; falls back to iMessage)"
+fi
 gh auth status >/dev/null 2>&1 && echo "  ok      gh auth" || echo "  MISSING gh auth  - gh auth login"
 
 step "Done"
