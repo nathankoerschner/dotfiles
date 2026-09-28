@@ -90,7 +90,12 @@ read only by the wrappers, never printed or put in files/args):
 | `ag machine-shared service account` | `op-shared` | `ag machine-shared agents` → Nathan's personal `machine-shared` (`qxomga2s2ppd3agns74jhfz7yi`) | Nathan's personal account → Personal → `ag machine-shared service account` |
 
 `op-shared` is a symlink to `op-ag`; the script picks the Keychain item by the
-name it was invoked as. To restore a token on a new ag, pipe it from the
+name it was invoked as. It fails fast instead of hanging: it first probes
+1Password's Group Container (5s), because `op` blocks forever in `open()` there
+while macOS shows an unanswered "… would like to access data from other apps"
+prompt (attributed to `bun` for Herdr-spawned agents; Don't Allow is enough),
+and it stops any `op` command other than `op run` after `OP_AG_TIMEOUT`
+seconds (default 120). To restore a token on a new ag, pipe it from the
 recovery item into `security -i` running in the GUI session (an
 `add-generic-password -U -a natkoersch -s "<service>" -w ...` line on stdin),
 never as a command-line argument. Nathan's personal 1Password account holds
