@@ -255,6 +255,11 @@ Moshi on the iPhone connects to ag over Tailscale and attaches to Herdr.
 - **Pairing** (by hand, once per host): Moshi app → Settings → Hooks →
   select ag → Retry/Pair, or run `moshi-hook host setup` and scan the QR code.
   The host secret stays in the login Keychain (`app.getmoshi.hook`), not in this repo.
+- **Session deep links**: `session-link` prints `http://<ag>:7374/m/<pi session id>`.
+  `file-inbox` resolves the session's current pane (it survives the Inbox auto-filer)
+  and 302s to `moshi://herdr?workspace=…&tab=…&pane=…`, which resumes Moshi's
+  already-open ag card on that pane (Moshi can't open a new connection from a link).
+  The http hop exists because iMessage doesn't linkify `moshi://`.
 - **Shortcuts**: the same Herdr shortcuts as the Mac, per
   [`herdr/SHORTCUTS.md`](herdr/SHORTCUTS.md). Moshi forwards Cmd keys to Herdr,
   except Cmd+N/W/O/K/V/1–9, which it keeps for itself; use `Ctrl+B` + key for those.
