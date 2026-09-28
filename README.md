@@ -163,7 +163,7 @@ Intentionally not tracked in dotfiles:
 
 - Key: `OPENROUTER_API_KEY` in `~/.zshenv.local` (personal OpenRouter account, paid with Nathan's personal card). pi's `openrouter` provider in `models.json` reads the same variable. Without it the page answers "OPENROUTER_API_KEY isn't set on ag yet."
 - Every request sends `provider: {data_collection: "deny", zdr: true}` (no provider training or retention). In the OpenRouter account settings, keep prompt logging off.
-- Chats are stored only on ag in `~/private-chat/<id>.json` (dir 0700, files 0600); nothing about their content is logged. Model picker: Claude Opus 5.5 (default), GPT-6 Sol, Claude Fable 5.1, Gemini 3.8 Flash (`MODELS` in the script).
+- Chats are stored only on ag in `~/private-chat/<id>.json` (dir 0700, files 0600); nothing about their content is logged. Model picker: Claude Opus 5.5 (default), GPT-6 Sol, Gemini 3.8 Flash (`MODELS` in the script; only models with a zero-data-retention endpoint work, e.g. Claude Fable has none).
 - Phone: Back Tap triple tap → shortcut **Private ag** (`ios-shortcuts/private-ag.md`).
 - Code: `bin/dot-local/bin/ag-private`; LaunchAgent `com.nathan.ag-private` (only runs on ag). Server output: `/tmp/ag-private.log`. Restart: `launchctl kickstart -k gui/$(id -u)/com.nathan.ag-private`.
 
