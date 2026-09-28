@@ -102,6 +102,9 @@ if "$(dirname "$0")/bin/dot-local/bin/machine-role" host; then
   sudo chmod 0440 /etc/sudoers.d/pmset
 else
   sudo pmset -a disablesleep 0
+  # macOS defaults: display off after 10 min on AC / 2 on battery, then the Mac sleeps
+  sudo pmset -c displaysleep 10 sleep 1
+  sudo pmset -b displaysleep 2 sleep 1
   sudo rm -f /etc/sudoers.d/pmset
 fi
 
