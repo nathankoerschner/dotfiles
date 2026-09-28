@@ -80,7 +80,7 @@ restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 
 - `gh auth login`, then re-run bootstrap to clone repos.
 - Sign in: Chrome (turn on sync, set as default browser), 1Password, Slack,
-  Discord, Linear, Granola, Spotify, Tailscale, Jump Desktop.
+  Discord, Linear, Spotify, Tailscale, Jump Desktop.
 - Alfred: activate Powerpack, set the preferences folder to `~/.alfred`, turn
   off the Spotlight shortcut.
 - Hammerspoon: grant Accessibility and enable launch at login. Change Caps Lock

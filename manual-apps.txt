@@ -24,6 +24,5 @@ ZoomLauncher.app
 # Installed by a Brewfile cask via .pkg (brew can't map these back to the cask)
 Jump Desktop Connect.app        # jump-desktop-connect
 Microsoft Teams.app             # microsoft-teams
-NordVPN.app                     # nordvpn
 Tailscale.app                   # tailscale-app
 zoom.us.app                     # zoom
