@@ -237,6 +237,23 @@ GTD tickler for Herdr. Say it in plain text to any pi agent ("do X Friday at 9",
 - State: `~/.local/state/presence/state.json` (`state`, `online_since`, `last_seen`, `idle_s`, …); transitions in `log.jsonl` beside it. launchd output: `/tmp/presence.log`. State older than 5 min reads as `unknown` (poller not running).
 - Not detected: Nathan on the phone only, or at a client not in `machines/README.md`. Jump Desktop input from ag into the client would count as presence.
 
+## Activity capture (time review)
+
+Metadata only, for reviewing where Nathan's time and effort go. Nothing polls on its own: client events are event-driven, and ag piggybacks on the presence poll. Everything is JSONL in `~/.local/state/activity/` on ag.
+
+| File (on ag) | Written by | What |
+| --- | --- | --- |
+| `client-<client>.jsonl` | client Hammerspoon `activity_log.lua` → pulled by `presence poll` | `hs_start` (login/reload, with boot time), `lock`/`unlock`, `sleep`/`wake`, `screens_off`/`on`, `session_active`/`inactive`, `power_off`, `screensaver_on`/`off`, `app_launch`/`app_quit`/`app_front` (app, bundle id, front window title ≤160 chars) |
+| `ag.jsonl` | `presence poll` (one `ps` per poll; `lsof` + `tailscale status` only for a new process) | `herdr_attach`/`herdr_detach`: which device has Herdr attached (`bridge` = the client's `ag` command, `tui` = Herdr in an SSH/mosh terminal such as Moshi, or ag's local Ghostty), with Tailscale IP → device name |
+| `injections.jsonl` | `ag-inbox`, `tickler`, `file-inbox` | a 12-char SHA-1 of every prompt they inject with `herdr agent prompt`, plus their id |
+| `prompts.jsonl` | Pi extension `activity-log.ts` | one line per prompt: session file, cwd, Herdr IDs at session start, `origin` (`typed` / `ag-inbox` / `tickler` / `file-inbox` / `rpc` / `extension`, by matching the injection hash), attached devices, client presence and HID idle seconds. No prompt text (the session file has it). Private sessions (`pi-private`, `~/private-chat`) are skipped. |
+| `state.json` | `presence poll` | pull offset into the client log, currently attached Herdr clients |
+
+The ag inbox also logs `from` on each `received` capture in `~/.local/state/ag-inbox/log.jsonl`: requester IP (Tailscale device), declared `source` (`iphone`), the Mac's front app/window, and user agent.
+
+- The client keeps its own `~/.local/state/activity/events.jsonl`; ag copies new complete lines each poll (≤256 KB per poll) and restarts from 0 if the client file shrinks. While the client is asleep, events queue there and arrive on the next poll.
+- Limits: Herdr doesn't say which attached client typed a keystroke, so `typed` prompts carry the attached devices plus the client's idle time. A prompt one agent sends to another with `herdr agent prompt` also reads as `typed`; a large client idle time with no phone attached marks it as probably not Nathan. Window titles only update when the app changes (switching tabs inside one app isn't logged).
+
 ## Jev (TypeSafe System One model)
 
 Guide for agents. Sources: [docs.typesafe.ai](https://docs.typesafe.ai/llms.txt) (source of truth; append `.md` to any page path) and the official skill, vendored at `agents/dot-agents/skills/typesafe-ai` (from [typesafe-ai/skills](https://github.com/typesafe-ai/skills)). Read the live docs before writing an integration; details below are from jev-1.13 (Sep 2026).

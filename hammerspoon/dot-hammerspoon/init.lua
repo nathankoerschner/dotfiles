@@ -43,6 +43,9 @@ require("winman")
 -- Host only: clients sleep normally (see the Power section of ../macos).
 if os.execute(os.getenv("HOME") .. "/.local/bin/machine-role host") then
 	require("battery_guard")
+else
+	-- Client only: lock/unlock, sleep/wake, app switches for the time review (pulled by ag's presence poll).
+	activity_log = require("activity_log")
 end
 
 -- Machine-local features should only run on this Mac, not every machine that
