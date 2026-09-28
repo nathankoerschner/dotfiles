@@ -134,8 +134,8 @@ check ~/Library/Application\ Support/Nessie/refresh_token.txt "Nessie sign-in: o
 check ~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json "Linear MCP OAuth client (copy from another machine)"
 check ~/.alchemy/credentials/playcademy-arcade/cloudflare.json "Alchemy Cloudflare profile for arcade prod/dev DB access (copy ~/.alchemy/config.json + this file, 0600)"
 if [[ $(hostname -s) == ag ]]; then
-  for svc in "ag 1Password service account" "ag machine-shared service account"; do
-    security find-generic-password -a natkoersch -s "$svc" >/dev/null 2>&1 && echo "  ok      Keychain '$svc'" || { echo "  MISSING Keychain '$svc'  - 1Password service-account token for op-ag / op-shared (README \"Secrets\")"; failed+=("secret $svc"); }
+  for svc in "ag 1Password service account" "ag machine-shared service account" "ag-shared 1Password service account"; do
+    security find-generic-password -a natkoersch -s "$svc" >/dev/null 2>&1 && echo "  ok      Keychain '$svc'" || { echo "  MISSING Keychain '$svc'  - 1Password service-account token for op-ag / op-shared / op-work (README \"Secrets\")"; failed+=("secret $svc"); }
   done
   security find-generic-password -a natkoersch -s "ag telegram bot" >/dev/null 2>&1 && echo "  ok      ag telegram bot" || echo "  MISSING Keychain 'ag telegram bot' + 'ag telegram chat'  - Telegram bot for ag-text (optional; falls back to iMessage)"
 fi
