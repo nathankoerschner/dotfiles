@@ -88,6 +88,9 @@ restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 - Open Ghostty (starts Herdr); re-run bootstrap if it warned about Herdr.
 - Apps with no cask: see `manual-apps.txt`.
 - Mission Control shortcuts aren't scriptable; set them by hand.
+- Host (ag): in System Settings > Apple Account > iCloud, turn on Reminders
+  sync so agents can read Nathan's reminders (the local store under
+  `~/Library/Group Containers/group.com.apple.reminders/`).
 - Optional: `:MasonInstall sqlfmt` in nvim where SQL formatting is wanted.
 
 ## Remote Herdr
