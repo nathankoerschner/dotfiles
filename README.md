@@ -95,6 +95,12 @@ restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 
 ## Remote Herdr
 
+**Every machine (host and clients): Tailscale must launch at login.** In
+Tailscale → Settings, turn on **Launch Tailscale at login** (check with
+`defaults read io.tailscale.ipn.macsys TailscaleStartOnLogin` → `1`). If it's
+off, a reboot or relogin leaves the machine off the tailnet and `ag`/`ssh` time
+out in both directions. Enabled on nathan-dev-client 2026-09-28.
+
 On the remote Mac: enable Remote Login (`sudo systemsetup -setremotelogin on`),
 sign in to Tailscale, and keep sleep off (`bootstrap --macos`). From here,
 `ssh-copy-id nathan@<host>`, then either:
