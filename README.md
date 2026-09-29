@@ -530,6 +530,28 @@ continue using the standard providers configured by each tool.
 | `Prefix x` | Close the current pane |
 | `Prefix i` | Copy the current pane ID |
 
+## Screen recordings (QA video)
+
+Agents hand Nathan QA walkthroughs as video, not just screenshots. Both helpers write H.264/yuv420p
+mp4s with faststart, so they play in QuickTime and inline on iPhone Safari.
+
+- **Headless**: `record-flow <url> [flow.ts] [-o out.mp4] [--mobile] [--storage state.json] [--trace]`
+  records a Playwright flow (Storybook story URL, staging, a local dev server). `flow.ts`
+  default-exports `async ({ page, context, pause }) => { … }`; use `pause(ms)` between steps so a
+  viewer can follow. `--storage` takes a Playwright storageState, e.g. a signed-in staging session.
+  Playwright is installed on first run into `~/.cache/record-flow` (pinned; Chromium auto-installs),
+  independent of any repo. If the flow throws, the video up to the failure is still saved.
+- **Desktop**: `screen-record start [-w "Google Chrome"]` … `screen-record stop` (prints the mp4)
+  records ag's main screen, or crops to one app's front window, while `chatgpt-cua` drives it.
+  ffmpeg avfoundation, 15 fps, capped at 30 min. Needs macOS **Screen Recording** permission for the
+  process chain running it: on ag that's `~/.local/bin/herdr` (System Settings → Privacy & Security →
+  Screen & System Audio Recording → +). GUI-only, so re-grant it on a new host; `start` fails fast
+  with that hint when it's missing. Admin prompts on ag are answered with `ag-login-password type`.
+- **Showing it**: `show clip.mp4` opens it on the client and publishes a phone player page
+  (`phone:` link). In review pages, keep the page self-contained for images (base64) but put videos
+  beside it as files, `<video src="flow.mp4" controls playsinline muted>`: `show page.html` copies
+  referenced `src`/`poster` files along. `file-inbox` serves byte ranges, which iPhone Safari needs.
+
 ## Client ↔ ag bridge
 
 Nathan sits at a client machine; agents run on a host (ag). Every machine stows this repo; roles and aliases are in `machines/README.md`.
