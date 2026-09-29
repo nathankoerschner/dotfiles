@@ -23,3 +23,13 @@ Host nathan-dev-client
     ControlMaster auto
     ControlPath ~/.ssh/sockets/%r@%h-%p
     ControlPersist 4h
+
+# Ag brain (Hetzner, rebuilt by ag-infra; Tailscale IP changes on rebuild, so use MagicDNS).
+Host ag-brain
+    HostName ag-brain.tail44736d.ts.net
+    User nathan
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 4h
