@@ -41,6 +41,9 @@ winmanScreenProfiles = {
 }
 require("winman")
 
+-- Ctrl+Shift+Cmd+M: create a superbuilders Google Meet and paste its link
+instantMeet = require("instant_meet")
+
 -- Machine-local features should only run on this Mac, not every machine that
 -- uses these dotfiles.
 local thisMacUUID = hs.execute([[ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformUUID/{print $4}']])
