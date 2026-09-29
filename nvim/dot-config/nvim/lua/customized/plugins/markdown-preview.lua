@@ -11,7 +11,7 @@ return {
     -- client Mac's browser: serve on all interfaces and hand the URL to `show`.
     if vim.tbl_contains({ "ag-mac", "ag" }, vim.fn.hostname()) and vim.fn.executable("show") == 1 then
       vim.g.mkdp_open_to_the_world = 1
-      vim.g.mkdp_open_ip = "ag"
+      vim.g.mkdp_open_ip = "ag-mac"
       vim.g.mkdp_echo_preview_url = 1
       vim.cmd([[
         function! MkdpShowOnClient(url) abort

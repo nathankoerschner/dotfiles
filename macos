@@ -91,12 +91,13 @@ defaults -currentHost write -g AppleFontSmoothing -int 0
 
 ### Power
 # Sleep policy depends on the machine's role (machines/README.md):
-# - host (ag): never sleep, even with the lid closed (AC and battery), so agents
+# - host (ag-mac): never sleep, even with the lid closed (AC and battery), so agents
 #   keep running; only the built-in panel turns off when shut. Hammerspoon's
 #   battery_guard.lua (host only) force-sleeps on low battery as a safety net,
 #   using passwordless sudo for pmset.
 # - client: normal macOS sleep; it only needs to be awake while Nathan uses it.
-if "$(dirname "$0")/bin/dot-local/bin/machine-role" host; then
+# machine-role lives in the ag repo (machines/README.md is there too).
+if "${AG:-$HOME/ag}/bin/dot-local/bin/machine-role" host; then
   sudo pmset -a disablesleep 1
   echo "$USER ALL=(root) NOPASSWD: /usr/bin/pmset" | sudo tee /etc/sudoers.d/pmset >/dev/null
   sudo chmod 0440 /etc/sudoers.d/pmset
@@ -116,3 +117,11 @@ killall Dock
 killall Finder
 
 echo "macOS defaults applied. Reboot to finish."
+
+
+### Legacy host name
+# ag-mac was called `ag` until 2026-09-29, and old links (http://ag:7376/<session>, http://ag:7373, …)
+# still sit in session transcripts and messages. Tailscale's MagicDNS only knows the new name, so
+# keep `ag` resolving on the Macs. Remove once those links no longer matter.
+grep -qE '^100\.107\.192\.32[[:space:]]+ag([[:space:]]|$)' /etc/hosts ||
+  printf '100.107.192.32\tag\t# legacy name of ag-mac (dotfiles macos)\n' | sudo tee -a /etc/hosts >/dev/null
