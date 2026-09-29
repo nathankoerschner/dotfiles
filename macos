@@ -118,10 +118,3 @@ killall Finder
 
 echo "macOS defaults applied. Reboot to finish."
 
-
-### Legacy host name
-# ag-mac was called `ag` until 2026-09-29, and old links (http://ag:7376/<session>, http://ag:7373, …)
-# still sit in session transcripts and messages. Tailscale's MagicDNS only knows the new name, so
-# keep `ag` resolving on the Macs. Remove once those links no longer matter.
-grep -qE '^100\.107\.192\.32[[:space:]]+ag([[:space:]]|$)' /etc/hosts ||
-  printf '100.107.192.32\tag\t# legacy name of ag-mac (dotfiles macos)\n' | sudo tee -a /etc/hosts >/dev/null
