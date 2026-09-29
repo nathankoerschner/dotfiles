@@ -2,7 +2,7 @@
 # Bring a Mac to parity with this setup. Idempotent: safe to re-run any time.
 # Personal config lives here; the agent system is the private ag repo, which this clones to ~/ag and installs.
 #
-#   zsh -c "$(curl -fsSL https://raw.githubusercontent.com/nathankoerschner/dotfiles/main/bootstrap)"
+#   zsh -c "$(curl -fsSL https://raw.githubusercontent.com/koerschner/dotfiles/main/bootstrap)"
 #   ~/dotfiles/bootstrap [--macos]      # --macos also applies ./macos defaults (sudo)
 #
 # Files that would block a stow symlink are moved to ~/.dotfiles-backup/<ts>/.
@@ -10,9 +10,9 @@
 set -uo pipefail
 
 DOTFILES=${DOTFILES:-$HOME/dotfiles}
-REPO=https://github.com/nathankoerschner/dotfiles.git
+REPO=https://github.com/koerschner/dotfiles.git
 AG=${AG:-$HOME/ag}
-AG_REPO=git@github.com:nathankoerschner/ag.git
+AG_REPO=git@github.com:koerschner/ag.git
 STOW_PACKAGES=(alfred bin ghostty git hammerspoon mise nvim ssh tmux zsh)
 backup=$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)
 failed=()
@@ -62,7 +62,7 @@ done
 step "ag (agent system) -> $AG"
 if [[ ! -d $AG/.git ]]; then
   gh auth status >/dev/null 2>&1 || gh auth login -h github.com -p ssh -w || warn "gh auth login"
-  gh repo clone nathankoerschner/ag $AG || git clone $AG_REPO $AG || warn "clone ag (private: needs gh auth or an SSH key on GitHub)"
+  gh repo clone koerschner/ag $AG || git clone $AG_REPO $AG || warn "clone ag (private: needs gh auth or an SSH key on GitHub)"
 fi
 [[ -x $AG/install ]] && { $AG/install || warn "ag install (see its output above)"; }
 

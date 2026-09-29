@@ -5,7 +5,7 @@ macOS defaults, an idempotent `bootstrap`, and per-machine snapshots under `mach
 up in git. Configs are stowed with `stow --dotfiles`.
 
 The agent system (Herdr + Pi, AG Dash, the ag inbox, tickler, bridge, infra, agent instructions and
-skills) lives in its own private repo, **ag** (`nathankoerschner/ag`). `bootstrap` clones it to `~/ag`
+skills) lives in its own private repo, **ag** (`koerschner/ag`). `bootstrap` clones it to `~/ag`
 and runs `~/ag/install`; see its README for everything agent-related, including the secrets list.
 
 Machines stay in sync over git only; nothing is shared over the network.
@@ -28,10 +28,10 @@ Paste this into a Codex chat:
 
 ```text
 Set up this Mac to parity with my main machine using my dotfiles. Read
-https://github.com/nathankoerschner/dotfiles/blob/main/README.md first, then run
+https://github.com/koerschner/dotfiles/blob/main/README.md first, then run
 the bootstrap:
 
-  zsh -c "$(curl -fsSL https://raw.githubusercontent.com/nathankoerschner/dotfiles/main/bootstrap)"
+  zsh -c "$(curl -fsSL https://raw.githubusercontent.com/koerschner/dotfiles/main/bootstrap)"
 
 It is idempotent: re-run it after anything that needed me (Command Line Tools
 dialog, sudo password, gh auth login, app sign-ins). Work through the
