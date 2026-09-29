@@ -91,13 +91,13 @@ defaults -currentHost write -g AppleFontSmoothing -int 0
 
 ### Power
 # Sleep policy depends on the machine's role (machines/README.md):
-# - host (ag-mac): never sleep, even with the lid closed (AC and battery), so agents
+# - host and extremity (ag-mac): never sleep, even with the lid closed (AC and battery), so agents
 #   keep running; only the built-in panel turns off when shut. Hammerspoon's
 #   battery_guard.lua (host only) force-sleeps on low battery as a safety net,
 #   using passwordless sudo for pmset.
 # - client: normal macOS sleep; it only needs to be awake while Nathan uses it.
 # machine-role lives in the ag repo (machines/README.md is there too).
-if "${AG:-$HOME/ag}/bin/dot-local/bin/machine-role" host; then
+if "${AG:-$HOME/ag}/bin/dot-local/bin/machine-role" host extremity; then
   sudo pmset -a disablesleep 1
   echo "$USER ALL=(root) NOPASSWD: /usr/bin/pmset" | sudo tee /etc/sudoers.d/pmset >/dev/null
   sudo chmod 0440 /etc/sudoers.d/pmset
