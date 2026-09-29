@@ -120,6 +120,12 @@ restart ChatGPT desktop: the stowed Codex config routes it through TrueFoundry.
 - `gh auth login`, then re-run bootstrap to clone repos.
 - Sign in: Chrome (turn on sync, set as default browser), 1Password, Slack,
   Discord, Linear, Spotify, Tailscale, Jump Desktop.
+- On ag, Chrome's Default profile must stay signed in to Google as
+  `nathankoerschner@gmail.com` (Gmail loads, not just Chrome sync): agents read
+  email verification codes there with `chatgpt-cua` instead of driving the
+  client. Check: `.google.com` `SID` cookie exists in
+  `~/Library/Application Support/Google/Chrome/Default/Cookies`. If Google shows
+  "Signed out", ask Nathan to sign in again (password + 2FA).
 - Alfred: activate Powerpack, set the preferences folder to `~/.alfred`, turn
   off the Spotlight shortcut.
 - Hammerspoon: grant Accessibility and enable launch at login. Change Caps Lock
