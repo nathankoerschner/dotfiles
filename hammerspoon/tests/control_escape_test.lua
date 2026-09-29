@@ -15,7 +15,7 @@ local function setup(hostname)
 		return t
 	end
 	env.hs = {
-		execute = function() return s.hostname or "nathans-MacBook-Pro-2\n" end,
+		execute = function() return s.hostname or "ag-client\n" end,
 		application = { frontmostApplication = function() return { name = function() return s.app end } end },
 		timer = { doAfter = timer, doEvery = timer, absoluteTime = function() return s.now end },
 		eventtap = {
@@ -69,11 +69,13 @@ local tests = {
 	["unknown terminal state suppresses Escape"] = function()
 		local s = setup(); s:tap(); assert(s.escapes == 0)
 	end,
-	["client asks ag over ssh; ag runs the helper locally"] = function()
+	["client asks ag-mac over ssh; ag-mac runs the helper locally"] = function()
 		local s = setup(); local t = s.tasks[1]
-		assert(t.path == "/usr/bin/ssh" and t.args[#t.args - 1] == "ag")
-		t = setup("ag\n").tasks[1]
-		assert(t.path == "/bin/sh" and t.args[2]:match("herdr%-focus%-agent$"))
+		assert(t.path == "/usr/bin/ssh" and t.args[#t.args - 1] == "ag-mac")
+		for _, name in ipairs({ "ag-mac\n", "ag\n" }) do
+			t = setup(name).tasks[1]
+			assert(t.path == "/bin/sh" and t.args[2]:match("herdr%-focus%-agent$"))
+		end
 	end,
 	["shell tap works, Ctrl-b and multi-modifier chords never inject Escape"] = function()
 		local s = setup(); s:answer("shell\n")

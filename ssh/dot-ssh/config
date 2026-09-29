@@ -1,23 +1,13 @@
 # Shared SSH config (stowed from dotfiles). Machine-specific hosts go in ~/.ssh/config.local.
 Include ~/.ssh/config.local
 
-# ag: primary dev Mac (agents, repos, Herdr). Tailscale IP.
-Host ag
-    HostName 100.107.192.32
-    User natkoersch
-    IdentityFile ~/.ssh/id_ed25519
-    IdentitiesOnly yes
-    ServerAliveInterval 15
-    ServerAliveCountMax 3
-    # Reuse one connection (instant Cmd+V image paste, shot/show). Socket dir: ~/.ssh/sockets.
-    ControlMaster auto
-    ControlPath ~/.ssh/sockets/%r@%h-%p
-    ControlPersist 4h
-
-# ag-mac: the Mac half of Ag (today still named `ag`). The engine reaches it with its own key
-# (~/.ssh/ag-mac, from ag-vault "ag-engine → ag-mac SSH key"; authorized on ag-mac only from tailnet IPs).
-# Used by `mac` (Mac-only commands, computer use, files) and the engine's MCP tunnel.
-Host ag-mac
+# ag-mac: the Mac half of Ag (primary dev Mac today: agents, repos, Herdr). Tailscale IP.
+# `ag` is its old name, kept as an alias during the rename (2026-09-29); drop it once nothing uses it.
+# The engine reaches it with its own key (~/.ssh/ag-mac, from ag-vault "ag-engine → ag-mac SSH key";
+# authorized on ag-mac only from tailnet IPs); other machines use id_ed25519. Missing keys are skipped.
+# Used by `mac` (Mac-only commands, computer use, files), the engine's MCP tunnel, and the client's
+# Herdr attach, image paste, shot/show.
+Host ag-mac ag
     HostName 100.107.192.32
     User natkoersch
     IdentityFile ~/.ssh/ag-mac
@@ -26,12 +16,14 @@ Host ag-mac
     StrictHostKeyChecking accept-new
     ServerAliveInterval 15
     ServerAliveCountMax 3
+    # Reuse one connection (instant Cmd+V image paste, shot/show). Socket dir: ~/.ssh/sockets.
     ControlMaster auto
     ControlPath ~/.ssh/sockets/%r@%h-%p
     ControlPersist 4h
 
-# Client Mac (where Nathan sits). ag uses this for shot/show/client-cua.
-Host nathan-dev-client
+# ag-client: the Mac where Nathan sits. ag-mac uses this for shot/show/client-cua.
+# `nathan-dev-client` is its old name, kept as an alias during the rename (2026-09-29).
+Host ag-client nathan-dev-client
     HostName 100.68.116.104
     User nathan
     IdentityFile ~/.ssh/id_ed25519

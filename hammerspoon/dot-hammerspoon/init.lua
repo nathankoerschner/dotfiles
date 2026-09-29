@@ -213,13 +213,15 @@ local function frontmost_app_is_terminal()
 	return app ~= nil and terminal_app_names[app:name()] == true
 end
 
--- Terminals run Herdr on ag (the client attaches with `ag`), so ask the host
+-- Terminals run Herdr on ag-mac (the client attaches with `ag`), so ask the host
 -- whether the focused Herdr pane is an agent at its prompt: Escape there would
 -- interrupt it. `herdr-focus-agent` prints "agent" or "shell" (plain shell, or
--- an editor like nvim in the foreground). On ag itself, run it locally.
-local herdr_host = "ag"
+-- an editor like nvim in the foreground). On ag-mac itself, run it locally.
+-- ("ag" is ag-mac's old LocalHostName, accepted during the rename.)
+local herdr_host = "ag-mac"
 local focus_agent_script = "$HOME/.local/bin/herdr-focus-agent"
-local focus_agent_cmd = (hs.execute("scutil --get LocalHostName") or ""):gsub("%s", "") == herdr_host
+local this_host = (hs.execute("scutil --get LocalHostName") or ""):gsub("%s", "")
+local focus_agent_cmd = (this_host == herdr_host or this_host == "ag")
 		and { "/bin/sh", { "-c", focus_agent_script } }
 	or { "/usr/bin/ssh", { "-o", "BatchMode=yes", "-o", "ConnectTimeout=2", herdr_host, focus_agent_script } }
 
