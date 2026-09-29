@@ -4,13 +4,16 @@ Include ~/.ssh/config.local
 # ag-mac: the Mac half of Ag (primary dev Mac today: agents, repos, Herdr). Tailscale IP.
 # `ag` is its old name, kept as an alias during the rename (2026-09-29); drop it once nothing uses it.
 # The engine reaches it with its own key (~/.ssh/ag-mac, from ag-vault "ag-engine → ag-mac SSH key";
-# authorized on ag-mac only from tailnet IPs); other machines use id_ed25519. Missing keys are skipped.
+# authorized on ag-mac only from tailnet IPs; the Match adds it only where it exists, so other machines
+# don't warn); other machines use id_ed25519.
 # Used by `mac` (Mac-only commands, computer use, files), the engine's MCP tunnel, and the client's
 # Herdr attach, image paste, shot/show.
+Match host ag-mac,ag exec "test -f ~/.ssh/ag-mac"
+    IdentityFile ~/.ssh/ag-mac
+
 Host ag-mac ag
     HostName 100.107.192.32
     User natkoersch
-    IdentityFile ~/.ssh/ag-mac
     IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
     StrictHostKeyChecking accept-new
