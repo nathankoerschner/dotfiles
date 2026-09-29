@@ -14,9 +14,9 @@ Host ag
     ControlPath ~/.ssh/sockets/%r@%h-%p
     ControlPersist 4h
 
-# ag-mac: the Mac half of Ag (today still named `ag`). The brain reaches it with its own key
-# (~/.ssh/ag-mac, from ag-vault "ag-brain → ag-mac SSH key"; authorized on ag-mac only from tailnet IPs).
-# Used by `mac` (Mac-only commands, computer use, files) and the brain's MCP tunnel.
+# ag-mac: the Mac half of Ag (today still named `ag`). The engine reaches it with its own key
+# (~/.ssh/ag-mac, from ag-vault "ag-engine → ag-mac SSH key"; authorized on ag-mac only from tailnet IPs).
+# Used by `mac` (Mac-only commands, computer use, files) and the engine's MCP tunnel.
 Host ag-mac
     HostName 100.107.192.32
     User natkoersch
@@ -40,9 +40,9 @@ Host nathan-dev-client
     ControlPath ~/.ssh/sockets/%r@%h-%p
     ControlPersist 4h
 
-# Ag brain (Hetzner, rebuilt by ag-infra; Tailscale IP changes on rebuild, so use MagicDNS).
-Host ag-brain
-    HostName ag-brain.tail44736d.ts.net
+# Ag engine (Hetzner, rebuilt by ag-infra; Tailscale IP changes on rebuild, so use MagicDNS).
+Host ag-engine
+    HostName ag-engine.tail44736d.ts.net
     User nathan
     IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
