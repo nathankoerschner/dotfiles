@@ -137,6 +137,7 @@ if [[ $(hostname -s) == ag ]]; then
   for svc in "ag 1Password service account" "ag machine-shared service account" "ag-shared 1Password service account"; do
     security find-generic-password -a natkoersch -s "$svc" >/dev/null 2>&1 && echo "  ok      Keychain '$svc'" || { echo "  MISSING Keychain '$svc'  - 1Password service-account token for op-ag / op-shared / op-work (README \"Secrets\")"; failed+=("secret $svc"); }
   done
+  ag-login-password check >/dev/null 2>&1 && echo "  ok      Keychain 'ag Mac login'" || echo "  MISSING Keychain 'ag Mac login'  - ag's own login password so agents can answer ag's password prompts: run ag-login-password set"
   security find-generic-password -a natkoersch -s "ag telegram bot" >/dev/null 2>&1 && echo "  ok      ag telegram bot" || echo "  MISSING Keychain 'ag telegram bot' + 'ag telegram chat'  - Telegram bot for ag-text (optional; falls back to iMessage)"
 fi
 gh auth status >/dev/null 2>&1 && echo "  ok      gh auth" || echo "  MISSING gh auth  - gh auth login"

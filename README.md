@@ -90,6 +90,14 @@ read only by the wrappers, never printed or put in files/args):
 | `ag machine-shared service account` | `op-shared` | `ag machine-shared agents` → Nathan's personal `machine-shared` (`qxomga2s2ppd3agns74jhfz7yi`) | Nathan's personal account → Personal → `ag machine-shared service account` |
 | `ag-shared 1Password service account` | `op-work` | `ag-shared agents` → Trilogy `ag-vault` (formerly `ag-shared`; `c3qkbcqktsxmi6hnpzpltdbose`; Keychain item keeps its old name): non-super-secret work items (Ramp card, infra API tokens) | Trilogy → Employee → `ag-shared 1Password service account` |
 
+ag's own macOS login password lives in ag's login Keychain (service `ag Mac login`, account
+`natkoersch`), so agents answer ag's admin/password prompts (e.g. adding an app under Privacy &
+Security) on ag without touching the client. Nathan stores or refreshes it once with
+`ag-login-password set` (hidden prompt, verified with `dscl -authonly`); agents run
+`ag-login-password type` with the prompt's password field focused, and `ag-login-password check`
+to see if it's there. The client's Keychain copy can't be read over SSH (its Keychain is locked
+to non-GUI sessions), and fetching it from the client is blocked by the client-CUA guard anyway.
+
 `op-shared` and `op-work` are symlinks to `op-ag`; the script picks the Keychain item by the
 name it was invoked as. It fails fast instead of hanging: it first probes
 1Password's Group Container (5s), because `op` blocks forever in `open()` there
