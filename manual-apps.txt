@@ -11,6 +11,7 @@ Nessie.app
 PlaycademyLauncher.app          # arcade.school launcher (prod)
 PlaycademyLauncher-staging.app  # arcade.school launcher (staging)
 Sports Academy.app
+TapKit.app                      # iPhone control for agents; tapkit.ai (GitHub release DMG, self-updating)
 TimeBack.app
 WorkSmart.app                   # Crossover time tracking
 Daily Call.app                  # Chrome web app
