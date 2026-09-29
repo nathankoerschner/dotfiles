@@ -14,6 +14,22 @@ Host ag
     ControlPath ~/.ssh/sockets/%r@%h-%p
     ControlPersist 4h
 
+# ag-mac: the Mac half of Ag (today still named `ag`). The brain reaches it with its own key
+# (~/.ssh/ag-mac, from ag-vault "ag-brain → ag-mac SSH key"; authorized on ag-mac only from tailnet IPs).
+# Used by `mac` (Mac-only commands, computer use, files) and the brain's MCP tunnel.
+Host ag-mac
+    HostName 100.107.192.32
+    User natkoersch
+    IdentityFile ~/.ssh/ag-mac
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+    ServerAliveInterval 15
+    ServerAliveCountMax 3
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 4h
+
 # Client Mac (where Nathan sits). ag uses this for shot/show/client-cua.
 Host nathan-dev-client
     HostName 100.68.116.104
