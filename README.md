@@ -460,6 +460,27 @@ prompt lives in UserNotificationCenter, which CUA can't touch; Hammerspoon can p
 via `hs.axuielement`. ag also allows `sshd-keygen-wrapper` → Google Chrome, so scripts
 run from Herdr/pi (started over SSH) can drive Chrome with osascript.
 
+## Pi sessions archive
+
+`pi-sessions-sync` copies every Pi session transcript to Nathan's private GitHub: repos
+`nathankoerschner/pi-sessions-NNN` ("volumes"), laid out as `machines/<machine>/<project>/<session>.jsonl`.
+Design notes: `docs/ag.md` ("pi-sessions archive").
+
+- **Redacted, then encrypted.** Token and key patterns, payment cards (issuer prefix + Luhn) and
+  `key = "value"` secrets become `[REDACTED:<kind>]`, then git-crypt encrypts everything under `machines/`.
+  The key is base64 in 1Password, ag-vault "pi-sessions git-crypt key". To read the archive:
+  clone it, `op-work item get "pi-sessions git-crypt key" --vault ag-vault --fields password --reveal | base64 -d > key`,
+  then `git-crypt unlock key`.
+- **When:** hourly, only for sessions untouched for 60 minutes (a live session is archived once it
+  settles, then again whenever it changes). On the host, LaunchAgent `com.nathan.pi-sessions-sync`
+  archives ag-mac plus the client, pulled over SSH (the client holds no vault credentials). On Ag Linux
+  machines, the `pi-sessions-sync.timer` systemd user unit archives that machine. Log on ag: `/tmp/pi-sessions-sync.log`.
+- **Volumes:** at about 4 GB a new private volume is created and the old one archived. The newest
+  volume holding a file has its latest version. Pushes go in batches of about 400 MB.
+- **State** (clones, index, remote mirrors): `~/.local/state/pi-sessions/`, on the brain's /data volume.
+- **Separate from Nessie,** which syncs company-paid traces to the company. OpenRouter sessions under
+  `~/private-chat` aren't archived.
+
 ## Shared MCP gateway (Pi)
 
 Pi's stdio MCP bridges (`linear`, `arcade_school`, `honeycomb`, `tsa_courses`) run
