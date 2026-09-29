@@ -179,6 +179,8 @@ settings go in untracked `~/.config/ghostty/local.conf`.
 
 Small helper scripts live in `bin/dot-local/bin` and stow into `~/.local/bin`.
 
+Tailscale (plan, policy, OAuth client, auth keys for Ag machines): see `tailscale/README.md`. The policy file is `tailscale/policy.hujson`, applied with `ts-apply-policy`; `ts-api` calls the Tailscale API with the OAuth client; `ts-mint-auth-key` rotates the Ag auth key.
+
 Every top-level directory except `machines/` (inventory + snapshots), `macos-launchagents/` and `ios-shortcuts/` is a stow package; `bootstrap` lists them in `STOW_PACKAGES`.
 
 ## Agent skills

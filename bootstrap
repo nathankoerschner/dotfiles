@@ -140,6 +140,7 @@ if [[ $(hostname -s) == ag ]]; then
   ag-login-password check >/dev/null 2>&1 && echo "  ok      Keychain 'ag Mac login'" || echo "  MISSING Keychain 'ag Mac login'  - ag's own login password so agents can answer ag's password prompts: run ag-login-password set"
   security find-generic-password -a natkoersch -s "ag telegram bot" >/dev/null 2>&1 && echo "  ok      ag telegram bot" || echo "  MISSING Keychain 'ag telegram bot' + 'ag telegram chat'  - Telegram bot for ag-text (optional; falls back to iMessage)"
 fi
+echo "  info    Tailscale OAuth client + Ag auth key live in 1Password ag-vault (op-work), nothing on disk (tailscale/README.md)"
 gh auth status >/dev/null 2>&1 && echo "  ok      gh auth" || echo "  MISSING gh auth  - gh auth login"
 
 step "Done"
