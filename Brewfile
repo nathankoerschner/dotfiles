@@ -12,6 +12,7 @@ brew "docker-compose"
 brew "ffmpeg"
 brew "fzf"
 brew "gh"
+brew "git-crypt"        # pi-sessions archive
 brew "hcloud"            # Ag infra (infra/hetzner, ag-infra)
 brew "opentofu"
 brew "lua"
