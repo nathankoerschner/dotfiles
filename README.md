@@ -99,12 +99,12 @@ to see if it's there. The client's Keychain copy can't be read over SSH (its Key
 to non-GUI sessions), and fetching it from the client is blocked by the client-CUA guard anyway.
 
 `op-shared` and `op-work` are symlinks to `op-ag`; the script picks the Keychain item by the
-name it was invoked as. It fails fast instead of hanging: it first probes
-1Password's Group Container (5s), because `op` blocks forever in `open()` there
-while macOS shows an unanswered "… would like to access data from other apps"
-prompt (attributed to `bun` for Herdr-spawned agents; Don't Allow is enough),
-and it stops any `op` command other than `op run` after `OP_AG_TIMEOUT`
-seconds (default 120). To restore a token on a new ag, pipe it from the
+name it was invoked as. On macOS it runs `op` with `HOME` pointed at a private empty
+directory (`~/.local/state/op-wrapper/home`; `op run` children get the real `HOME` back), so
+`op` never touches 1Password's Group Container. That access raised the TCC prompt "“bun”
+would like to access data from other apps", which blocked `op` and wasn't remembered when
+denied; service accounts never need the desktop app. It also stops any `op` command other
+than `op run` after `OP_AG_TIMEOUT` seconds (default 120). To restore a token on a new ag, pipe it from the
 recovery item into `security -i` running in the GUI session (an
 `add-generic-password -U -a natkoersch -s "<service>" -w ...` line on stdin),
 never as a command-line argument. Nathan's personal 1Password account holds
