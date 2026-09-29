@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 # Bring a Mac to parity with this setup. Idempotent: safe to re-run any time.
+# Personal config lives here; the agent system is the private ag repo, which this clones to ~/ag and installs.
 #
 #   zsh -c "$(curl -fsSL https://raw.githubusercontent.com/nathankoerschner/dotfiles/main/bootstrap)"
 #   ~/dotfiles/bootstrap [--macos]      # --macos also applies ./macos defaults (sudo)
@@ -10,7 +11,9 @@ set -uo pipefail
 
 DOTFILES=${DOTFILES:-$HOME/dotfiles}
 REPO=https://github.com/nathankoerschner/dotfiles.git
-STOW_PACKAGES=(ag-board ag-inbox agents alfred bin claude codex ghostty git hammerspoon herdr mise nvim pi ssh tmux zsh)
+AG=${AG:-$HOME/ag}
+AG_REPO=git@github.com:nathankoerschner/ag.git
+STOW_PACKAGES=(alfred bin ghostty git hammerspoon mise nvim ssh tmux zsh)
 backup=$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)
 failed=()
 STOW=(stow --dotfiles --no-folding -d $DOTFILES -t $HOME)
@@ -44,22 +47,6 @@ step "oh-my-zsh"
   RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" ||
   warn "oh-my-zsh install failed"
 
-step "Standalone CLIs (vendor installers)"
-# Installers that edit ~/.zshrc run before stow, so their edits land on a file
-# that gets backed up rather than on the tracked one.
-[[ -x ~/.bun/bin/bun ]]   || curl -fsSL https://bun.sh/install | bash               || warn "bun"
-have herdr                || curl -fsSL https://herdr.dev/install.sh | sh            || warn "herdr"
-have claude               || curl -fsSL https://claude.ai/install.sh | bash          || warn "claude"
-have codex                || curl -fsSL https://chatgpt.com/codex/install.sh | sh    || warn "codex"
-have amp                  || curl -fsSL https://ampcode.com/install.sh | bash        || warn "amp"
-[[ -f ~/.bun/install/global/package.json ]] || ~/.bun/bin/bun add -g @oh-my-pi/pi-coding-agent || warn "omp"
-
-step "agent instructions"
-"$DOTFILES/agents.md/build" || warn "agents.md/build"
-
-step "git hooks"
-git -C $DOTFILES config core.hooksPath .githooks && echo "  core.hooksPath=.githooks"
-
 step "stow packages"
 for pkg in $STOW_PACKAGES; do
   # Move aside any real file that would block a symlink, then stow.
@@ -72,18 +59,12 @@ for pkg in $STOW_PACKAGES; do
 done
 [[ -d $backup ]] && echo "  pre-existing files moved to $backup"
 
-step "LaunchAgents"
-mkdir -p ~/Library/LaunchAgents
-for plist in $DOTFILES/macos-launchagents/*.plist; do
-  dest=~/Library/LaunchAgents/${plist:t}
-  [[ -L $dest ]] || { [[ -e $dest ]] && mkdir -p $backup && mv $dest $backup/; ln -s $plist $dest; }
-  launchctl bootstrap gui/$UID $dest 2>/dev/null || true   # already loaded is fine
-  echo "  ${plist:t}"
-done
-
-step "macOS helper apps"
-zsh $DOTFILES/macos-apps/HerdrLink/install.sh || warn "HerdrLink (needs Command Line Tools)"
-zsh $DOTFILES/macos-apps/ChromeTabReaper/install.sh || warn "ChromeTabReaper"
+step "ag (agent system) -> $AG"
+if [[ ! -d $AG/.git ]]; then
+  gh auth status >/dev/null 2>&1 || gh auth login -h github.com -p ssh -w || warn "gh auth login"
+  gh repo clone nathankoerschner/ag $AG || git clone $AG_REPO $AG || warn "clone ag (private: needs gh auth or an SSH key on GitHub)"
+fi
+[[ -x $AG/install ]] && { $AG/install || warn "ag install (see its output above)"; }
 
 step "Tool setup"
 mise install -y >/dev/null && echo "  mise tools" || warn "mise install"
@@ -92,18 +73,6 @@ mtp="$HOME/.local/share/minecraft-test-python"
 { [ -x "$mtp/.venv/bin/python" ] || uv venv -q --python /usr/bin/python3 "$mtp/.venv"; } \
   && uv pip install -q --python "$mtp/.venv/bin/python" pyyaml && echo "  minecraft test python" \
   || warn "minecraft test python"
-# Moshi (iPhone terminal) hook daemon + Pi hook; the LaunchAgent runs it.
-$DOTFILES/bin/dot-local/bin/moshi-hook-install >/dev/null && ~/.local/bin/moshi-hook install --target pi >/dev/null \
-  && echo "  moshi-hook" || warn "moshi-hook-install"
-# DiscordChatExporter for the discord-export skill (pinned, checksum-verified).
-bash $DOTFILES/agents/dot-agents/skills/discord-export/scripts/install.sh >/dev/null \
-  && echo "  DiscordChatExporter" || warn "discord-export install.sh"
-if have herdr && [[ $(herdr status 2>/dev/null) == *'status: running'* ]]; then
-  zsh $DOTFILES/herdr/setup.sh || warn "herdr/setup.sh"
-  $DOTFILES/bin/dot-local/bin/herdr-shortcuts-check || warn "herdr shortcuts drifted (herdr/SHORTCUTS.md)"
-else
-  warn "herdr server not running: open Ghostty (starts herdr), then run herdr/setup.sh"
-fi
 nvim --headless '+Lazy! restore' +qa >/dev/null 2>&1 && echo "  nvim plugins" || warn "nvim Lazy sync"
 
 if [[ ${1:-} == --macos ]]; then
@@ -121,9 +90,9 @@ else
   warn "gh not authenticated: run 'gh auth login', then re-run bootstrap to clone repos"
 fi
 
-step "Secrets checklist (transfer these via 1Password; never commit them)"
+step "Secrets checklist (transfer these via 1Password; never commit them; details: ~/ag/README.md)"
 check() { [[ -e $1 ]] && echo "  ok      $1" || { echo "  MISSING $1  - $2"; failed+=("secret $1"); } }
-check ~/.zshenv.local                         "TFY_TOKEN, BRAVE_API_KEY, OPENROUTER_API_KEY (see README)"
+check ~/.zshenv.local                         "TFY_TOKEN, BRAVE_API_KEY, OPENROUTER_API_KEY (see ~/ag/README.md, Secrets)"
 check ~/.gitconfig.local                      "[user] name/email"
 check ~/.config/mcp/arcade-school.headers     "Authorization: Bearer <token> (0600)"
 check ~/.config/mcp/tsa-courses.headers       "Authorization: Bearer <token> (0600)"
@@ -133,14 +102,7 @@ check ~/.pi/agent/auth.json                   "run pi and /login, or copy"
 check ~/Library/Application\ Support/Nessie/refresh_token.txt "Nessie sign-in: open Nessie and sign in, or copy the 4 auth files (README \"Nessie\")"
 check ~/.local/share/arcade-linear-return/mcp-destination/client-metadata.json "Linear MCP OAuth client (copy from another machine)"
 check ~/.alchemy/credentials/playcademy-arcade/cloudflare.json "Alchemy Cloudflare profile for arcade prod/dev DB access (copy ~/.alchemy/config.json + this file, 0600)"
-if [[ $(hostname -s) == ag ]]; then
-  for svc in "ag 1Password service account" "ag machine-shared service account" "ag-shared 1Password service account"; do
-    security find-generic-password -a natkoersch -s "$svc" >/dev/null 2>&1 && echo "  ok      Keychain '$svc'" || { echo "  MISSING Keychain '$svc'  - 1Password service-account token for op-ag / op-shared / op-work (README \"Secrets\")"; failed+=("secret $svc"); }
-  done
-  ag-login-password check >/dev/null 2>&1 && echo "  ok      Keychain 'ag Mac login'" || echo "  MISSING Keychain 'ag Mac login'  - ag's own login password so agents can answer ag's password prompts: run ag-login-password set"
-  security find-generic-password -a natkoersch -s "ag telegram bot" >/dev/null 2>&1 && echo "  ok      ag telegram bot" || echo "  MISSING Keychain 'ag telegram bot' + 'ag telegram chat'  - Telegram bot for ag-text (optional; falls back to iMessage)"
-fi
-echo "  info    Tailscale OAuth client + Ag auth key live in 1Password ag-vault (op-work), nothing on disk (tailscale/README.md)"
+echo "  info    Tailscale OAuth client + Ag auth key live in 1Password ag-vault (op-work), nothing on disk (~/ag/tailscale/README.md)"
 gh auth status >/dev/null 2>&1 && echo "  ok      gh auth" || echo "  MISSING gh auth  - gh auth login"
 
 step "Done"
