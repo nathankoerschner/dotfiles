@@ -54,6 +54,7 @@ cask "shadow"
 cask "slack"
 cask "spotify"
 cask "tailscale-app"
+cask "telegram"          # ag-mac: Telegram.app signed in for ag (BotFather, ag-text bot)
 cask "wireshark-app"
 cask "workflowy"
 cask "zoom"
