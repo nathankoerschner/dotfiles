@@ -4,7 +4,7 @@ Nathan's personal machine config: shell, editor, terminal, git, window managemen
 macOS defaults, an idempotent `bootstrap`, and per-machine snapshots under `machines/` so drift shows
 up in git. Configs are stowed with `stow --dotfiles`.
 
-The agent system (Herdr + Pi, AG Dash, the ag inbox, tickler, bridge, infra, agent instructions and
+The agent system (tmux via ag-mux + Pi, AG Dash, the ag inbox, tickler, bridge, infra, agent instructions and
 skills) lives in its own private repo, **ag** (`koerschner/ag`). `bootstrap` clones it to `~/ag`
 and runs `~/ag/install`; see its README for everything agent-related, including the secrets list.
 
@@ -53,8 +53,8 @@ machine's snapshot in ~/dotfiles/machines/.
 4. Stows every package here into `~`. Any real file in the way moves to
    `~/.dotfiles-backup/<timestamp>/`.
 5. Clones the private ag repo to `~/ag` (after `gh auth login`) and runs
-   `~/ag/install`: agent CLIs (bun, herdr, claude, codex, amp, omp), agent
-   instructions, ag's stow packages, LaunchAgents, helper apps, Herdr setup.
+   `~/ag/install`: agent CLIs (bun, claude, codex, amp, omp), agent
+   instructions, ag's stow packages, LaunchAgents, helper apps, shortcut check.
 6. `mise install`, nvim plugins at the versions in `lazy-lock.json`.
 7. `--macos`: applies the `macos` defaults script (Dock, keyboard, Finder,
    power settings by role: the host never sleeps, clients sleep normally;
@@ -83,7 +83,7 @@ ag README, section "Secrets". Personal-config ones: `~/.zshenv.local`,
   off the Spotlight shortcut.
 - Hammerspoon: grant Accessibility and enable launch at login. Change Caps Lock
   to Control in System Settings > Keyboard.
-- Open Ghostty (starts Herdr); re-run bootstrap if it warned about Herdr.
+- Open Ghostty and run `ag` to attach to the sessions on the session host.
 - Apps with no cask: see `manual-apps.txt`.
 - Mission Control shortcuts aren't scriptable; set them by hand.
 - Host (ag): in System Settings > Apple Account > iCloud, turn on Reminders

@@ -7,5 +7,5 @@
 # `\x02` (Ctrl-b) prefix sequences. See git history if that setup is ever needed
 # again.
 
-# Per-host settings (e.g. ag: `command = ~/.local/bin/herdr`), untracked.
+# Per-host settings (e.g. `command = ~/.local/bin/ag` to open straight into Ag's sessions), untracked.
 config-file = ?local.conf

@@ -182,8 +182,8 @@ hs.hotkey.bind({ "ctrl", "cmd" }, "b", function()
 	end)
 end)
 
--- ag (the agent system, ~/ag): inbox capture, Herdr shortcuts, image paste into remote agents,
--- herdr tab links, and role-specific power/activity. Optional: a Mac without ag still loads the rest.
+-- ag (the agent system, ~/ag): inbox capture, session shortcuts, image paste into remote agents,
+-- and role-specific power/activity. Optional: a Mac without ag still loads the rest.
 local ag_ok, ag_err = pcall(require, "ag")
 if not ag_ok and not tostring(ag_err):match("module 'ag' not found") then
 	hs.alert.show("ag.lua failed: " .. tostring(ag_err), 8)
@@ -218,15 +218,15 @@ end
 
 -- Terminals attach to Ag's sessions on the session host (`ag`; ag repo `ag-host`), so ask the host
 -- whether the focused pane is an agent at its prompt: Escape there would
--- interrupt it. `herdr-focus-agent` prints "agent" or "shell" (plain shell, or
+-- interrupt it. `ag-focus-agent` prints "agent" or "shell" (plain shell, or
 -- an editor like nvim in the foreground). On the host itself, run it locally.
-local herdr_host = (hs.execute(os.getenv("HOME") .. "/.local/bin/ag-host") or ""):gsub("%s", "")
-if herdr_host == "" then herdr_host = "ag-engine" end
-local focus_agent_script = "$HOME/.local/bin/herdr-focus-agent"
+local session_host = (hs.execute(os.getenv("HOME") .. "/.local/bin/ag-host") or ""):gsub("%s", "")
+if session_host == "" then session_host = "ag-engine" end
+local focus_agent_script = "$HOME/.local/bin/ag-focus-agent"
 local this_host = (hs.execute("scutil --get LocalHostName") or ""):gsub("%s", "")
-local focus_agent_cmd = (this_host == herdr_host or this_host == "ag")
+local focus_agent_cmd = (this_host == session_host or this_host == "ag")
 		and { "/bin/sh", { "-c", focus_agent_script } }
-	or { "/usr/bin/ssh", { "-o", "BatchMode=yes", "-o", "ConnectTimeout=2", herdr_host, focus_agent_script } }
+	or { "/usr/bin/ssh", { "-o", "BatchMode=yes", "-o", "ConnectTimeout=2", session_host, focus_agent_script } }
 
 -- nil means unknown: suppress synthetic Escape in terminals until a check
 -- succeeds, including after a timeout. Never turn a failed check into "safe".

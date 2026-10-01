@@ -74,7 +74,7 @@ local tests = {
 		assert(t.path == "/usr/bin/ssh" and t.args[#t.args - 1] == "ag-mac")
 		for _, name in ipairs({ "ag-mac\n", "ag\n" }) do
 			t = setup(name).tasks[1]
-			assert(t.path == "/bin/sh" and t.args[2]:match("herdr%-focus%-agent$"))
+			assert(t.path == "/bin/sh" and t.args[2]:match("ag%-focus%-agent$"))
 		end
 	end,
 	["shell tap works, Ctrl-b and multi-modifier chords never inject Escape"] = function()
