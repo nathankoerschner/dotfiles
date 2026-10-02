@@ -122,6 +122,7 @@ local appList = {
 	["m"] = "Gmail",
 	["g"] = "Grok Bot",
 	["p"] = "Perplexity",
+	["e"] = "Ag Chat", -- Chrome-installed web app of http://ag:7376/chat (ag repo: chat-manifest.json)
 }
 local urlList = {
 	["o"] = "cleanshot://capture-text", -- Capture text (OCR) with Ctrl+Cmd+O
