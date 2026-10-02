@@ -122,11 +122,11 @@ local appList = {
 	["m"] = "Gmail",
 	["g"] = "Grok Bot",
 	["p"] = "Perplexity",
-	["e"] = "Ag Chat", -- Chrome-installed web app of http://ag:7376/chat (ag repo: chat-manifest.json)
+	["a"] = "Ag Chat", -- Chrome-installed web app of http://ag:7376/chat (ag repo: chat-manifest.json)
 }
 local urlList = {
 	["o"] = "cleanshot://capture-text", -- Capture text (OCR) with Ctrl+Cmd+O
-	["a"] = "https://claude.ai/new",
+	["e"] = "https://claude.ai/new",
 	["0"] = "https://calendar.google.com",
 }
 
